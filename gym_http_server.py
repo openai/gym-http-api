@@ -3,6 +3,7 @@ from functools import wraps
 import uuid
 import gym
 
+import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -70,6 +71,7 @@ class Envs(object):
         if info['name'] == 'Discrete':
             info['n'] = space.n
         elif info['name'] == 'Box':
+            info['shape'] = space.shape
             info['low'] = space.to_jsonable(space.low)
             info['high'] = space.to_jsonable(space.high)
         return info
@@ -122,7 +124,7 @@ def handle_invalid_usage(error):
 @catch_invalid_request_param
 def env_create():
     """
-    Instantiates an instance of the specified environment
+    Create an instance of the specified environment
     
     Parameters:
         - env_id: gym environment ID string, such as 'CartPole-v0'
@@ -152,7 +154,7 @@ def env_list_all():
 @app.route('/v1/envs/<instance_id>/check_exists/', methods=['POST'])
 def env_check_exists(instance_id):
     """
-    Determines whether the specified instance_id corresponds to
+    Determine whether the specified instance_id corresponds to
     a valid environment instance that has been created.
     
     Parameters:
@@ -168,7 +170,7 @@ def env_check_exists(instance_id):
 @app.route('/v1/envs/<instance_id>/reset/', methods=['POST'])
 def env_reset(instance_id):
     """
-    Resets the state of the environment and returns an initial
+    Reset the state of the environment and return an initial
     observation.
     
     Parameters:
@@ -189,7 +191,7 @@ def env_step(instance_id):
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
-        - action: an action provided by the environment
+        - action: an action to take in the environment
     Returns:
         - observation: agent's observation of the current
         environment

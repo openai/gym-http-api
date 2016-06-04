@@ -50,9 +50,9 @@ if __name__ == '__main__':
 
     # Upload to the scoreboard. This expects the 'OPENAI_GYM_API_KEY'
     # environment variable to be set on the client side.
-    logger.info("Successfully ran example agent using
+    logger.info("""Successfully ran example agent using
         gym_http_client. Now trying to upload results to the
         scoreboard. If this fails, you likely need to set
-        os.environ['OPENAI_GYM_API_KEY']=<your_api_key>")
+        os.environ['OPENAI_GYM_API_KEY']=<your_api_key>""")
 
     client.upload(outdir)
