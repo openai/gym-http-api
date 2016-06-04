@@ -126,7 +126,7 @@ API specification
       * param: `algorithm_id` (default=None) -- An arbitrary string
         indicating the paricular version of the algorithm
         (including choices of parameters) you are running.
-      * param: `writeup` (default=None): A Gist URL (of the form
+      * param: `writeup` (default=None) -- A Gist URL (of the form
         https://gist.github.com/<user>/<id>) containing your
         writeup for this evaluation.
    
