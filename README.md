@@ -42,7 +42,7 @@ You can also write code like this to create your own client, and test it out by 
 API specification
 ============
 
-  * POST /v1/envs/
+  * POST `/v1/envs/`
       * Create an instance of the specified environment
       * param: `env_id` -- gym environment ID string, such as 'CartPole-v0'
       * returns: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -50,12 +50,12 @@ API specification
         used in future API calls to identify the environment to be
         manipulated
 
-  * GET /v1/envs/
+  * GET `/v1/envs/`
       * List all environments running on the server
 	  * returns: `envs` -- dict mapping `instance_id` to `env_id` 
 	    (e.g. `{'3c657dbc': 'CartPole-v0'}`) for every env on the server
 
-  * POST /v1/envs/<instance_id>/check_exists/
+  * POST `/v1/envs/<instance_id>/check_exists/`
   	  * Determine whether the specified instance_id corresponds to
 	    a valid environment instance that has been created.
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -63,14 +63,14 @@ API specification
 	  * returns: `exists` -- True or False, indicating whether the given
         instance exists
 
-  * POST /v1/envs/<instance_id>/reset/
+  * POST `/v1/envs/<instance_id>/reset/`
       * Reset the state of the environment and return an initial
         observation.
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance
       * returns: `observation` -- the initial observation of the space
     
-  * POST /v1/envs/<instance_id>/step/
+  * POST `/v1/envs/<instance_id>/step/`
       * Reset the state of the environment and return an initial
         observation.
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -82,7 +82,7 @@ API specification
       * returns: `done` -- whether the episode has ended
       * returns: `info` -- a dict containing auxiliary diagnostic information
 
-   * GET /v1/envs/<instance_id>/action_space/
+   * GET `/v1/envs/<instance_id>/action_space/`
       * Get information (name and dimensions/bounds) of the env's
         `action_space`
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -91,7 +91,7 @@ API specification
     additional dimensional info (such as 'n') which varies from
     space to space
 
-   * GET /v1/envs/<instance_id>/observation_space/
+   * GET `/v1/envs/<instance_id>/observation_space/`
       * Get information (name and dimensions/bounds) of the env's
         `observation_space`
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -100,7 +100,7 @@ API specification
     additional dimensional info (such as 'n') which varies from
     space to space
 
-   * POST /v1/envs/<instance_id>/monitor/start/
+   * POST `/v1/envs/<instance_id>/monitor/start/`
       * Start monitoring
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance  
@@ -113,12 +113,12 @@ API specification
       * (NOTE: the 'video_callable' parameter from the native
     env.monitor.start function is NOT implemented)
 
-   * POST /v1/envs/<instance_id>/monitor/close/
+   * POST `/v1/envs/<instance_id>/monitor/close/`
       * Flush all monitor data to disk
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance 
 
-   * POST /v1/upload/
+   * POST `/v1/upload/`
       * Flush all monitor data to disk
       * param: `training_dir` -- A directory containing the results of a
         training run.
@@ -130,5 +130,5 @@ API specification
         https://gist.github.com/<user>/<id>) containing your
         writeup for this evaluation.
    
-   * POST /v1/shutdown/
+   * POST `/v1/shutdown/`
       * Shut down the server
