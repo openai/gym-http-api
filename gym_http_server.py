@@ -3,6 +3,8 @@ from functools import wraps
 import uuid
 import gym
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 ########## Container for environments ##########
 class Envs(object):
@@ -27,7 +29,11 @@ class Envs(object):
             raise InvalidUsage('Instance_id {} unknown'.format(instance_id))
 
     def create(self, env_id):
-        env = gym.make(env_id)
+        try:
+            env = gym.make(env_id)
+        except gym.error.Error:
+            raise InvalidUsage('Attempted to look up malformed environment ID')
+
         instance_id = str(uuid.uuid4().hex)[:self.id_len]
         self.envs[instance_id] = env
         return instance_id
@@ -101,9 +107,8 @@ def catch_invalid_request_param(fn):
         try:
             return fn(*args, **kwargs)
         except KeyError, e:
-            print "Caught invalid request param" # TODO make this logging
-            raise InvalidUsage('A required request parameter
-                                was not provided')
+            logger.info('Caught invalid request param')
+            raise InvalidUsage('A required request parameter was not provided')
     return wrapped
 
 @app.errorhandler(InvalidUsage)
@@ -303,6 +308,12 @@ def upload():
         return ('', 204)
     except gym.error.AuthenticationError:
         raise InvalidUsage('You must provide an OpenAI Gym API key')
+
+@app.route('/v1/shutdown/', methods=['POST'])
+def shutdown():
+    f = request.environ.get('werkzeug.server.shutdown')
+    f()
+    return 'Server shutting down'
 
 if __name__ == '__main__':
     app.run()

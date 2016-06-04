@@ -95,6 +95,10 @@ class Client(object):
                 'ignore_open_monitors': ignore_open_monitors}
         self._post_request(route, data)
 
+    def shutdown_server(self):
+        route = '/v1/shutdown/'
+        self._post_request(route, None)
+
 if __name__ == '__main__':
     remote_base = 'http://127.0.0.1:5000'
     client = Client(remote_base)
