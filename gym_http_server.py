@@ -20,6 +20,9 @@ class Envs(object):
 
     def check_exists(self, instance_id):
         return instance_id in self.envs
+    
+    def list_all(self):
+        return dict([(instance_id, env.spec.id) for (instance_id, env) in self.envs.items()])
 
     def reset(self, instance_id):
         env = self.envs[instance_id]
@@ -32,6 +35,24 @@ class Envs(object):
         [observation, reward, done, info] = env.step(action_from_json)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
+
+    def get_action_space_info(self, instance_id):
+        env = self.envs[instance_id]
+        return self._get_space_properties(env.action_space)
+
+    def get_observation_space_info(self, instance_id):
+        env = self.envs[instance_id]
+        return self._get_space_properties(env.observation_space)
+
+    def _get_space_properties(self, space):
+        info = {}
+        info['name'] = space.__class__.__name__
+        if info['name'] == 'Discrete':
+            info['n'] = space.n
+        elif info['name'] == 'Box':
+            info['low'] = space.to_jsonable(space.low)
+            info['high'] = space.to_jsonable(space.high)
+        return info
     
     def monitor_start(self, instance_id, directory, force, resume):
         env = self.envs[instance_id]
@@ -58,6 +79,17 @@ def env_create():
     env_id = request.get_json()['env_id']
     instance_id = envs.create(env_id)
     return jsonify(instance_id = instance_id)
+
+@app.route('/v1/envs/', methods=['GET'])
+def env_list_all():
+    """
+    List all environments running on the server
+
+    Returns:
+        - envs: dict mapping instance_id to env_id (e.g. {'3c657dbc': 'CartPole-v0'}) for every env on the server
+    """
+    all_envs = envs.list_all()
+    return jsonify(all_envs = all_envs)
 
 @app.route('/v1/envs/<instance_id>/check_exists/', methods=['POST'])
 def env_check_exists(instance_id):
@@ -104,6 +136,32 @@ def env_step(instance_id):
     return jsonify(observation = obs_jsonable,
                     reward = reward, done = done, info = info)
 
+@app.route('/v1/envs/<instance_id>/action_space/', methods=['GET'])
+def env_action_space_info(instance_id):
+    """
+    Get information (name and dimensions/bounds) of the env's action_space
+    
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+    Returns:
+        - info: a dict containing 'name' (such as 'Discrete'), and additional dimensional info (such as 'n') which varies from space to space
+    """  
+    info = envs.get_action_space_info(instance_id)
+    return jsonify(info = info)
+
+@app.route('/v1/envs/<instance_id>/observation_space/', methods=['GET'])
+def env_observation_space_info(instance_id):
+    """
+    Get information (name and dimensions/bounds) of the env's observation_space
+    
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+    Returns:
+        - info: a dict containing 'name' (such as 'Discrete'), and additional dimensional info (such as 'n') which varies from space to space
+    """  
+    info = envs.get_observation_space_info(instance_id)
+    return jsonify(info = info)
+
 @app.route('/v1/envs/<instance_id>/monitor/start/', methods=['POST'])
 def env_monitor_start(instance_id):
     """
@@ -123,7 +181,6 @@ def env_monitor_start(instance_id):
     resume = request_data.get('resume', False)
 
     envs.monitor_start(instance_id, directory, force, resume)
-    # NOTE: no video_callable implemented yet
     return ('', 204)
 
 @app.route('/v1/envs/<instance_id>/monitor/close/', methods=['POST'])
@@ -158,6 +215,7 @@ def upload():
 
     gym.upload(training_dir, algorithm_id, writeup, api_key,
                    ignore_open_monitors)
+    return ('', 204)
 
 if __name__ == '__main__':
     app.run()
