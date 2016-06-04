@@ -131,3 +131,10 @@ API specification
   * POST `/v1/shutdown/`
       * Request a server shutdown
       * Currently used by the integration tests to repeatedly create and destroy fresh copies of the server running in a separate thread
+
+Contributors
+============
+  * Jie Tang
+  * Greg Brockman
+  * Flavio Truzzi
+  
