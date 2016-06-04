@@ -7,9 +7,14 @@ import gym
 ########## Container for environments ##########
 class Envs(object):
     """
-    Container and manager for the environments instantiated on this server.
+    Container and manager for the environments instantiated
+    on this server.
 
-    When a new environment is created, such as with envs.create('CartPole-v0'), it is stored under a short identifier (such as '3c657dbc'). Future API calls make use of this instance_id to identify which environment should be manipulated.
+    When a new environment is created, such as with
+    envs.create('CartPole-v0'), it is stored under a short
+    identifier (such as '3c657dbc'). Future API calls make
+    use of this instance_id to identify which environment
+    should be manipulated.
     """
     def __init__(self):
         self.envs = {}
@@ -97,7 +102,8 @@ def catch_invalid_request_param(fn):
             return fn(*args, **kwargs)
         except KeyError, e:
             print "Caught invalid request param" # TODO make this logging
-            raise InvalidUsage('A required request parameter was not provided')
+            raise InvalidUsage('A required request parameter
+                                was not provided')
     return wrapped
 
 @app.errorhandler(InvalidUsage)
@@ -116,7 +122,10 @@ def env_create():
     Parameters:
         - env_id: gym environment ID string, such as 'CartPole-v0'
     Returns:
-        - instance_id: a short identifier (such as '3c657dbc') for the created environment instance. The instance_id is used in future API calls to identify the environment to be manipulated
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the created environment instance. The instance_id is
+        used in future API calls to identify the environment to be
+        manipulated
     """
     env_id = request.get_json()['env_id']
     instance_id = envs.create(env_id)
@@ -128,7 +137,9 @@ def env_list_all():
     List all environments running on the server
 
     Returns:
-        - envs: dict mapping instance_id to env_id (e.g. {'3c657dbc': 'CartPole-v0'}) for every env on the server
+        - envs: dict mapping instance_id to env_id
+        (e.g. {'3c657dbc': 'CartPole-v0'}) for every env
+        on the server
     """
     all_envs = envs.list_all()
     return jsonify(all_envs = all_envs)
@@ -136,12 +147,15 @@ def env_list_all():
 @app.route('/v1/envs/<instance_id>/check_exists/', methods=['POST'])
 def env_check_exists(instance_id):
     """
-    Determines whether the specified instance_id corresponds to a valid environment instance that has been created.
+    Determines whether the specified instance_id corresponds to
+    a valid environment instance that has been created.
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
     Returns:
-        - exists: True or False, indicating whether the given instance exists
+        - exists: True or False, indicating whether the given
+        instance exists
     """
     exists = envs.check_exists(instance_id)
     return jsonify(exists = exists)
@@ -149,10 +163,12 @@ def env_check_exists(instance_id):
 @app.route('/v1/envs/<instance_id>/reset/', methods=['POST'])
 def env_reset(instance_id):
     """
-    Resets the state of the environment and returns an initial observation.
+    Resets the state of the environment and returns an initial
+    observation.
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
     Returns:
         - observation: the initial observation of the space
     """  
@@ -166,10 +182,12 @@ def env_step(instance_id):
     Run one timestep of the environment's dynamics.
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
         - action: an action provided by the environment
     Returns:
-        - observation: agent's observation of the current environment
+        - observation: agent's observation of the current
+        environment
         - reward: amount of reward returned after previous action
         - done: whether the episode has ended
         - info: a dict containing auxiliary diagnostic information
@@ -182,12 +200,16 @@ def env_step(instance_id):
 @app.route('/v1/envs/<instance_id>/action_space/', methods=['GET'])
 def env_action_space_info(instance_id):
     """
-    Get information (name and dimensions/bounds) of the env's action_space
+    Get information (name and dimensions/bounds) of the env's
+    action_space
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
     Returns:
-        - info: a dict containing 'name' (such as 'Discrete'), and additional dimensional info (such as 'n') which varies from space to space
+    - info: a dict containing 'name' (such as 'Discrete'), and
+    additional dimensional info (such as 'n') which varies from
+    space to space
     """  
     info = envs.get_action_space_info(instance_id)
     return jsonify(info = info)
@@ -195,12 +217,16 @@ def env_action_space_info(instance_id):
 @app.route('/v1/envs/<instance_id>/observation_space/', methods=['GET'])
 def env_observation_space_info(instance_id):
     """
-    Get information (name and dimensions/bounds) of the env's observation_space
+    Get information (name and dimensions/bounds) of the env's
+    observation_space
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
     Returns:
-        - info: a dict containing 'name' (such as 'Discrete'), and additional dimensional info (such as 'n') which varies from space to space
+        - info: a dict containing 'name' (such as 'Discrete'),
+        and additional dimensional info (such as 'n') which
+        varies from space to space
     """  
     info = envs.get_observation_space_info(instance_id)
     return jsonify(info = info)
@@ -212,11 +238,17 @@ def env_monitor_start(instance_id):
     Start monitoring.
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
-        - force (default=False): Clear out existing training data from this directory (by deleting every file prefixed with "openaigym.")
-        - resume (default=False): Retain the training data already in this directory, which will be merged with our new data
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
+        - force (default=False): Clear out existing training
+        data from this directory (by deleting every file
+        prefixed with "openaigym.")
+        - resume (default=False): Retain the training data
+        already in this directory, which will be merged with
+        our new data
     
-    (NOTE: the 'video_callable' parameter from the native env.monitor.start function is NOT implemented)
+    (NOTE: the 'video_callable' parameter from the native
+    env.monitor.start function is NOT implemented)
     """  
     request_data = request.get_json()
 
@@ -233,7 +265,8 @@ def env_monitor_close(instance_id):
     Flush all monitor data to disk.
     
     Parameters:
-        - instance_id: a short identifier (such as '3c657dbc') for the environment instance
+        - instance_id: a short identifier (such as '3c657dbc')
+          for the environment instance
     """
     envs.monitor_close(instance_id)
     return ('', 204)
@@ -242,14 +275,20 @@ def env_monitor_close(instance_id):
 @catch_invalid_request_param
 def upload():
     """
-    Upload the results of training (as automatically recorded by your env's monitor) to OpenAI Gym.
+    Upload the results of training (as automatically recorded by
+    your env's monitor) to OpenAI Gym.
     
     Parameters:
-        - training_dir: A directory containing the results of a training run.
+        - training_dir: A directory containing the results of a
+        training run.
         - api_key: Your OpenAI API key
-        - algorithm_id (default=None): An arbitrary string indicating the paricular version of the algorithm (including choices of parameters) you are running.
-        - writeup (default=None): A Gist URL (of the form https://gist.github.com/<user>/<id>) containing your writeup for this evaluation.
-    """  
+        - algorithm_id (default=None): An arbitrary string
+        indicating the paricular version of the algorithm
+        (including choices of parameters) you are running.
+        - writeup (default=None): A Gist URL (of the form
+        https://gist.github.com/<user>/<id>) containing your
+        writeup for this evaluation.
+        """  
     request_data = request.get_json()
 
     training_dir = request_data['training_dir']
