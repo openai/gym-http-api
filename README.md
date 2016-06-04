@@ -82,7 +82,7 @@ API specification
       * returns: `done` -- whether the episode has ended
       * returns: `info` -- a dict containing auxiliary diagnostic information
 
-   * GET `/v1/envs/<instance_id>/action_space/`
+  * GET `/v1/envs/<instance_id>/action_space/`
       * Get information (name and dimensions/bounds) of the env's
         `action_space`
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -91,7 +91,7 @@ API specification
     additional dimensional info (such as 'n') which varies from
     space to space
 
-   * GET `/v1/envs/<instance_id>/observation_space/`
+  * GET `/v1/envs/<instance_id>/observation_space/`
       * Get information (name and dimensions/bounds) of the env's
         `observation_space`
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -100,7 +100,7 @@ API specification
     additional dimensional info (such as 'n') which varies from
     space to space
 
-   * POST `/v1/envs/<instance_id>/monitor/start/`
+  * POST `/v1/envs/<instance_id>/monitor/start/`
       * Start monitoring
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance  
@@ -113,12 +113,12 @@ API specification
       * (NOTE: the 'video_callable' parameter from the native
     env.monitor.start function is NOT implemented)
 
-   * POST `/v1/envs/<instance_id>/monitor/close/`
+  * POST `/v1/envs/<instance_id>/monitor/close/`
       * Flush all monitor data to disk
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance 
 
-   * POST `/v1/upload/`
+  * POST `/v1/upload/`
       * Flush all monitor data to disk
       * param: `training_dir` -- A directory containing the results of a
         training run.
@@ -130,5 +130,5 @@ API specification
         https://gist.github.com/<user>/<id>) containing your
         writeup for this evaluation.
    
-   * POST `/v1/shutdown/`
+  * POST `/v1/shutdown/`
       * Shut down the server
