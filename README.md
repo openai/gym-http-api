@@ -39,6 +39,15 @@ You can also write code like this to create your own client, and test it out by 
     exists = client.env_check_exists(instance_id)
 
 
+Testing
+============
+
+This repository contains tests that can be run using the `nose2` framework. From a shell (such as bash) you can run nose2 directly:
+
+    cd gym-http-api
+    nose2
+
+
 API specification
 ============
 
