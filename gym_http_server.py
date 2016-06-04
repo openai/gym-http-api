@@ -39,9 +39,6 @@ class Envs(object):
         self.envs[instance_id] = env
         return instance_id
 
-    def check_exists(self, instance_id):
-        return instance_id in self.envs
-    
     def list_all(self):
         return dict([(instance_id, env.spec.id) for (instance_id, env) in self.envs.items()])
 
@@ -103,15 +100,12 @@ class InvalidUsage(Exception):
         rv['message'] = self.message
         return rv
 
-def catch_invalid_request_param(fn):
-    @wraps(fn)
-    def wrapped(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except KeyError, e:
-            logger.info('Caught invalid request param')
-            raise InvalidUsage('A required request parameter was not provided')
-    return wrapped
+def get_required_param(request, param):
+    try:
+        return request.get_json()[param]
+    except KeyError, e:
+        logger.info('Caught invalid request param')
+        raise InvalidUsage('A required request parameter was not provided')
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
@@ -121,7 +115,6 @@ def handle_invalid_usage(error):
 
 ########## API route definitions ##########
 @app.route('/v1/envs/', methods=['POST'])
-@catch_invalid_request_param
 def env_create():
     """
     Create an instance of the specified environment
@@ -134,7 +127,7 @@ def env_create():
         used in future API calls to identify the environment to be
         manipulated
     """
-    env_id = request.get_json()['env_id']
+    env_id = get_required_param(request, 'env_id') 
     instance_id = envs.create(env_id)
     return jsonify(instance_id = instance_id)
 
@@ -150,22 +143,6 @@ def env_list_all():
     """
     all_envs = envs.list_all()
     return jsonify(all_envs = all_envs)
-
-@app.route('/v1/envs/<instance_id>/check_exists/', methods=['POST'])
-def env_check_exists(instance_id):
-    """
-    Determine whether the specified instance_id corresponds to
-    a valid environment instance that has been created.
-    
-    Parameters:
-        - instance_id: a short identifier (such as '3c657dbc')
-        for the environment instance
-    Returns:
-        - exists: True or False, indicating whether the given
-        instance exists
-    """
-    exists = envs.check_exists(instance_id)
-    return jsonify(exists = exists)
 
 @app.route('/v1/envs/<instance_id>/reset/', methods=['POST'])
 def env_reset(instance_id):
@@ -183,7 +160,6 @@ def env_reset(instance_id):
     return jsonify(observation = observation)
 
 @app.route('/v1/envs/<instance_id>/step/', methods=['POST'])
-@catch_invalid_request_param
 def env_step(instance_id):
     """
     Run one timestep of the environment's dynamics.
@@ -199,7 +175,7 @@ def env_step(instance_id):
         - done: whether the episode has ended
         - info: a dict containing auxiliary diagnostic information
     """  
-    action = request.get_json()['action']
+    action = get_required_param(request, 'action')
     [obs_jsonable, reward, done, info] = envs.step(instance_id, action)
     return jsonify(observation = obs_jsonable,
                     reward = reward, done = done, info = info)
@@ -239,7 +215,6 @@ def env_observation_space_info(instance_id):
     return jsonify(info = info)
 
 @app.route('/v1/envs/<instance_id>/monitor/start/', methods=['POST'])
-@catch_invalid_request_param
 def env_monitor_start(instance_id):
     """
     Start monitoring.
@@ -259,7 +234,7 @@ def env_monitor_start(instance_id):
     """  
     request_data = request.get_json()
 
-    directory = request_data['directory']
+    directory = get_required_param(request, 'directory')
     force = request_data.get('force', False)
     resume = request_data.get('resume', False)
 
@@ -279,7 +254,6 @@ def env_monitor_close(instance_id):
     return ('', 204)
 
 @app.route('/v1/upload/', methods=['POST'])
-@catch_invalid_request_param
 def upload():
     """
     Upload the results of training (as automatically recorded by
@@ -292,27 +266,23 @@ def upload():
         - algorithm_id (default=None): An arbitrary string
         indicating the paricular version of the algorithm
         (including choices of parameters) you are running.
-        - writeup (default=None): A Gist URL (of the form
-        https://gist.github.com/<user>/<id>) containing your
-        writeup for this evaluation.
         """  
     request_data = request.get_json()
 
-    training_dir = request_data['training_dir']
-    api_key = request_data['api_key']
+    training_dir = get_required_param(request, 'training_dir')
+    api_key = get_required_param(request, 'api_key')
     algorithm_id = request_data.get('algorithm_id', None)
-    writeup = request_data.get('writeup', None)
-    ignore_open_monitors = request_data.get('ignore_open_monitors', False)
 
     try:
-        gym.upload(training_dir, algorithm_id, writeup, api_key,
-                   ignore_open_monitors)
+        gym.upload(training_dir, algorithm_id, writeup=None, api_key=api_key,
+                   ignore_open_monitors=False)
         return ('', 204)
     except gym.error.AuthenticationError:
         raise InvalidUsage('You must provide an OpenAI Gym API key')
 
 @app.route('/v1/shutdown/', methods=['POST'])
 def shutdown():
+    """ Request a server shutdown - currently used by the integration tests to repeatedly create and destroy fresh copies of the server running in a separate thread"""
     f = request.environ.get('werkzeug.server.shutdown')
     f()
     return 'Server shutting down'

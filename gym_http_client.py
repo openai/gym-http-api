@@ -36,12 +36,6 @@ class Client(object):
         all_envs = resp.json()['all_envs']
         return all_envs
 
-    def env_check_exists(self, instance_id):
-        route = '/v1/envs/{}/check_exists/'.format(instance_id)
-        resp = self._post_request(route, None)
-        exists = resp.json()['exists']
-        return exists
-
     def env_reset(self, instance_id):
         route = '/v1/envs/{}/reset/'.format(instance_id)
         resp = self._post_request(route, None)
@@ -82,17 +76,14 @@ class Client(object):
         route = '/v1/envs/{}/monitor/close/'.format(instance_id)
         self._post_request(route, None)
 
-    def upload(self, training_dir, algorithm_id=None, writeup=None, 
-                   api_key=None, ignore_open_monitors=False):
+    def upload(self, training_dir, algorithm_id=None, api_key=None):
         if not api_key:
             api_key = os.environ.get('OPENAI_GYM_API_KEY')
 
         route = '/v1/upload/'
         data = {'training_dir': training_dir,
                 'algorithm_id': algorithm_id,
-                'writeup': writeup,
-                'api_key': api_key,
-                'ignore_open_monitors': ignore_open_monitors}
+                'api_key': api_key}
         self._post_request(route, data)
 
     def shutdown_server(self):
@@ -108,7 +99,6 @@ if __name__ == '__main__':
     instance_id = client.env_create(env_id)
 
     # Check properties
-    exists = client.env_check_exists(instance_id)
     all_envs = client.env_list_all()
     action_info = client.env_action_space_info(instance_id)
     obs_info = client.env_observation_space_info(instance_id)

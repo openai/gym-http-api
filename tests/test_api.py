@@ -53,7 +53,6 @@ def with_server(fn):
 def test_create_valid():
     client = gym_http_client.Client(get_remote_base())
     instance_id = client.env_create('CartPole-v0')
-    assert client.env_check_exists(instance_id)
     assert instance_id in client.env_list_all()
 
 @with_server
@@ -192,16 +191,14 @@ def test_missing_param_monitor_directory():
 def test_missing_param_upload_directory():
     ''' Test client failure to provide JSON param: directory'''
     class BadClient(gym_http_client.Client):
-        def upload(self, training_dir, algorithm_id=None, writeup=None,
-                       api_key=None, ignore_open_monitors=False):
+        def upload(self, training_dir, algorithm_id=None, api_key=None):
             if not api_key:
                 api_key = os.environ.get('OPENAI_GYM_API_KEY')
 
             route = '/v1/upload/'
-            data = {'algorithm_id': algorithm_id, # deliberately omit training_dir
-                    'writeup': writeup,
-                    'api_key': api_key,
-                    'ignore_open_monitors': ignore_open_monitors}
+            data = {'algorithm_id': algorithm_id,
+                    'api_key': api_key}
+                # deliberately omit training_dir
             self._post_request(route, data)
     client = BadClient(get_remote_base())
 

@@ -64,14 +64,6 @@ API specification
 	  * returns: `envs` -- dict mapping `instance_id` to `env_id` 
 	    (e.g. `{'3c657dbc': 'CartPole-v0'}`) for every env on the server
 
-  * POST `/v1/envs/<instance_id>/check_exists/`
-  	  * Determine whether the specified instance_id corresponds to
-	    a valid environment instance that has been created.
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-	  * returns: `exists` -- True or False, indicating whether the given
-        instance exists
-
   * POST `/v1/envs/<instance_id>/reset/`
       * Reset the state of the environment and return an initial
         observation.
@@ -135,9 +127,7 @@ API specification
       * param: `algorithm_id` (default=None) -- An arbitrary string
         indicating the paricular version of the algorithm
         (including choices of parameters) you are running.
-      * param: `writeup` (default=None) -- A Gist URL (of the form
-        https://gist.github.com/<user>/<id>) containing your
-        writeup for this evaluation.
    
   * POST `/v1/shutdown/`
-      * Shut down the server
+      * Request a server shutdown
+      * Currently used by the integration tests to repeatedly create and destroy fresh copies of the server running in a separate thread
