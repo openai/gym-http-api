@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
+from functools import wraps
 import uuid
 import gym
 
+
+########## Container for environments ##########
 class Envs(object):
     """
     Container and manager for the environments instantiated on this server.
@@ -11,6 +14,12 @@ class Envs(object):
     def __init__(self):
         self.envs = {}
         self.id_len = 8
+
+    def _lookup_env(self, instance_id):
+        try:
+            return self.envs[instance_id]
+        except KeyError:
+            raise InvalidUsage('Instance_id {} unknown'.format(instance_id))
 
     def create(self, env_id):
         env = gym.make(env_id)
@@ -25,23 +34,23 @@ class Envs(object):
         return dict([(instance_id, env.spec.id) for (instance_id, env) in self.envs.items()])
 
     def reset(self, instance_id):
-        env = self.envs[instance_id]
+        env = self._lookup_env(instance_id)
         obs = env.reset()
         return env.observation_space.to_jsonable(obs)
 
     def step(self, instance_id, action):
-        env = self.envs[instance_id]
+        env = self._lookup_env(instance_id)
         action_from_json = int(env.action_space.from_jsonable(action))
         [observation, reward, done, info] = env.step(action_from_json)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
 
     def get_action_space_info(self, instance_id):
-        env = self.envs[instance_id]
+        env = self._lookup_env(instance_id)
         return self._get_space_properties(env.action_space)
 
     def get_observation_space_info(self, instance_id):
-        env = self.envs[instance_id]
+        env = self._lookup_env(instance_id)
         return self._get_space_properties(env.observation_space)
 
     def _get_space_properties(self, space):
@@ -55,17 +64,51 @@ class Envs(object):
         return info
     
     def monitor_start(self, instance_id, directory, force, resume):
-        env = self.envs[instance_id]
+        env = self._lookup_env(instance_id)
         env.monitor.start(directory, force=force, resume=resume)
 
     def monitor_close(self, instance_id):
-        env = self.envs[instance_id]
+        env = self._lookup_env(instance_id)
         env.monitor.close()
 
+########## App setup ##########
 app = Flask(__name__)
 envs = Envs()
 
+########## Error handling ##########
+class InvalidUsage(Exception):
+    status_code = 400
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+def catch_invalid_request_param(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except KeyError, e:
+            print "Caught invalid request param" # TODO make this logging
+            raise InvalidUsage('A required request parameter was not provided')
+    return wrapped
+
+@app.errorhandler(InvalidUsage)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+########## API route definitions ##########
 @app.route('/v1/envs/', methods=['POST'])
+@catch_invalid_request_param
 def env_create():
     """
     Instantiates an instance of the specified environment
@@ -75,7 +118,6 @@ def env_create():
     Returns:
         - instance_id: a short identifier (such as '3c657dbc') for the created environment instance. The instance_id is used in future API calls to identify the environment to be manipulated
     """
-
     env_id = request.get_json()['env_id']
     instance_id = envs.create(env_id)
     return jsonify(instance_id = instance_id)
@@ -118,6 +160,7 @@ def env_reset(instance_id):
     return jsonify(observation = observation)
 
 @app.route('/v1/envs/<instance_id>/step/', methods=['POST'])
+@catch_invalid_request_param
 def env_step(instance_id):
     """
     Run one timestep of the environment's dynamics.
@@ -163,6 +206,7 @@ def env_observation_space_info(instance_id):
     return jsonify(info = info)
 
 @app.route('/v1/envs/<instance_id>/monitor/start/', methods=['POST'])
+@catch_invalid_request_param
 def env_monitor_start(instance_id):
     """
     Start monitoring.
@@ -195,27 +239,31 @@ def env_monitor_close(instance_id):
     return ('', 204)
 
 @app.route('/v1/upload/', methods=['POST'])
+@catch_invalid_request_param
 def upload():
     """
     Upload the results of training (as automatically recorded by your env's monitor) to OpenAI Gym.
     
     Parameters:
         - training_dir: A directory containing the results of a training run.
+        - api_key: Your OpenAI API key
         - algorithm_id (default=None): An arbitrary string indicating the paricular version of the algorithm (including choices of parameters) you are running.
         - writeup (default=None): A Gist URL (of the form https://gist.github.com/<user>/<id>) containing your writeup for this evaluation.
-        - api_key (default=None): Your OpenAI API key
     """  
     request_data = request.get_json()
 
     training_dir = request_data['training_dir']
+    api_key = request_data['api_key']
     algorithm_id = request_data.get('algorithm_id', None)
     writeup = request_data.get('writeup', None)
-    api_key = request_data.get('api_key', None)
     ignore_open_monitors = request_data.get('ignore_open_monitors', False)
 
-    gym.upload(training_dir, algorithm_id, writeup, api_key,
+    try:
+        gym.upload(training_dir, algorithm_id, writeup, api_key,
                    ignore_open_monitors)
-    return ('', 204)
+        return ('', 204)
+    except gym.error.AuthenticationError:
+        raise InvalidUsage('You must provide an OpenAI Gym API key')
 
 if __name__ == '__main__':
     app.run()

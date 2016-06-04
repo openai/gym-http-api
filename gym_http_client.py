@@ -1,6 +1,7 @@
 import requests
 import urlparse
 import json
+import os
 
 class Client(object):
     """
@@ -81,8 +82,11 @@ class Client(object):
         route = '/v1/envs/{}/monitor/close/'.format(instance_id)
         self._post_request(route, None)
 
-    def upload(self, training_dir, algorithm_id=None, writeup=None,
+    def upload(self, training_dir, algorithm_id=None, writeup=None, 
                    api_key=None, ignore_open_monitors=False):
+        if not api_key:
+            api_key = os.environ.get('OPENAI_GYM_API_KEY')
+
         route = '/v1/upload/'
         data = {'training_dir': training_dir,
                 'algorithm_id': algorithm_id,
@@ -110,7 +114,7 @@ if __name__ == '__main__':
     init_obs = client.env_reset(instance_id)
     [observation, reward, done, info] = client.env_step(instance_id, 1)
     client.env_monitor_close(instance_id)
-#    client.upload(training_dir='tmp')
+    client.upload(training_dir='tmp')
 
     
 
