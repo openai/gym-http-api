@@ -105,14 +105,14 @@ API specification
       * Start monitoring
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance  
-      * param: force (default=False) -- Clear out existing training
+      * param: `force` (default=False) -- Clear out existing training
         data from this directory (by deleting every file
         prefixed with "openaigym.")
-      * param: resume (default=False) -- Retain the training data
+      * param: `resume` (default=False) -- Retain the training data
         already in this directory, which will be merged with
         our new data
-      * (NOTE: the 'video_callable' parameter from the native
-    env.monitor.start function is NOT implemented)
+      * (NOTE: the `video_callable` parameter from the native
+    `env.monitor.start` function is NOT implemented)
 
   * POST `/v1/envs/<instance_id>/monitor/close/`
       * Flush all monitor data to disk
