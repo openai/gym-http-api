@@ -33,7 +33,7 @@ class Envs(object):
         try:
             env = gym.make(env_id)
         except gym.error.Error:
-            raise InvalidUsage('Attempted to look up malformed environment ID')
+            raise InvalidUsage("Attempted to look up malformed environment ID '{}'".format(env_id))
 
         instance_id = str(uuid.uuid4().hex)[:self.id_len]
         self.envs[instance_id] = env
@@ -47,10 +47,11 @@ class Envs(object):
         obs = env.reset()
         return env.observation_space.to_jsonable(obs)
 
-    def step(self, instance_id, action):
+    def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
         action_from_json = int(env.action_space.from_jsonable(action))
         [observation, reward, done, info] = env.step(action_from_json)
+        if render: env.render()
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
 
@@ -100,12 +101,12 @@ class InvalidUsage(Exception):
         rv['message'] = self.message
         return rv
 
-def get_required_param(request, param):
-    try:
-        return request.get_json()[param]
-    except KeyError, e:
-        logger.info('Caught invalid request param')
-        raise InvalidUsage('A required request parameter was not provided')
+def get_required_param(json, param):
+    r = json.get(param, None)
+    if r is None:
+        logger.info("Caught invalid request param '{}'".format(param))
+        raise InvalidUsage("A required request parameter '{}' was not provided".format(param))
+    return r
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
@@ -127,7 +128,7 @@ def env_create():
         used in future API calls to identify the environment to be
         manipulated
     """
-    env_id = get_required_param(request, 'env_id') 
+    env_id = get_required_param(request.get_json(), 'env_id')
     instance_id = envs.create(env_id)
     return jsonify(instance_id = instance_id)
 
@@ -175,8 +176,9 @@ def env_step(instance_id):
         - done: whether the episode has ended
         - info: a dict containing auxiliary diagnostic information
     """  
-    action = get_required_param(request, 'action')
-    [obs_jsonable, reward, done, info] = envs.step(instance_id, action)
+    json = request.get_json()
+    action = get_required_param(json, 'action')
+    [obs_jsonable, reward, done, info] = envs.step(instance_id, action, "render" in json)
     return jsonify(observation = obs_jsonable,
                     reward = reward, done = done, info = info)
 
@@ -234,7 +236,7 @@ def env_monitor_start(instance_id):
     """  
     request_data = request.get_json()
 
-    directory = get_required_param(request, 'directory')
+    directory = get_required_param(request.get_json(), 'directory')
     force = request_data.get('force', False)
     resume = request_data.get('resume', False)
 
@@ -269,9 +271,10 @@ def upload():
         """  
     request_data = request.get_json()
 
-    training_dir = get_required_param(request, 'training_dir')
-    api_key = get_required_param(request, 'api_key')
-    algorithm_id = request_data.get('algorithm_id', None)
+    j = request.get_json()
+    training_dir = get_required_param(j, 'training_dir')
+    api_key      = get_required_param(j, 'api_key')
+    algorithm_id = j.get('algorithm_id', None)
 
     try:
         gym.upload(training_dir, algorithm_id, writeup=None, api_key=api_key,

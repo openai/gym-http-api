@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
         for j in range(max_steps):
             action = agent.act(ob, reward, done)
-            ob, reward, done, _ = client.env_step(instance_id, action)
+            ob, reward, done, _ = client.env_step(instance_id, action, True)
             if done:
                 break
 

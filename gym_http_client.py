@@ -15,8 +15,18 @@ class Client(object):
         resp = requests.post(urlparse.urljoin(self.remote_base, route),
                             data=json.dumps(data),
                             headers=headers)
+        j = {}
+        try:
+            j = resp.json()
+        except:
+            # Most likely json parse failed because of network error, not server error (server
+            # sends its errors in json). Don't let parse exception go up, but rather raise default
+            # error.
+            resp.raise_for_status()
+        if resp.status_code != 200 and "message" in j:  # descriptive message from server side
+            raise ValueError(j["message"])
         resp.raise_for_status()
-        return resp
+        return j
 
     def _get_request(self, route):
         resp = requests.get(urlparse.urljoin(self.remote_base, route))
@@ -27,7 +37,7 @@ class Client(object):
         route = '/v1/envs/'
         data = {'env_id': env_id}
         resp = self._post_request(route, data)
-        instance_id = resp.json()['instance_id']
+        instance_id = resp['instance_id']
         return instance_id
 
     def env_list_all(self):
@@ -39,17 +49,17 @@ class Client(object):
     def env_reset(self, instance_id):
         route = '/v1/envs/{}/reset/'.format(instance_id)
         resp = self._post_request(route, None)
-        observation = resp.json()['observation']
+        observation = resp['observation']
         return observation
 
-    def env_step(self, instance_id, action):    
+    def env_step(self, instance_id, action, render):
         route = '/v1/envs/{}/step/'.format(instance_id)
-        data = {'action': action}
+        data = {'action': action, 'render': render}
         resp = self._post_request(route, data)
-        observation = resp.json()['observation']
-        reward = resp.json()['reward']
-        done = resp.json()['done']
-        info = resp.json()['info']
+        observation = resp['observation']
+        reward = resp['reward']
+        done = resp['done']
+        info = resp['info']
         return [observation, reward, done, info]
 
     def env_action_space_info(self, instance_id):
@@ -106,7 +116,7 @@ if __name__ == '__main__':
     # Run a single step
     client.env_monitor_start(instance_id, directory='tmp', force=True)
     init_obs = client.env_reset(instance_id)
-    [observation, reward, done, info] = client.env_step(instance_id, 1)
+    [observation, reward, done, info] = client.env_step(instance_id, 1, True)
     client.env_monitor_close(instance_id)
     client.upload(training_dir='tmp')
 
