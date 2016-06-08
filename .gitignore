@@ -37,3 +37,15 @@ tutorial/*.html
 
 # PyCharm project files
 .idea
+
+# C++ binding
+binding-cpp/random_agent
+binding-cpp/lib/gym_binding.a
+binding-cpp/.obj/*
+
+# Qt Creator files for C++ binding
+binding-cpp/gym-binding-cpp.config
+binding-cpp/gym-binding-cpp.creator
+binding-cpp/gym-binding-cpp.creator.user
+binding-cpp/gym-binding-cpp.files
+binding-cpp/gym-binding-cpp.includes
