@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from functools import wraps
 import uuid
 import gym
+import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
@@ -45,14 +46,14 @@ class Envs(object):
     def reset(self, instance_id):
         env = self._lookup_env(instance_id)
         obs = env.reset()
-        return env.observation_space.to_jsonable(obs)
+        return env.observation_space.to_jsonable(np.array(obs).flatten())
 
     def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
         action_from_json = int(env.action_space.from_jsonable(action))
         [observation, reward, done, info] = env.step(action_from_json)
         if render: env.render()
-        obs_jsonable = env.observation_space.to_jsonable(observation)
+        obs_jsonable = env.observation_space.to_jsonable(np.array(observation).flatten())
         return [obs_jsonable, reward, done, info]
 
     def get_action_space_info(self, instance_id):
@@ -70,8 +71,12 @@ class Envs(object):
             info['n'] = space.n
         elif info['name'] == 'Box':
             info['shape'] = space.shape
-            info['low'] = space.to_jsonable(space.low)
-            info['high'] = space.to_jsonable(space.high)
+            # It's not JSON compliant to have Infinity, -Infinity, NaN.
+            # Many newer JSON parsers allow it, but many don't. Notably python json
+            # module can read and write such floats. So we only here fix "export version",
+            # also make it flat.
+            info['low']  = [(x if x != -np.inf else -1e100) for x in np.array(space.low ).flatten()]
+            info['high'] = [(x if x != +np.inf else +1e100) for x in np.array(space.high).flatten()]
         return info
     
     def monitor_start(self, instance_id, directory, force, resume):
@@ -102,6 +107,9 @@ class InvalidUsage(Exception):
         return rv
 
 def get_required_param(json, param):
+    if json is None:
+        logger.info("Request is not a valid json")
+        raise InvalidUsage("Request is not a valid json")
     r = json.get(param, None)
     if r is None:
         logger.info("Caught invalid request param '{}'".format(param))
