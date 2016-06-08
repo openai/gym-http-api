@@ -3,6 +3,9 @@ import urlparse
 import json
 import os
 
+# Set this to True to see client-server exchange
+verbose = False
+
 class Client(object):
     """
     Gym client to interface with gym_http_server
@@ -10,11 +13,7 @@ class Client(object):
     def __init__(self, remote_base):
         self.remote_base = remote_base
 
-    def _post_request(self, route, data):
-        headers = {'Content-type': 'application/json'}
-        resp = requests.post(urlparse.urljoin(self.remote_base, route),
-                            data=json.dumps(data),
-                            headers=headers)
+    def _parse_server_error_or_raise_for_status(self, resp):
         j = {}
         try:
             j = resp.json()
@@ -28,10 +27,20 @@ class Client(object):
         resp.raise_for_status()
         return j
 
+    def _post_request(self, route, data):
+        url = urlparse.urljoin(self.remote_base, route)
+        if verbose: print( "POST {}\n{}".format(url, json.dumps(data)) )
+        headers = {'Content-type': 'application/json'}
+        resp = requests.post(urlparse.urljoin(self.remote_base, route),
+                            data=json.dumps(data),
+                            headers=headers)
+        return self._parse_server_error_or_raise_for_status(resp)
+
     def _get_request(self, route):
-        resp = requests.get(urlparse.urljoin(self.remote_base, route))
-        resp.raise_for_status()
-        return resp
+        url = urlparse.urljoin(self.remote_base, route)
+        if verbose: print("GET {}".format(url))
+        resp = requests.get(url)
+        return self._parse_server_error_or_raise_for_status(resp)
         
     def env_create(self, env_id):
         route = '/v1/envs/'
@@ -43,7 +52,7 @@ class Client(object):
     def env_list_all(self):
         route = '/v1/envs/'
         resp = self._get_request(route)
-        all_envs = resp.json()['all_envs']
+        all_envs = resp['all_envs']
         return all_envs
 
     def env_reset(self, instance_id):
@@ -65,13 +74,13 @@ class Client(object):
     def env_action_space_info(self, instance_id):
         route = '/v1/envs/{}/action_space/'.format(instance_id)
         resp = self._get_request(route)
-        info = resp.json()['info']
+        info = resp['info']
         return info
 
     def env_observation_space_info(self, instance_id):
         route = '/v1/envs/{}/observation_space/'.format(instance_id)
         resp = self._get_request(route)
-        info = resp.json()['info']
+        info = resp['info']
         return info
 
     def env_monitor_start(self, instance_id, directory,
