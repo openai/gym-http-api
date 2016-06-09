@@ -2,3 +2,4 @@ Flask
 numpy
 gym
 Requests
+nose2
