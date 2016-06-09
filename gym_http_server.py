@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from functools import wraps
 import uuid
 import gym
+import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ class Envs(object):
         try:
             env = gym.make(env_id)
         except gym.error.Error:
-            raise InvalidUsage('Attempted to look up malformed environment ID')
+            raise InvalidUsage("Attempted to look up malformed environment ID '{}'".format(env_id))
 
         instance_id = str(uuid.uuid4().hex)[:self.id_len]
         self.envs[instance_id] = env
@@ -45,13 +46,14 @@ class Envs(object):
     def reset(self, instance_id):
         env = self._lookup_env(instance_id)
         obs = env.reset()
-        return env.observation_space.to_jsonable(obs)
+        return env.observation_space.to_jsonable(np.array(obs).flatten())
 
-    def step(self, instance_id, action):
+    def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
         action_from_json = int(env.action_space.from_jsonable(action))
         [observation, reward, done, info] = env.step(action_from_json)
-        obs_jsonable = env.observation_space.to_jsonable(observation)
+        if render: env.render()
+        obs_jsonable = env.observation_space.to_jsonable(np.array(observation).flatten())
         return [obs_jsonable, reward, done, info]
 
     def get_action_space_info(self, instance_id):
@@ -69,8 +71,12 @@ class Envs(object):
             info['n'] = space.n
         elif info['name'] == 'Box':
             info['shape'] = space.shape
-            info['low'] = space.to_jsonable(space.low)
-            info['high'] = space.to_jsonable(space.high)
+            # It's not JSON compliant to have Infinity, -Infinity, NaN.
+            # Many newer JSON parsers allow it, but many don't. Notably python json
+            # module can read and write such floats. So we only here fix "export version",
+            # also make it flat.
+            info['low']  = [(x if x != -np.inf else -1e100) for x in np.array(space.low ).flatten()]
+            info['high'] = [(x if x != +np.inf else +1e100) for x in np.array(space.high).flatten()]
         return info
     
     def monitor_start(self, instance_id, directory, force, resume):
@@ -100,15 +106,14 @@ class InvalidUsage(Exception):
         rv['message'] = self.message
         return rv
 
-def get_required_param(request, param):
-    try:
-        value = request.get_json()[param]
-    except KeyError, e:
-        logger.info('Caught invalid request param')
-        raise InvalidUsage('A required request parameter was not provided')
-    if not value: # present, but value is '' or []
-        logger.info('Caught invalid request param')
-        raise InvalidUsage('A required request parameter was not provided')        
+def get_required_param(json, param):
+    if json is None:
+        logger.info("Request is not a valid json")
+        raise InvalidUsage("Request is not a valid json")
+    value = json.get(param, None)
+    if not value: # value is not provided, or is empty (e.g. '' or [])
+        logger.info("Caught invalid request param '{}'".format(param))
+        raise InvalidUsage("A required request parameter '{}' was not provided".format(param))
     return value
 
 @app.errorhandler(InvalidUsage)
@@ -131,7 +136,7 @@ def env_create():
         used in future API calls to identify the environment to be
         manipulated
     """
-    env_id = get_required_param(request, 'env_id') 
+    env_id = get_required_param(request.get_json(), 'env_id')
     instance_id = envs.create(env_id)
     return jsonify(instance_id = instance_id)
 
@@ -179,8 +184,9 @@ def env_step(instance_id):
         - done: whether the episode has ended
         - info: a dict containing auxiliary diagnostic information
     """  
-    action = get_required_param(request, 'action')
-    [obs_jsonable, reward, done, info] = envs.step(instance_id, action)
+    json = request.get_json()
+    action = get_required_param(json, 'action')
+    [obs_jsonable, reward, done, info] = envs.step(instance_id, action, "render" in json)
     return jsonify(observation = obs_jsonable,
                     reward = reward, done = done, info = info)
 
@@ -236,11 +242,11 @@ def env_monitor_start(instance_id):
     (NOTE: the 'video_callable' parameter from the native
     env.monitor.start function is NOT implemented)
     """  
-    request_data = request.get_json()
+    j = request.get_json()
 
-    directory = get_required_param(request, 'directory')
-    force = request_data.get('force', False)
-    resume = request_data.get('resume', False)
+    directory = get_required_param(j, 'directory')
+    force = j.get('force', False)
+    resume = j.get('resume', False)
 
     envs.monitor_start(instance_id, directory, force, resume)
     return ('', 204)
@@ -271,11 +277,10 @@ def upload():
         indicating the paricular version of the algorithm
         (including choices of parameters) you are running.
         """  
-    request_data = request.get_json()
-
-    training_dir = get_required_param(request, 'training_dir')
-    api_key = get_required_param(request, 'api_key')
-    algorithm_id = request_data.get('algorithm_id', None)
+    j = request.get_json()
+    training_dir = get_required_param(j, 'training_dir')
+    api_key      = get_required_param(j, 'api_key')
+    algorithm_id = j.get('algorithm_id', None)
 
     try:
         gym.upload(training_dir, algorithm_id, writeup=None, api_key=api_key,

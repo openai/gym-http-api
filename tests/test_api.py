@@ -120,8 +120,9 @@ def test_bad_instance_id():
     for call in try_these:
         try:
             call('bad_id')
-        except requests.HTTPError, e:
-            assert e.response.status_code == 400
+        except gym_http_client.ServerError, e:
+            assert 'Instance_id' in e.message
+            assert e.status_code == 400
         else:
             assert False
 
@@ -138,8 +139,9 @@ def test_missing_param_env_id():
     client = BadClient(get_remote_base())
     try:
         client.env_create('CartPole-v0')
-    except requests.HTTPError, e:
-        assert e.response.status_code == 400
+    except gym_http_client.ServerError, e:
+        assert 'env_id' in e.message
+        assert e.status_code == 400
     else:
         assert False
 
@@ -162,8 +164,9 @@ def test_missing_param_action():
     client.env_reset(instance_id)
     try:
         client.env_step(instance_id, 1)
-    except requests.HTTPError, e:
-        assert e.response.status_code == 400
+    except gym_http_client.ServerError, e:
+        assert 'action' in e.message
+        assert e.status_code == 400
     else:
         assert False
 
@@ -182,8 +185,9 @@ def test_missing_param_monitor_directory():
     instance_id = client.env_create('CartPole-v0')
     try:
         client.env_monitor_start(instance_id, 'tmp', force=True)
-    except requests.HTTPError, e:
-        assert e.response.status_code == 400
+    except gym_http_client.ServerError, e:
+        assert 'directory' in e.message
+        assert e.status_code == 400
     else:
         assert False
 
@@ -212,8 +216,9 @@ def test_missing_param_upload_directory():
     client.env_monitor_close(instance_id)
     try:
         client.upload('tmp')
-    except requests.HTTPError, e:
-        assert e.response.status_code == 400
+    except gym_http_client.ServerError, e:
+        assert 'training_dir' in e.message
+        assert e.status_code == 400
     else:
         assert False
 
@@ -235,8 +240,9 @@ def test_empty_param_api_key():
     client.env_monitor_close(instance_id)
     try:
         client.upload('tmp')
-    except requests.HTTPError, e:
-        assert e.response.status_code == 400
+    except gym_http_client.ServerError, e:
+        assert 'api_key' in e.message
+        assert e.status_code == 400
     else:
         assert False
 
@@ -248,8 +254,9 @@ def test_create_malformed():
     client = gym_http_client.Client(get_remote_base())
     try:
         client.env_create('bad string')
-    except requests.HTTPError, e:
-        assert e.response.status_code == 400
+    except gym_http_client.ServerError, e:
+        assert 'malformed environment ID' in e.message
+        assert e.status_code == 400
     else:
         assert False
 
