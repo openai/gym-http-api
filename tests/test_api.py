@@ -217,6 +217,29 @@ def test_missing_param_upload_directory():
     else:
         assert False
 
+@with_server
+def test_empty_param_api_key():
+    ''' Test client failure to provide non-empty JSON param: api_key'''
+    class BadClient(gym_http_client.Client):
+        def upload(self, training_dir, algorithm_id=None, api_key=None):
+            route = '/v1/upload/'
+            data = {'algorithm_id': algorithm_id,
+                    'training_dir': 'tmp', 
+                    'api_key': ''} # deliberately empty string
+            self._post_request(route, data)
+    client = BadClient(get_remote_base())
+    instance_id = client.env_create('CartPole-v0')
+    client.env_monitor_start(instance_id, 'tmp', force=True)
+    client.env_reset(instance_id)
+    client.env_step(instance_id, 1)
+    client.env_monitor_close(instance_id)
+    try:
+        client.upload('tmp')
+    except requests.HTTPError, e:
+        assert e.response.status_code == 400
+    else:
+        assert False
+
 
 ##### Gym-side errors #####
 

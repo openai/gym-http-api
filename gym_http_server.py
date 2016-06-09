@@ -102,10 +102,14 @@ class InvalidUsage(Exception):
 
 def get_required_param(request, param):
     try:
-        return request.get_json()[param]
+        value = request.get_json()[param]
     except KeyError, e:
         logger.info('Caught invalid request param')
         raise InvalidUsage('A required request parameter was not provided')
+    if not value: # present, but value is '' or []
+        logger.info('Caught invalid request param')
+        raise InvalidUsage('A required request parameter was not provided')        
+    return value
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
