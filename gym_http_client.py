@@ -3,8 +3,9 @@ import urlparse
 import json
 import os
 
-# Set this to True to see client-server exchange
-verbose = False
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class Client(object):
     """
@@ -30,7 +31,7 @@ class Client(object):
 
     def _post_request(self, route, data):
         url = urlparse.urljoin(self.remote_base, route)
-        if verbose: print( "POST {}\n{}".format(url, json.dumps(data)) )
+        logger.info("POST {}\n{}".format(url, json.dumps(data)))
         headers = {'Content-type': 'application/json'}
         resp = requests.post(urlparse.urljoin(self.remote_base, route),
                             data=json.dumps(data),
@@ -39,7 +40,7 @@ class Client(object):
 
     def _get_request(self, route):
         url = urlparse.urljoin(self.remote_base, route)
-        if verbose: print("GET {}".format(url))
+        logger.info("GET {}".format(url))
         resp = requests.get(url)
         return self._parse_server_error_or_raise_for_status(resp)
         

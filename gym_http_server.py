@@ -116,6 +116,16 @@ def get_required_param(json, param):
         raise InvalidUsage("A required request parameter '{}' was not provided".format(param))
     return value
 
+
+def get_optional_param(json, param, default):
+    if json is None:
+        logger.info("Request is not a valid json")
+        raise InvalidUsage("Request is not a valid json")
+    value = json.get(param, None)
+    if value is None:
+        value = default
+    return value
+
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
@@ -186,7 +196,8 @@ def env_step(instance_id):
     """  
     json = request.get_json()
     action = get_required_param(json, 'action')
-    [obs_jsonable, reward, done, info] = envs.step(instance_id, action, "render" in json)
+    render = get_optional_param(json, 'render', False)
+    [obs_jsonable, reward, done, info] = envs.step(instance_id, action, render)
     return jsonify(observation = obs_jsonable,
                     reward = reward, done = done, info = info)
 
@@ -245,8 +256,8 @@ def env_monitor_start(instance_id):
     j = request.get_json()
 
     directory = get_required_param(j, 'directory')
-    force = j.get('force', False)
-    resume = j.get('resume', False)
+    force = get_optional_param(j, 'force', False)
+    resume = get_optional_param(j, 'resume', False)
 
     envs.monitor_start(instance_id, directory, force, resume)
     return ('', 204)
@@ -280,7 +291,7 @@ def upload():
     j = request.get_json()
     training_dir = get_required_param(j, 'training_dir')
     api_key      = get_required_param(j, 'api_key')
-    algorithm_id = j.get('algorithm_id', None)
+    algorithm_id = get_optional_param(j, 'algorithm_id', None)
 
     try:
         gym.upload(training_dir, algorithm_id, writeup=None, api_key=api_key,
