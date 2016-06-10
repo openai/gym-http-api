@@ -3,8 +3,13 @@ gym-http-api
 
 This project provides a local REST API to the [gym](https://github.com/openai/gym) open-source library, allowing development in languages other than python.
 
-A python client is included, to demonstrate how to interact with the server. Contributions of clients in other languages are welcomed!
+A python client is included, to demonstrate how to interact with the server.
 
+Additional languages:
+  * C++ (author: Oleg Klimov)
+  * lua (in progress, author: Catherine Olsson)
+  * Scala (in progress, author: Flavio Truzzi)
+  * ... Contributions of clients in other languages are welcomed!
 
 Installation
 ============
@@ -42,7 +47,7 @@ You can also write code like this to create your own client, and test it out by 
 Testing
 ============
 
-This repository contains tests that can be run using the `nose2` framework. From a shell (such as bash) you can run nose2 directly:
+This repository contains integration tests, using the python client implementation to send requests to the local server. They can be run using the `nose2` framework. From a shell (such as bash) you can run nose2 directly:
 
     cd gym-http-api
     nose2

@@ -50,10 +50,12 @@ def with_server(fn):
 ##### Valid use cases #####
 
 @with_server
-def test_create_valid():
+def test_create_destroy():
     client = gym_http_client.Client(get_remote_base())
     instance_id = client.env_create('CartPole-v0')
     assert instance_id in client.env_list_all()
+    client.env_close(instance_id)
+    assert instance_id not in client.env_list_all()
 
 @with_server
 def test_action_space_discrete():
@@ -116,7 +118,8 @@ def test_bad_instance_id():
                  lambda x: client.env_action_space_info(x),
                  lambda x: client.env_observation_space_info(x),
                  lambda x: client.env_monitor_start(x, directory='tmp', force=True),
-                 lambda x: client.env_monitor_close(x)]
+                 lambda x: client.env_monitor_close(x),
+                 lambda x: client.env_close(x)]
     for call in try_these:
         try:
             call('bad_id')

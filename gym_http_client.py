@@ -97,6 +97,10 @@ class Client(object):
         route = '/v1/envs/{}/monitor/close/'.format(instance_id)
         self._post_request(route, None)
 
+    def env_close(self, instance_id):
+        route = '/v1/envs/{}/close/'.format(instance_id)
+        self._post_request(route, None)
+
     def upload(self, training_dir, algorithm_id=None, api_key=None):
         if not api_key:
             api_key = os.environ.get('OPENAI_GYM_API_KEY')

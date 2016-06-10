@@ -30,6 +30,12 @@ class Envs(object):
         except KeyError:
             raise InvalidUsage('Instance_id {} unknown'.format(instance_id))
 
+    def _remove_env(self, instance_id):
+        try:
+            del self.envs[instance_id]
+        except KeyError:
+            raise InvalidUsage('Instance_id {} unknown'.format(instance_id))
+
     def create(self, env_id):
         try:
             env = gym.make(env_id)
@@ -86,6 +92,11 @@ class Envs(object):
     def monitor_close(self, instance_id):
         env = self._lookup_env(instance_id)
         env.monitor.close()
+
+    def env_close(self, instance_id):
+        env = self._lookup_env(instance_id)
+        env.close()
+        self._remove_env(instance_id)
 
 ########## App setup ##########
 app = Flask(__name__)
@@ -272,6 +283,18 @@ def env_monitor_close(instance_id):
           for the environment instance
     """
     envs.monitor_close(instance_id)
+    return ('', 204)
+
+@app.route('/v1/envs/<instance_id>/close/', methods=['POST'])
+def env_close(instance_id):
+    """
+    Manually close an environment
+    
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc')
+          for the environment instance
+    """
+    envs.env_close(instance_id)
     return ('', 204)
 
 @app.route('/v1/upload/', methods=['POST'])
