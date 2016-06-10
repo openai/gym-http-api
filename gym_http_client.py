@@ -13,6 +13,8 @@ class Client(object):
     """
     def __init__(self, remote_base):
         self.remote_base = remote_base
+        self.session = requests.Session()
+        self.session.headers.update({'Content-type': 'application/json'})
 
     def _parse_server_error_or_raise_for_status(self, resp):
         j = {}
@@ -32,16 +34,14 @@ class Client(object):
     def _post_request(self, route, data):
         url = urlparse.urljoin(self.remote_base, route)
         logger.info("POST {}\n{}".format(url, json.dumps(data)))
-        headers = {'Content-type': 'application/json'}
-        resp = requests.post(urlparse.urljoin(self.remote_base, route),
-                            data=json.dumps(data),
-                            headers=headers)
+        resp = self.session.post(urlparse.urljoin(self.remote_base, route),
+                            data=json.dumps(data))
         return self._parse_server_error_or_raise_for_status(resp)
 
     def _get_request(self, route):
         url = urlparse.urljoin(self.remote_base, route)
         logger.info("GET {}".format(url))
-        resp = requests.get(url)
+        resp = self.session.get(url)
         return self._parse_server_error_or_raise_for_status(resp)
         
     def env_create(self, env_id):
