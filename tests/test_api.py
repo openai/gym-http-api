@@ -93,14 +93,14 @@ def test_step():
    client = gym_http_client.Client(get_remote_base())
 
    instance_id = client.env_create('CartPole-v0')
-   [observation, reward, done, info] = client.env_step(instance_id, 1)
+   [observation, reward, done, info] = client.env_step(instance_id, 0)
    assert len(observation) == 4
    assert type(reward) == float
    assert type(done) == bool
    assert type(info) == dict
 
    instance_id = client.env_create('FrozenLake-v0')
-   [observation, reward, done, info] = client.env_step(instance_id, 1)
+   [observation, reward, done, info] = client.env_step(instance_id, 0)
    assert type(observation) == int
 
 @with_server
