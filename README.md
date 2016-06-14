@@ -7,7 +7,7 @@ A python client is included, to demonstrate how to interact with the server.
 
 Additional languages:
   * C++ (within this repository, author: Oleg Klimov)
-  * lua (work-in-progress at [gym-client-lua](https://github.com/catherio/gym-client-lua))
+  * lua (within this repository, work-in-progress)
   * Scala (in progress, author: Flavio Truzzi)
   * ... Contributions of clients in other languages are welcomed!
 
@@ -30,18 +30,23 @@ To start the server from the command line, run this:
 
     python gym_server.py
 
-In a separate terminal, you can then try running the example agent and see what happens:
+In a separate terminal, you can then try running the example python agent and see what happens:
 
     python example_agent.py  
 
-You can also write code like this to create your own client, and test it out by creating a new environment:
+The example lua agent behaves very similarly:
+
+    cd binding-lua
+    lua example_agent.lua
+
+You can also write code like this to create your own client, and test it out by creating a new environment. For example, in python:
 
     remote_base = 'http://127.0.0.1:5000'
     client = Client(remote_base)
 
     env_id = 'CartPole-v0'
     instance_id = client.env_create(env_id)
-    exists = client.env_check_exists(instance_id)
+    client.env_step(instance_id, 0)
 
 
 Testing
