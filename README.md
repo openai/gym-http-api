@@ -6,8 +6,8 @@ This project provides a local REST API to the [gym](https://github.com/openai/gy
 A python client is included, to demonstrate how to interact with the server.
 
 Additional languages:
-  * C++ (author: Oleg Klimov)
-  * lua (in progress, author: Catherine Olsson)
+  * C++ (within this repository, author: Oleg Klimov)
+  * lua (work-in-progress at [gym-client-lua](https://github.com/catherio/gym-client-lua))
   * Scala (in progress, author: Flavio Truzzi)
   * ... Contributions of clients in other languages are welcomed!
 
