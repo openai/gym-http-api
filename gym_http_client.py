@@ -1,5 +1,5 @@
 import requests
-import urlparse
+import six.moves.urllib.parse as urlparse
 import json
 import os
 
