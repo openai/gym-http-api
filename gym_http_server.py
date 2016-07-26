@@ -83,6 +83,10 @@ class Envs(object):
             # also make it flat.
             info['low']  = [(x if x != -np.inf else -1e100) for x in np.array(space.low ).flatten()]
             info['high'] = [(x if x != +np.inf else +1e100) for x in np.array(space.high).flatten()]
+        elif info['name'] == 'HighLow':
+            info['num_rows'] = space.num_rows
+            info['matrix'] = [((float(x) if x != -np.inf else -1e100) if x != +np.inf else +1e100) for x in np.array(space.matrix).flatten()]
+            
         return info
     
     def monitor_start(self, instance_id, directory, force, resume):
