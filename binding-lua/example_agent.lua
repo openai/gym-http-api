@@ -15,6 +15,7 @@ instance_id = client:env_create(env_id)
 -- Run random experiment with monitor
 outdir = '/tmp/random-agent-results'
 client:env_monitor_start(instance_id, outdir, true)
+render = false
 
 episode_count = 100
 max_steps = 200
@@ -25,7 +26,7 @@ for i = 1,episode_count do
    obs = client:env_reset(instance_id)
    for j = 1,max_steps do
 	  action = math.random(0, 1)
-      ob, reward, done, info = client:env_step(instance_id, action)
+      ob, reward, done, info = client:env_step(instance_id, action, render)
       if done then
 		 break
 	  end
