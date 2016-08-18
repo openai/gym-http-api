@@ -54,9 +54,10 @@ function GymClient:env_reset(instance_id)
    return resp_data['observation']
 end
 
-function GymClient:env_step(instance_id, action)
+function GymClient:env_step(instance_id, action, render)
+   render = render or false
    route = '/v1/envs/'..instance_id..'/step/'
-   req_data = {action = action}
+   req_data = {action = action, render = render}
    resp_data = self:post_request(route, req_data)
    obs = resp_data['observation']
    reward = resp_data['reward']
