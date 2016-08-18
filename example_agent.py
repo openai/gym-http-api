@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # Run experiment, with monitor
     outdir = '/tmp/random-agent-results'
-    client.env_monitor_start(instance_id, outdir, force=True, resume=False, video_callable=1)
+    client.env_monitor_start(instance_id, outdir, force=True, resume=False, video_callable=False)
     
     episode_count = 100
     max_steps = 200

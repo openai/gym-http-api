@@ -20,6 +20,7 @@ function GymClient:get_request(route)
 
    resp = self.http:get(url, options)
    resp_data, pos, err = json.decode(resp.body)
+   print(resp_data, pos, err)
    -- TODO: needs error checking. see python client for example error checking.
    return resp_data
 end
@@ -28,7 +29,6 @@ function GymClient:post_request(route, req_data)
    url = self.remote_base .. route
    options = {}
    options.content_type = 'application/json'
-
    json_str = json.encode(req_data)
    resp = self.http:post(url, json_str, options)
    resp_data, pos, err = json.decode(resp.body)
@@ -54,10 +54,10 @@ function GymClient:env_reset(instance_id)
    return resp_data['observation']
 end
 
-function GymClient:env_step(instance_id, action, render)
+function GymClient:env_step(instance_id, action, render, video_callable)
    render = render or false
    route = '/v1/envs/'..instance_id..'/step/'
-   req_data = {action = action, render = render}
+   req_data = {action = action, render = render, video_callable = video_callable}
    resp_data = self:post_request(route, req_data)
    obs = resp_data['observation']
    reward = resp_data['reward']
@@ -78,13 +78,13 @@ function GymClient:env_observation_space_info(instance_id)
    return resp_data['info']
 end
 
-function GymClient:env_monitor_start(instance_id, directory,
-									force, resume)
+function GymClient:env_monitor_start(instance_id, directory, force, resume, video_callable)
    if not force then force = false end
    if not resume then resume = false end
    req_data = {directory = directory,
 			   force = tostring(force),
-			   resume = tostring(resume)}
+			   resume = tostring(resume),
+            video_callable = video_callable}
    route = '/v1/envs/'..instance_id..'/monitor/start/'
    resp_data  = self:post_request(route, req_data)
 end

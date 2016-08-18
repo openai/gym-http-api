@@ -12,7 +12,10 @@ instance_id = client:env_create(env_id)
 
 -- Run random experiment with monitor
 outdir = '/tmp/random-agent-results'
-client:env_monitor_start(instance_id, outdir, true)
+video_callable = 10
+resume = false
+force = true
+client:env_monitor_start(instance_id, outdir, force, resume, video_callable)
 render = false
 
 episode_count = 100
@@ -36,7 +39,7 @@ client:env_monitor_close(instance_id)
 
 -- Upload to the scoreboard. This expects the 'OPENAI_GYM_API_KEY'
 -- environment variable to be set on the client side.
-client:upload(outdir)
+-- client:upload(outdir)
 print('Lua client test ending')
 
 
