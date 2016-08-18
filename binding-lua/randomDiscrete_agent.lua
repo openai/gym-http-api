@@ -1,7 +1,5 @@
-require('math')
 local GymClient = require("gym_http_client")
-local HttpClient = require("httpclient")
-print('Testing lua client')
+
 -- Set up client
 base = 'http://127.0.0.1:5000'
 local client = GymClient.new(base)
@@ -16,7 +14,7 @@ client:env_monitor_start(instance_id, outdir, true)
 render = false
 
 episode_count = 100
-max_steps = 200
+max_steps = 500
 reward = 0
 done = False
 
@@ -26,7 +24,7 @@ for i = 1,episode_count do
 	  action = math.random(0, 1)
       ob, reward, done, info = client:env_step(instance_id, action, render)
       if done then
-		 break
+			break
 	  end
    end
 end
@@ -34,9 +32,5 @@ end
 -- Dump result info to disk
 client:env_monitor_close(instance_id)
 
--- Upload to the scoreboard. This expects the 'OPENAI_GYM_API_KEY'
--- environment variable to be set on the client side.
+-- Upload to the scoreboard. 'OPENAI_GYM_API_KEY' set on the client side
 client:upload(outdir)
-print('Lua client test ending')
-
-

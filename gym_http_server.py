@@ -335,5 +335,6 @@ def shutdown():
     return 'Server shutting down'
 
 if __name__ == '__main__':
+    print('Server starting...')
     app.run()
 
