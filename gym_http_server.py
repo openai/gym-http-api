@@ -278,7 +278,6 @@ def env_monitor_start(instance_id):
     force = get_optional_param(j, 'force', False)
     resume = get_optional_param(j, 'resume', False)
     video_callable = get_optional_param(j, 'video_callable', False)
-    print(envs)
     envs.monitor_start(instance_id, directory, force, resume, video_callable)
     return ('', 204)
 
