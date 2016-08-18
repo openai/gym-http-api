@@ -86,11 +86,12 @@ class Client(object):
         return info
 
     def env_monitor_start(self, instance_id, directory,
-                              force=False, resume=False):
+                              force=False, resume=False, video_callable=False):
         route = '/v1/envs/{}/monitor/start/'.format(instance_id)
         data = {'directory': directory,
                 'force': force,
-                'resume': resume}
+                'resume': resume,
+                'video_callable': video_callable}
         self._post_request(route, data)
 
     def env_monitor_close(self, instance_id):

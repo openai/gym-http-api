@@ -89,9 +89,13 @@ class Envs(object):
             
         return info
     
-    def monitor_start(self, instance_id, directory, force, resume):
+    def monitor_start(self, instance_id, directory, force, resume, video_callable):
         env = self._lookup_env(instance_id)
-        env.monitor.start(directory, force=force, resume=resume)
+        if video_callable == False:
+            v_c = lambda count: False
+        else:
+            v_c = lambda count: count % video_callable == 0
+        env.monitor.start(directory, force=force, resume=resume, video_callable=v_c)
 
     def monitor_close(self, instance_id):
         env = self._lookup_env(instance_id)
@@ -273,8 +277,9 @@ def env_monitor_start(instance_id):
     directory = get_required_param(j, 'directory')
     force = get_optional_param(j, 'force', False)
     resume = get_optional_param(j, 'resume', False)
-
-    envs.monitor_start(instance_id, directory, force, resume)
+    video_callable = get_optional_param(j, 'video_callable', False)
+    print(envs)
+    envs.monitor_start(instance_id, directory, force, resume, video_callable)
     return ('', 204)
 
 @app.route('/v1/envs/<instance_id>/monitor/close/', methods=['POST'])
