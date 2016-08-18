@@ -1,5 +1,6 @@
 local HttpClient = require("httpclient")
 local json = require("dkjson")
+local os = require 'os'
 -- TODO: what guidance does luarocks need to find these dependencies?
 
 local GymClient = {}
@@ -13,16 +14,29 @@ function m.new(remote_base)
    return self
 end
 
+function GymClient:parse_server_error_or_raise_for_status(resp)
+   local resp_data, pos, err = {}
+   if resp.err then
+      err = resp.err
+      print('Error: ' .. err)
+      os.exit()
+   else
+      if resp.code ~= 200 then
+         err = resp.status_line
+         -- Descriptive message from the server side
+         print('Response: ' .. err)
+      end
+      resp_data, pos, err = json.decode(resp.body)
+   end
+   return resp_data, pos, err
+end
+
 function GymClient:get_request(route)
    url = self.remote_base .. route
    options = {}
    options.content_type = 'application/json'
-
    resp = self.http:get(url, options)
-   resp_data, pos, err = json.decode(resp.body)
-   print(resp_data, pos, err)
-   -- TODO: needs error checking. see python client for example error checking.
-   return resp_data
+   return self:parse_server_error_or_raise_for_status(resp)
 end
 
 function GymClient:post_request(route, req_data)
@@ -31,8 +45,7 @@ function GymClient:post_request(route, req_data)
    options.content_type = 'application/json'
    json_str = json.encode(req_data)
    resp = self.http:post(url, json_str, options)
-   resp_data, pos, err = json.decode(resp.body)
-   return resp_data
+   return self:parse_server_error_or_raise_for_status(resp)
 end
 
 function GymClient:env_create(env_id)
