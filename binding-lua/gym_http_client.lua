@@ -18,7 +18,7 @@ function GymClient:parse_server_error_or_raise_for_status(resp)
    local resp_data, pos, err = {}
    if resp.err then
       err = resp.err
-      print('Error: ' .. err)
+      print('Response error: ' .. err)
       os.exit()
    else
       if resp.code ~= 200 then
