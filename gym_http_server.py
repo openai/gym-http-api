@@ -56,7 +56,7 @@ class Envs(object):
 
     def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
-        action_from_json = int(env.action_space.from_jsonable(action))
+        action_from_json = env.action_space.from_jsonable(action)
         [observation, reward, done, info] = env.step(action_from_json)
         if render: env.render()
         obs_jsonable = env.observation_space.to_jsonable(observation)
