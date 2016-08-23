@@ -272,20 +272,20 @@ def test_create_malformed():
     else:
         assert False
 
-# @with_server
-# def test_missing_API_key():
-#    client = gym_http_client.Client(get_remote_base())
-#    cur_key = os.environ.get('OPENAI_GYM_API_KEY')
-#    os.environ['OPENAI_GYM_API_KEY'] = ''
-#    try:
-#        print 'UPLOADING'
-#        print cur_key
-#        client.upload('tmp')
-#        print '*****'
-#    except requests.HTTPError, e:
-#        assert e.response.status_code == 400
-#    else:
-#        assert False
-#    finally:
-#        if cur_key:
-#            os.environ['OPENAI_GYM_API_KEY'] = cur_key
+@with_server
+def test_missing_API_key():
+   client = gym_http_client.Client(get_remote_base())
+   cur_key = os.environ.get('OPENAI_GYM_API_KEY')
+   os.environ['OPENAI_GYM_API_KEY'] = ''
+   try:
+       print 'UPLOADING'
+       print cur_key
+       client.upload('tmp')
+       print '*****'
+   except requests.HTTPError, e:
+       assert e.response.status_code == 400
+   else:
+       assert False
+   finally:
+       if cur_key:
+           os.environ['OPENAI_GYM_API_KEY'] = cur_key
