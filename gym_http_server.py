@@ -56,9 +56,12 @@ class Envs(object):
 
     def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
-        nice_action = np.array(action)
+        if isinstance( action, ( int, long ) ):
+            nice_action = action
+        else:
+            nice_action = np.array(action)
         if render: env.render()
-        [observation, reward, done, info] = env.step(nice_action)
+        [observation, reward, done, info] = env.step(action)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
 

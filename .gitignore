@@ -19,6 +19,8 @@
 
 logs/
 
+tmp/
+
 .ipynb_checkpoints
 ghostdriver.log
 

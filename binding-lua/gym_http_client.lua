@@ -82,6 +82,7 @@ function GymClient:env_step(instance_id, action, render, video_callable)
       end
    end
 
+   print(action, action_clean)
    req_data = {action = action_clean, render = render, video_callable = video_callable}
    resp_data = self:post_request(route, req_data)
    obs = resp_data['observation']
