@@ -3,6 +3,7 @@ from functools import wraps
 import uuid
 import gym
 import numpy as np
+import six
 
 import logging
 logger = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ class Envs(object):
 
     def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
-        if isinstance( action, ( int, long ) ):
+        if isinstance( action, six.integer_types ):
             nice_action = action
         else:
             nice_action = np.array(action)
