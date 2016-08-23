@@ -71,7 +71,6 @@ function GymClient:env_step(instance_id, action, render, video_callable)
    render = render or false
    video_callable = video_callable or false
    route = '/v1/envs/'..instance_id..'/step/'
-   
    local action_clean
    if type(action) == 'number' then
       action_clean = action
@@ -81,8 +80,6 @@ function GymClient:env_step(instance_id, action, render, video_callable)
          action_clean[i] = action[i]
       end
    end
-
-   print(action, action_clean)
    req_data = {action = action_clean, render = render, video_callable = video_callable}
    resp_data = self:post_request(route, req_data)
    obs = resp_data['observation']
