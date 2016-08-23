@@ -272,8 +272,6 @@ def test_create_malformed():
     else:
         assert False
 
-# NOTE: I can't seem to make it *fail* to upload, even when
-# there's clearly no api_key passed...
 @with_server
 def test_missing_API_key():
    client = gym_http_client.Client(get_remote_base())
