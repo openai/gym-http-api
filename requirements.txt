@@ -1,5 +1,5 @@
 Flask
-numpy
+numpy==1.11.1rc1
 gym
 Requests
 nose2
