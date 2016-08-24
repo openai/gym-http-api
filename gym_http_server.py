@@ -205,7 +205,7 @@ def env_reset(instance_id):
         for the environment instance
     Returns:
         - observation: the initial observation of the space
-    """  
+    """
     observation = envs.reset(instance_id)
     return jsonify(observation = observation)
 
@@ -307,9 +307,6 @@ def env_monitor_start(instance_id):
         - resume (default=False): Retain the training data
         already in this directory, which will be merged with
         our new data
-    
-    (NOTE: the 'video_callable' parameter from the native
-    env.monitor.start function is NOT implemented)
     """  
     j = request.get_json()
 

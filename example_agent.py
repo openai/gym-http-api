@@ -40,7 +40,8 @@ if __name__ == '__main__':
         ob = client.env_reset(instance_id)
 
         for j in range(max_steps):
-            action = agent.act(ob, reward, done)
+            # action = agent.act(ob, reward, done)
+            action = client.env_action_space_sample(instance_id)
             ob, reward, done, _ = client.env_step(instance_id, action, render=False)
             if done:
                 break

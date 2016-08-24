@@ -78,6 +78,18 @@ class Client(object):
         info = resp['info']
         return info
 
+    def env_action_space_sample(self, instance_id):
+        route = '/v1/envs/{}/action_space/sample'.format(instance_id)
+        resp = self._get_request(route)
+        action = resp['action']
+        return action
+
+    def env_action_space_contains(self, instance_id, x):
+        route = '/v1/envs/{}/action_space/contains/{}'.format(instance_id, x)
+        resp = self._get_request(route)
+        member = resp['member']
+        return member
+
     def env_observation_space_info(self, instance_id):
         route = '/v1/envs/{}/observation_space/'.format(instance_id)
         resp = self._get_request(route)
