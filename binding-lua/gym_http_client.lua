@@ -96,6 +96,20 @@ function GymClient:env_action_space_info(instance_id)
    return resp_data['info']
 end
 
+function GymClient:env_action_space_sample(instance_id)
+   route = '/v1/envs/'..instance_id..'/action_space/sample'
+   resp_data = self:get_request(route)
+   action = resp_data['action']
+   return action
+end
+
+function GymClient:env_action_space_contains(instance_id)
+   route = '/v1/envs/'..instance_id..'/action_space/contains'
+   resp_data = self:get_request(route)
+   member = resp['member']
+   return member
+end
+
 function GymClient:env_observation_space_info(instance_id)
    route = '/v1/envs/'..instance_id..'/observation_space/'
    resp_data = self:get_request(route)
