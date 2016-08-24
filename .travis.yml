@@ -1,7 +1,6 @@
 language: python
 python:
 - '2.7'
-- '3.4'
 before_install:
 - Xvfb :12 -screen 0 800x600x24 +extension RANDR &
 env:
