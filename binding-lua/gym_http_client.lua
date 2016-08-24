@@ -18,12 +18,12 @@ function GymClient:parse_server_error_or_raise_for_status(resp)
    local resp_data, pos, err = {}
    if resp.err then
       err = resp.err
-      print('Response error: ' .. err)
+      -- print('Response error: ' .. err)
    else
       if resp.code ~= 200 then
          err = resp.status_line
          -- Descriptive message from the server side
-         print('Response: ' .. err)
+         -- print('Response: ' .. err)
       end
       resp_data, pos, err = json.decode(resp.body)
    end
@@ -56,7 +56,6 @@ end
 
 function GymClient:env_list_all()
    route = '/v1/envs/'
-   print(route)
    resp_data = self:get_request(route)
    return resp_data['all_envs']
 end
