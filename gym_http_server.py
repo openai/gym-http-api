@@ -68,8 +68,15 @@ class Envs(object):
     
     def get_action_space_sample(self, instance_id):
         env = self._lookup_env(instance_id)
-        return env.action_space.sample()
-    
+        action = env.action_space.sample()
+        if isinstance(action, (list, tuple)) or ('numpy' in str(type(action))):
+            try:
+                action = action.tolist()
+            except TypeError:
+                print(type(action))
+                print('TypeError')
+        return action
+
     def get_action_space_contains(self, instance_id, x):
         env = self._lookup_env(instance_id)
         return env.action_space.contains(int(x))

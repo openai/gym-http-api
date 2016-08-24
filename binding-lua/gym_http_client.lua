@@ -19,7 +19,6 @@ function GymClient:parse_server_error_or_raise_for_status(resp)
    if resp.err then
       err = resp.err
       print('Response error: ' .. err)
-      os.exit()
    else
       if resp.code ~= 200 then
          err = resp.status_line
@@ -72,16 +71,7 @@ function GymClient:env_step(instance_id, action, render, video_callable)
    render = render or false
    video_callable = video_callable or false
    route = '/v1/envs/'..instance_id..'/step/'
-   local action_clean
-   if type(action) == 'number' then
-      action_clean = action
-   else
-      action_clean = {}
-      for i = 1, action:size()[1] do
-         action_clean[i] = action[i]
-      end
-   end
-   req_data = {action = action_clean, render = render, video_callable = video_callable}
+   req_data = {action = action, render = render, video_callable = video_callable}
    resp_data = self:post_request(route, req_data)
    obs = resp_data['observation']
    reward = resp_data['reward']
