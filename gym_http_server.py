@@ -62,7 +62,7 @@ class Envs(object):
         else:
             nice_action = np.array(action)
         if render: env.render()
-        [observation, reward, done, info] = env.step(action)
+        [observation, reward, done, info] = env.step(nice_action)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
     
