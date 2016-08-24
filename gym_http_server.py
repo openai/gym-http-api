@@ -65,7 +65,15 @@ class Envs(object):
         [observation, reward, done, info] = env.step(action)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
-
+    
+    def get_action_space_sample(self, instance_id):
+        env = self._lookup_env(instance_id)
+        return env.action_space.sample()
+    
+    def get_action_space_contains(self, instance_id, x):
+        env = self._lookup_env(instance_id)
+        return env.action_space.contains(int(x))
+    
     def get_action_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
         return self._get_space_properties(env.action_space)
@@ -241,6 +249,33 @@ def env_action_space_info(instance_id):
     info = envs.get_action_space_info(instance_id)
     return jsonify(info = info)
 
+@app.route('/v1/envs/<instance_id>/action_space/sample', methods=['GET'])
+def env_action_space_sample(instance_id):
+    """
+    Get a sample from the env's action_space
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
+    Returns:
+        - action: a randomly sampled element belonging to the action_space
+    """
+    action = envs.get_action_space_sample(instance_id)
+    return jsonify(action = action)
+
+@app.route('/v1/envs/<instance_id>/action_space/contains/<x>', methods=['GET'])
+def env_action_space_contains(instance_id, x):
+    """
+    Assess that value is a member of the env's action_space
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
+    - x: the value to be checked as member
+    Returns:
+        - member: whether the value passed as parameter belongs to the action_space
+    """
+    member = envs.get_action_space_contains(instance_id, x)
+    return jsonify(member = member)
+
 @app.route('/v1/envs/<instance_id>/observation_space/', methods=['GET'])
 def env_observation_space_info(instance_id):
     """
@@ -343,6 +378,6 @@ def shutdown():
     return 'Server shutting down'
 
 if __name__ == '__main__':
-    print('Server starting...')
+    print('Server starting at: ' + 'http://127.0.0.1:5000')
     app.run()
 

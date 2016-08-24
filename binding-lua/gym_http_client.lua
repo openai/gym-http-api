@@ -57,6 +57,7 @@ end
 
 function GymClient:env_list_all()
    route = '/v1/envs/'
+   print(route)
    resp_data = self:get_request(route)
    return resp_data['all_envs']
 end

@@ -66,6 +66,23 @@ def test_action_space_discrete():
     assert action_info['n'] == 2
 
 @with_server
+def test_action_space_sample():
+    client = gym_http_client.Client(get_remote_base())
+    instance_id = client.env_create('CartPole-v0')
+    action = client.env_action_space_sample(instance_id)
+    assert 0 <= action < 2
+
+@with_server
+def test_action_space_contains():
+    client = gym_http_client.Client(get_remote_base())
+    instance_id = client.env_create('CartPole-v0')
+    action_info = client.env_action_space_info(instance_id)
+    assert action_info['n'] == 2
+    assert client.env_action_space_contains(instance_id, 0) == True
+    assert client.env_action_space_contains(instance_id, 1) == True
+    assert client.env_action_space_contains(instance_id, 2) == False
+
+@with_server
 def test_observation_space_box():
     client = gym_http_client.Client(get_remote_base())    
     instance_id = client.env_create('CartPole-v0')
