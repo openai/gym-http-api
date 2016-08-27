@@ -1,4 +1,4 @@
-import * as Gym from "../gym";
+import { Client } from "../lib/gym_http_client";
 
 class RandomDiscreteAgent {
     constructor(public n: number) {}
@@ -8,7 +8,7 @@ class RandomDiscreteAgent {
     }
 }
 
-const client = Gym.createClient("127.0.0.1", 5000),
+const client = new Client("127.0.0.1", 5000),
     envID = "CartPole-v0", 
     numTrials = 3;
 
