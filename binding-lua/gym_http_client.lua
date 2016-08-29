@@ -1,7 +1,6 @@
 local HttpClient = require("httpclient")
 local json = require("dkjson")
 local os = require 'os'
--- TODO: what guidance does luarocks need to find these dependencies?
 
 local GymClient = {}
 local m = {}
