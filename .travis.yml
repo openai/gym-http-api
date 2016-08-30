@@ -1,11 +1,11 @@
 language: python
 python:
-  - "2.7"
-  - "3.4"
+- '2.7'
+- '3.4'
 before_install:
-  - Xvfb :12 -screen 0 800x600x24 +extension RANDR &
+- Xvfb :12 -screen 0 800x600x24 +extension RANDR &
 env:
-  secure: JuKMjiXidl1lP5bwLnvd9Mh4d+NSr9icKgrP0qhfGjQxt5CRqc5ZXqB860bh5YXhAlPGvJJDfKJF5ZvKqLzKJ5f7R/83+wM75nQOW9ytM4EsnPghb42+JLw0MQrOVx7Rf+XGv57sgFqNuFM0e8Fieew+hKKHTv2kzs0Pgh+nV7IocN2o1Fx8iWccDeYvgy+YHG4CxqdQzVvd4A0h/WPVG0TehIzhRjNDZkf3iliUfAlUKf/QI6OVv2gCQsGl28K/jEk8XHHrWAC+F23eFUSiXbvYbbkNVLwqj11Qw64vTLIyKFYD3a9UxK2agldk2eAoeXjGp1vCY8hy7vWRaUuc7ilHkO2dvJO9b3oCLgtzmGvIyJc5USI3CEQ50uazK0q3qQ2ZVs/JZt/QQ+UdMLkdHewWXeSs8IWOcMMWCaIINriOJmnxDzeMDghb1yoQWeRiCrD2feDwZ8fiAvkZ9Gfql8Wbu1Yb49lGSJAvRb5+Ysegh8xactprtXUdoGJxakwHvKlfIUNG2b8M6h+LvFJMYuH32G6ZjFI/HulDbCTGAd+kyfyJuP5MOm/q9uODZLQPuowMpm+qPjOhSXBni+xdPAtrN+LSOUG2BniK3gW4MCayGgGbRl7V0nxW6EcZQpy7cqIZEQpa6ZLNEjSgzUDxg0pO9yEVpfdSj4SrLjq+A6A=
-  # contains encrypted API key to upload
-install: "pip install -r requirements.txt"
+  global:
+    secure: rwRcKoBUVrkOhfKbp/bd70nKxPAGWsHxbFCgvh+2yBroZuvmt982zlcBR6CHnuEopKaSETVPnA62gPGOu6GKvW+QU04ZLXxwolv8GJnWiElUo2cWwkvRnOssTfSjKHfPKvSkefWP/O0uhsHfku68fDsspovRkOSpB7gVGoF3JC18xHQPeHIG54EqSUbYz+CrhnJFRHgDoa9kcgAP9mXmKUCskvzOYc210nkcbFo8eURhEvaiOtQ/okMGmRa8Hf/fseMZv+Fdi5RiGp3NUSEu7l67FnmPeqZ+cdIJTJywujMcyd8C/dgjwTLExOD+HP5qo3/PhbDR5b8+F85SU8ITO0f1jKRDd3eeu+auKmf6cXERqCcKcA6l/I2dbDrVKNrQcQPqYNyQ6IzmOvS0A4PIbscjU59FM7c48/EW5JnuicRMKzgth5FevkzeWhOJjWdun4dTSlYpPtSZlBsYneRnNLw+abQTMSYZGMENDME/V4ZpqKGvRsEFQHRxn3A3uevZuBFg7vWzKoYaUAqMg8Mgh5T9pBrlqFxH2T17Zrf81eoKQijboGMpVXbpN11ofwuBY2Hw+Fhexsoz0cy6vAL8feBisD6YCKmu7MLbfZIT6Zbq8KUdRDWrJgJkXMPxyO6Wup91vu7vUXKdpPZFEfCaqD5zvic7Nup+nKQPEbgtZ9s=
+install: pip install -r requirements.txt
 script: nose2
