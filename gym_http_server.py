@@ -384,4 +384,3 @@ def shutdown():
 if __name__ == '__main__':
     print('Server starting at: ' + 'http://127.0.0.1:5000')
     app.run()
-

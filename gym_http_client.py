@@ -153,7 +153,3 @@ if __name__ == '__main__':
     [observation, reward, done, info] = client.env_step(instance_id, 1, True)
     client.env_monitor_close(instance_id)
     client.upload(training_dir='tmp')
-
-    
-
-
