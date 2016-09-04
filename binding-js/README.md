@@ -1,0 +1,22 @@
+# gym-http-api: JavaScript Binding
+
+
+## Building
+
+```
+npm install
+gulp
+```
+
+## Example
+
+This should be run from the `binding-js` directory.
+
+```javascript
+var gym = require("./dist/lib/gymHTTPClient")
+var client = new gym.default("http://127.0.0.1:5000")
+
+var p = client.envCreate("CartPole-v0");
+p.then((reply) => console.log("Reply: " + reply))
+p.catch((error) => console.log("Error : " + error))
+```
