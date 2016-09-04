@@ -5,7 +5,16 @@ import * as axios from "axios";
 import * as path from "path";
 
 export default class Client {
-    constructor(public remote) { }
+    shouldLog: boolean;
+
+    constructor(public remote) {
+        this.shouldLog = (process.env.SHOULD_LOG === "true");
+        if (this.shouldLog) {
+            console.log("Logging enabled")
+        } else {
+            console.log("To enable logging, set SHOULD_LOG=true")
+        }
+    }
 
     _parseServerErrors<T>(promise: Axios.IPromise<Axios.AxiosXHR<T>>):
         Axios.IPromise<T> {
@@ -25,12 +34,16 @@ export default class Client {
     }
 
     _post<T>(route: string, data: any): Axios.IPromise<T> {
-        console.log(`POST ${route}\n${JSON.stringify(data)}`);
+        if (this.shouldLog) {
+            console.log(`POST ${route}\n${JSON.stringify(data)}`);
+        }
         return this._parseServerErrors(axios.post(this._buildURL(route), data));
     }
 
     _get<T>(route: string): Axios.IPromise<T> {
-        console.log(`GET ${route}`);
+        if (this.shouldLog) {
+            console.log(`GET ${route}`);
+        }
         return this._parseServerErrors(axios.get(this._buildURL(route)));
     }
 

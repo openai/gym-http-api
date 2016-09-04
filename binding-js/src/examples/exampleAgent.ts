@@ -22,8 +22,8 @@ const client = new Client("http://127.0.0.1:5000"),
 let instanceID: string = undefined,
     agent: RandomDiscreteAgent = undefined;
 
-function actOutStep(step: number, reward: number, observation: any, done: boolean):
-    Promise.IThenable<boolean> {
+function actOutStep(step: number, reward: number, observation: any,
+    done: boolean): Promise.IThenable<boolean> {
     return new Promise((resolve, reject) => {
         if (step >= maxSteps) {
             resolve(null);
@@ -34,7 +34,8 @@ function actOutStep(step: number, reward: number, observation: any, done: boolea
                     if (reply.done) {
                         resolve(null);
                     } else {
-                        resolve(actOutStep(step + 1, reply.reward, reply.observation, reply.done));
+                        resolve(actOutStep(step + 1, reply.reward,
+                            reply.observation, reply.done));
                     }
                 }).catch((error) => { throw error });
         }
@@ -46,8 +47,9 @@ function actOutEpisode(episode: number): Promise.IThenable<boolean> {
         if (episode >= episodeCount) {
             resolve(true);
         } else {
-            resolve(client.envReset(instanceID)
-                .then((reply) => actOutStep(0, 0, reply.observation, false)));
+            client.envReset(instanceID)
+                .then((reply) => actOutStep(0, 0, reply.observation, false))
+                .then((done) => resolve(actOutEpisode(episode + 1)));
         }
     })
 }
@@ -67,10 +69,10 @@ client.envCreate(envID)
     }).then(() => {
         // Upload to the scoreboard. This expects the 'OPENAI_GYM_API_KEY'
         // environment variable to be set on the client side.
-        console.log(`Successfully ran example agent using
-            gym_http_client. Now trying to upload results to the
-            scoreboard. If this fails, you likely need to set
-            OPENAI_GYM_API_KEY=<your_api_key>`);
+        console.log("Successfully ran example agent using " +
+            "gym_http_client. Now trying to upload results to the " +
+            "scoreboard. If this fails, you likely need to set " +
+            "OPENAI_GYM_API_KEY=<your_api_key>");
         return client.upload(outDir)
     }).then(() => {
         console.log("Data uploaded successfully");
