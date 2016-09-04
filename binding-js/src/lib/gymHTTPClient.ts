@@ -48,7 +48,7 @@ export default class Client {
 
     // POST `/v1/envs/<instanceID>/reset/`
     envReset(instanceID: string): Axios.IPromise<ioInterfaces.EnvResetReply> {
-        const route = `/v1/envs/${instanceID}/reset`;
+        const route = `/v1/envs/${instanceID}/reset/`;
         return this._post<ioInterfaces.EnvResetReply>(route, null)
             .then((value) => value.observation);
     }
@@ -56,7 +56,7 @@ export default class Client {
     // POST `/v1/envs/<instanceID>/step/`
     envStep(instanceID: string, action: number, render: boolean = false):
         Axios.IPromise<ioInterfaces.StepReply> {
-        const route = `/v1/envs/${instanceID}/step`;
+        const route = `/v1/envs/${instanceID}/step/`;
         const data = { action, render };
         return this._post<ioInterfaces.StepReply>(route, data)
             .then((value) => value);
@@ -65,7 +65,7 @@ export default class Client {
     // GET `/v1/envs/<instanceID>/action_space/`
     envActionSpaceInfo(instanceID: string):
         Axios.IPromise<ioInterfaces.ActionSpaceReply> {
-        const route = `/v1/envs/${instanceID}/action_space`
+        const route = `/v1/envs/${instanceID}/action_space/`
         return this._get<ioInterfaces.ActionSpaceReply>(route)
             .then((reply) => reply);
     }
@@ -73,7 +73,7 @@ export default class Client {
     // GET `/v1/envs/<instanceID>/observation_space/`
     envObservationSpaceInfo(instanceID: string):
         Axios.IPromise<ioInterfaces.ObservationSpaceReply> {
-        const route = `/v1/envs/${instanceID}/observation_space`;
+        const route = `/v1/envs/${instanceID}/observation_space/`;
         return this._get<ioInterfaces.ObservationSpaceReply>(route)
             .then((reply) => reply);
     }
