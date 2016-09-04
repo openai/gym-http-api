@@ -1,7 +1,7 @@
 import { Client } from "../lib/gym_http_client";
 
 class RandomDiscreteAgent {
-    constructor(public n: number) {}
+    constructor(public n: number) { }
 
     act(observation, reward, done: boolean): number {
         return Math.floor(Math.random() * this.n);
@@ -9,7 +9,7 @@ class RandomDiscreteAgent {
 }
 
 const client = new Client("127.0.0.1", 5000),
-    envID = "CartPole-v0", 
+    envID = "CartPole-v0",
     numTrials = 3;
 
 // Set up environment
@@ -47,7 +47,7 @@ client.envMonitorClose(instanceID)
 
 // Upload to the scoreboard. This expects the 'OPENAI_GYM_API_KEY'
 // environment variable to be set on the client side.
-console.log("Successfully ran example agent using " + 
+console.log("Successfully ran example agent using " +
     "gym_http_client. Now trying to upload results to the " +
     "scoreboard. If this fails, you likely need to set " +
     "OPENAI_GYM_API_KEY=<your_api_key>");
