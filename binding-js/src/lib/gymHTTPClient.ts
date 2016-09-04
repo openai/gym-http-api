@@ -35,9 +35,9 @@ export class Client {
     }
 
     // POST `/v1/envs/`
-    env_create(env_id): Axios.IPromise<ioInterfaces.NewEnvInstanceReply> {
+    env_create(envID: string): Axios.IPromise<ioInterfaces.NewEnvInstanceReply> {
         return this._post<ioInterfaces.NewEnvInstanceReply>("/v1/envs/", 
-            { env_id }).then((value) => value.data);
+            { env_id: envID }).then((value) => value.data);
     }
 
     // GET `/v1/envs/`
@@ -46,72 +46,75 @@ export class Client {
             .then((value) => value.data);
     }
 
-    // POST `/v1/envs/<instance_id>/reset/`
-    env_reset(instance_id: string): Axios.IPromise<ioInterfaces.EnvResetReply> {
-        const route = `/v1/envs/${instance_id}/reset`;
+    // POST `/v1/envs/<instanceID>/reset/`
+    env_reset(instanceID: string): Axios.IPromise<ioInterfaces.EnvResetReply> {
+        const route = `/v1/envs/${instanceID}/reset`;
         return this._post<ioInterfaces.EnvResetReply>(route, null)
             .then((value) => value.data.observation);
     }
 
-    // POST `/v1/envs/<instance_id>/step/`
-    env_step(instance_id: string, action: number, render: boolean = false):
+    // POST `/v1/envs/<instanceID>/step/`
+    env_step(instanceID: string, action: number, render: boolean = false):
         Axios.IPromise<ioInterfaces.StepReply> {
-        const route = `/v1/envs/${instance_id}/step`;
+        const route = `/v1/envs/${instanceID}/step`;
         const data = { action, render };
         return this._post<ioInterfaces.StepReply>(route, data)
             .then((value) => value.data);
     }
 
-    // GET `/v1/envs/<instance_id>/action_space/`
-    env_action_space_info(instance_id: string): 
+    // GET `/v1/envs/<instanceID>/action_space/`
+    env_action_space_info(instanceID: string): 
     Axios.IPromise<ioInterfaces.ActionSpaceReply> {
-        const route = `/v1/envs/${instance_id}/action_space`
+        const route = `/v1/envs/${instanceID}/action_space`
         return this._get<ioInterfaces.ActionSpaceReply>(route)
             .then((reply) => reply.data.info);
     }
 
-    // GET `/v1/envs/<instance_id>/observation_space/`
-    env_observation_space_info(instance_id: string): Axios.IPromise<ioInterfaces.ObservationSpaceReply> {
-        const route = `/v1/envs/${instance_id}/observation_space`;
+    // GET `/v1/envs/<instanceID>/observation_space/`
+    env_observation_space_info(instanceID: string):
+    Axios.IPromise<ioInterfaces.ObservationSpaceReply> {
+        const route = `/v1/envs/${instanceID}/observation_space`;
         return this._get<ioInterfaces.ObservationSpaceReply>(route)
             .then((reply) => reply.data.info);
     }
 
-    // POST `/v1/envs/<instance_id>/monitor/start/`
-    env_monitor_start(instance_id: string, directory: string,
+    // POST `/v1/envs/<instanceID>/monitor/start/`
+    env_monitor_start(instanceID: string, directory: string,
         force: boolean = false, resume: boolean = false):
         Axios.IPromise<void> {
-        const route = `/v1/envs/${instance_id}/monitor/start/`;
+        const route = `/v1/envs/${instanceID}/monitor/start/`;
         return this._post(route, { directory, force, resume })
             .then((reply) => { return });
     }
 
-    // POST `/v1/envs/<instance_id>/monitor/close/`
-    env_monitor_close(instance_id) {
-        route = '/v1/envs/{}/monitor/close/'.format(instance_id)
-        this._post(route, None)
+    // POST `/v1/envs/<instanceID>/monitor/close/`
+    env_monitor_close(instanceID: string): Axios.IPromise<void> { 
+        const route = `/v1/envs/${instanceID}/monitor/close/`
+        return this._post(route, null)
+            .then((reply) => { return });
     }
 
-    // POST `/v1/envs/<instance_id>/close`
-    env_close(instance_id) {
-        route = '/v1/envs/{}/close/'.format(instance_id)
-        this._post(route, None)
+    // POST `/v1/envs/<instanceID>/close`
+    env_close(instanceID: string): Axios.IPromise<void> {
+        const route = `/v1/envs/${instanceID}/close/`
+        return this._post(route, null)
+            .then((reply) => { return });
     }
 
     // POST `/v1/upload/`
-    upload(training_dir, algorithm_id = None, api_key = None) {
-        if not api_key:
-            api_key = os.environ.get('OPENAI_GYM_API_KEY')
-
+    upload(trainingDir: string, algorithmID: string = undefined, apiKey: string = undefined) {
+        if (apiKey === undefined) {            
+            apiKey = process.env["OPENAI_GYM_API_KEY"];
+        }
         this._post("/v1/upload/", {
-            'training_dir': training_dir,
-            'algorithm_id': algorithm_id,
-            'api_key': api_key
+            training_dir: trainingDir,
+            algorithm_id: algorithmID,
+            api_key: apiKey
         });
     }
 
     // POST `/v1/shutdown/`
     shutdown_server(self) {
-        this._post('/v1/shutdown/', null)
+        this._post("/v1/shutdown/", null)
     }
 }
