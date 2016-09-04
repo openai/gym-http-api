@@ -21,15 +21,15 @@ export default class Client {
     }
 
     _buildURL(route: string): string {
-        return `${this.remote}/${route}`;
+        return `${this.remote}${route}`;
     }
 
-    _post<T>(route: string, data: any): Axios.IPromise<Axios.AxiosXHR<T>> {
+    _post<T>(route: string, data: any): Axios.IPromise<T> {
         console.log(`POST ${route}\n${JSON.stringify(data)}`);
         return this._parseServerErrors(axios.post(this._buildURL(route), data));
     }
 
-    _get<T>(route: string): Axios.IPromise<Axios.AxiosXHR<T>> {
+    _get<T>(route: string): Axios.IPromise<T> {
         console.log(`GET ${route}`);
         return this._parseServerErrors(axios.get(this._buildURL(route)));
     }
@@ -37,20 +37,20 @@ export default class Client {
     // POST `/v1/envs/`
     envCreate(envID: string): Axios.IPromise<ioInterfaces.NewEnvInstanceReply> {
         return this._post<ioInterfaces.NewEnvInstanceReply>("/v1/envs/",
-            { env_id: envID }).then((value) => value.data);
+            { env_id: envID }).then((value) => value);
     }
 
     // GET `/v1/envs/`
     envListAll(): Axios.IPromise<ioInterfaces.GetEnvsReply> {
         return this._get<ioInterfaces.GetEnvsReply>("/v1/envs/")
-            .then((value) => value.data);
+            .then((value) => value);
     }
 
     // POST `/v1/envs/<instanceID>/reset/`
     envReset(instanceID: string): Axios.IPromise<ioInterfaces.EnvResetReply> {
         const route = `/v1/envs/${instanceID}/reset`;
         return this._post<ioInterfaces.EnvResetReply>(route, null)
-            .then((value) => value.data.observation);
+            .then((value) => value.observation);
     }
 
     // POST `/v1/envs/<instanceID>/step/`
@@ -59,7 +59,7 @@ export default class Client {
         const route = `/v1/envs/${instanceID}/step`;
         const data = { action, render };
         return this._post<ioInterfaces.StepReply>(route, data)
-            .then((value) => value.data);
+            .then((value) => value);
     }
 
     // GET `/v1/envs/<instanceID>/action_space/`
@@ -67,7 +67,7 @@ export default class Client {
         Axios.IPromise<ioInterfaces.ActionSpaceReply> {
         const route = `/v1/envs/${instanceID}/action_space`
         return this._get<ioInterfaces.ActionSpaceReply>(route)
-            .then((reply) => reply.data.info);
+            .then((reply) => reply);
     }
 
     // GET `/v1/envs/<instanceID>/observation_space/`
@@ -75,7 +75,7 @@ export default class Client {
         Axios.IPromise<ioInterfaces.ObservationSpaceReply> {
         const route = `/v1/envs/${instanceID}/observation_space`;
         return this._get<ioInterfaces.ObservationSpaceReply>(route)
-            .then((reply) => reply.data.info);
+            .then((reply) => reply);
     }
 
     // POST `/v1/envs/<instanceID>/monitor/start/`
