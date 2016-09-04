@@ -1,4 +1,4 @@
-import { Client } from "../lib/gym_http_client";
+import { Client } from "../lib/gymHTTPClient"
 
 class RandomDiscreteAgent {
     constructor(public n: number) { }
