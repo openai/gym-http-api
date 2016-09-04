@@ -1,3 +1,8 @@
+/** Fields in these interfaces are named with underscores (e.g. `instance_id`)
+ *  as opposed to in camel case (e.g. `instanceID`) because this is how they
+ *  the server sends/expects them to be sent.
+ */
+
 // REPLY POST `/v1/envs/`
 export interface NewEnvInstanceReply {
     instance_id: string;
