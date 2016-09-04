@@ -75,5 +75,5 @@ client.envCreate(envID)
     }).then(() => {
         console.log("Data uploaded successfully");
     }).catch((error) => {
-        console.log(`Experiment failed. Got error: ${JSON.stringify(error)}`);
+        console.log(`Experiment failed. Got error: ${error}`);
     });
