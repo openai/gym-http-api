@@ -20,3 +20,5 @@ var p = client.envCreate("CartPole-v0");
 p.then((reply) => console.log("Reply: " + JSON.stringify(reply)))
 p.catch((error) => console.log("Error : " + error))
 ```
+
+After building the library, you can also run the example agent with `node dist/examples/exampleAgent.js`. 
