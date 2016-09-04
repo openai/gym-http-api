@@ -22,6 +22,47 @@ const client = new Client("http://127.0.0.1:5000"),
 let instanceID: string = undefined,
     agent: RandomDiscreteAgent = undefined;
 
+/** Steps:
+ *  1. Set up environment
+ *  2. Set up agent
+ *  3. Run experiment
+ *  4. Try to upload results
+ */
+client.envCreate(envID)
+    .then((reply) => {
+        instanceID = reply.instance_id;
+        return client.envActionSpaceInfo(instanceID)
+    }).then((reply) => {
+        agent = new RandomDiscreteAgent(reply.info["n"]);
+        return client.envMonitorStart(instanceID, outDir, true);
+    }).then(() => {
+        return actOutEpisode(0)
+            .then((done) => {
+                client.envMonitorClose(instanceID).then((value) => { return; })
+            });
+    }).then(() => {
+        console.log("Successfully ran example agent. Now trying to upload " +
+            "results to the scoreboard. If this fails, you likely need to " +
+            "set OPENAI_GYM_API_KEY=<your_api_key>");
+        return client.upload(outDir)
+    }).catch((error) => {
+        console.log(`Example agent failed. Got error: ${error}`);
+    });
+
+// Recursively calls itself until `episode >= episodeCount`.
+function actOutEpisode(episode: number): Promise.IThenable<boolean> {
+    return new Promise((resolve, reject) => {
+        if (episode >= episodeCount) {
+            resolve(true);
+        } else {
+            client.envReset(instanceID)
+                .then((reply) => actOutStep(0, 0, reply.observation, false))
+                .then((done) => resolve(actOutEpisode(episode + 1)));
+        }
+    })
+}
+
+// Recursively calls itself until `step >= maxSteps`.
 function actOutStep(step: number, reward: number, observation: any,
     done: boolean): Promise.IThenable<boolean> {
     return new Promise((resolve, reject) => {
@@ -41,41 +82,3 @@ function actOutStep(step: number, reward: number, observation: any,
         }
     });
 }
-
-function actOutEpisode(episode: number): Promise.IThenable<boolean> {
-    return new Promise((resolve, reject) => {
-        if (episode >= episodeCount) {
-            resolve(true);
-        } else {
-            client.envReset(instanceID)
-                .then((reply) => actOutStep(0, 0, reply.observation, false))
-                .then((done) => resolve(actOutEpisode(episode + 1)));
-        }
-    })
-}
-
-client.envCreate(envID)
-    .then((reply) => { // Set up environment
-        instanceID = reply.instance_id;
-        return client.envActionSpaceInfo(instanceID)
-    }).then((reply) => { // Set up agent
-        agent = new RandomDiscreteAgent(reply.info["n"]);
-        return client.envMonitorStart(instanceID, outDir, true);
-    }).then(() => {
-        return actOutEpisode(0)
-            .then((done) => {
-                client.envMonitorClose(instanceID).then((value) => { return; })
-            });
-    }).then(() => {
-        // Upload to the scoreboard. This expects the 'OPENAI_GYM_API_KEY'
-        // environment variable to be set on the client side.
-        console.log("Successfully ran example agent using " +
-            "gym_http_client. Now trying to upload results to the " +
-            "scoreboard. If this fails, you likely need to set " +
-            "OPENAI_GYM_API_KEY=<your_api_key>");
-        return client.upload(outDir)
-    }).then(() => {
-        console.log("Data uploaded successfully");
-    }).catch((error) => {
-        console.log(`Experiment failed. Got error: ${error}`);
-    });
