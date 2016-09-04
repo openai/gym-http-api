@@ -172,3 +172,4 @@ Contributors
   * Greg Brockman
   * Flavio Truzzi
   * Oleg Klimov
+  * Jess Smith
