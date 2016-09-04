@@ -1,0 +1,5 @@
+{
+  "globalDependencies": {
+    "axios": "registry:dt/axios#0.9.1+20160629101425"
+  }
+}
