@@ -5,7 +5,7 @@ import * as axios from "axios";
 import * as path from "path";
 
 export default class Client {
-    constructor(public remoteBase: string, public port: number) { }
+    constructor(public remote) { }
 
     _parseServerErrors<T>(promise: Axios.IPromise<Axios.AxiosXHR<T>>):
         Axios.IPromise<T> {
@@ -21,7 +21,7 @@ export default class Client {
     }
 
     _buildURL(route: string): string {
-        return `${this.remoteBase}/${route}`;
+        return `${this.remote}/${route}`;
     }
 
     _post<T>(route: string, data: any): Axios.IPromise<Axios.AxiosXHR<T>> {
@@ -36,7 +36,7 @@ export default class Client {
 
     // POST `/v1/envs/`
     envCreate(envID: string): Axios.IPromise<ioInterfaces.NewEnvInstanceReply> {
-        return this._post<ioInterfaces.NewEnvInstanceReply>("/v1/envs/", 
+        return this._post<ioInterfaces.NewEnvInstanceReply>("/v1/envs/",
             { env_id: envID }).then((value) => value.data);
     }
 
@@ -63,8 +63,8 @@ export default class Client {
     }
 
     // GET `/v1/envs/<instanceID>/action_space/`
-    envActionSpaceInfo(instanceID: string): 
-    Axios.IPromise<ioInterfaces.ActionSpaceReply> {
+    envActionSpaceInfo(instanceID: string):
+        Axios.IPromise<ioInterfaces.ActionSpaceReply> {
         const route = `/v1/envs/${instanceID}/action_space`
         return this._get<ioInterfaces.ActionSpaceReply>(route)
             .then((reply) => reply.data.info);
@@ -72,7 +72,7 @@ export default class Client {
 
     // GET `/v1/envs/<instanceID>/observation_space/`
     envObservationSpaceInfo(instanceID: string):
-    Axios.IPromise<ioInterfaces.ObservationSpaceReply> {
+        Axios.IPromise<ioInterfaces.ObservationSpaceReply> {
         const route = `/v1/envs/${instanceID}/observation_space`;
         return this._get<ioInterfaces.ObservationSpaceReply>(route)
             .then((reply) => reply.data.info);
@@ -88,7 +88,7 @@ export default class Client {
     }
 
     // POST `/v1/envs/<instanceID>/monitor/close/`
-    envMonitorClose(instanceID: string): Axios.IPromise<void> { 
+    envMonitorClose(instanceID: string): Axios.IPromise<void> {
         const route = `/v1/envs/${instanceID}/monitor/close/`
         return this._post(route, null)
             .then((reply) => { return });
@@ -103,7 +103,7 @@ export default class Client {
 
     // POST `/v1/upload/`
     upload(trainingDir: string, algorithmID: string = undefined, apiKey: string = undefined) {
-        if (apiKey === undefined) {            
+        if (apiKey === undefined) {
             apiKey = process.env["OPENAI_GYM_API_KEY"];
         }
         this._post("/v1/upload/", {

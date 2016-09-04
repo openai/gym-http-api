@@ -11,7 +11,7 @@ class RandomDiscreteAgent {
     }
 }
 
-const client = new Client("127.0.0.1", 5000),
+const client = new Client("http://127.0.0.1:5000"),
     envID = "CartPole-v0",
     numTrials = 3,
     outDir = "/tmp/random-agent-results",
@@ -31,25 +31,25 @@ function actOutStep(step: number, reward: number, observation: any, done: boolea
             let action = agent.act(observation, reward, done);
             client.envStep(instanceID, action, true)
                 .then((reply) => {
-                   if (reply.done) {
-                      resolve(null);
-                   } else {
-                      resolve(actOutStep(step + 1, reply.reward, reply.observation, reply.done));
-                   }
+                    if (reply.done) {
+                        resolve(null);
+                    } else {
+                        resolve(actOutStep(step + 1, reply.reward, reply.observation, reply.done));
+                    }
                 }).catch((error) => { throw error });
         }
     });
 }
 
 function actOutEpisode(episode: number): Promise.IThenable<boolean> {
-   return new Promise((resolve, reject) => {
-       if (episode >= episodeCount) {
-           resolve(true);
-       } else {
-           resolve(client.envReset(instanceID)
-               .then((reply) => actOutStep(0, 0, reply.observation, false)));
-       }
-   })
+    return new Promise((resolve, reject) => {
+        if (episode >= episodeCount) {
+            resolve(true);
+        } else {
+            resolve(client.envReset(instanceID)
+                .then((reply) => actOutStep(0, 0, reply.observation, false)));
+        }
+    })
 }
 
 client.envCreate(envID)
@@ -75,5 +75,5 @@ client.envCreate(envID)
     }).then(() => {
         console.log("Data uploaded successfully");
     }).catch((error) => {
-       console.log(`Experiment failed. Got error: ${JSON.stringify(error)}`);
+        console.log(`Experiment failed. Got error: ${JSON.stringify(error)}`);
     });
