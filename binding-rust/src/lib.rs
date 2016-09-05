@@ -11,6 +11,8 @@ use serde_json::ser::to_string_pretty;
 use curl::easy::{Easy, List};
 use rand::{thread_rng, Rng};
 
+pub type ClientResult<T> = Result<T, curl::Error>;
+
 #[derive(Debug, Clone)]
 pub enum Space {
 	DISCRETE{n: u64},
@@ -96,16 +98,16 @@ impl Environment {
 	pub fn observation_space(&self) -> Space {
 		self.obs_space.clone()
 	}
-	pub fn reset(&mut self) -> Vec<f64> {
-		let observation = self.client.post("/v1/envs/".to_string() + &self.instance_id + "/reset/", 
-										   Value::Null);
+	pub fn reset(&mut self) -> ClientResult<Vec<f64>> {
+		let observation = try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/reset/", 
+										   		Value::Null));
 		let mut ret = Vec::new();
 		for val in observation.find("observation").unwrap().as_array().unwrap() {
 			ret.push(val.as_f64().unwrap());
 		}
-		ret
+		Ok(ret)
 	}
-	pub fn step(&mut self, action: Vec<f64>, render: bool) -> State {
+	pub fn step(&mut self, action: Vec<f64>, render: bool) -> ClientResult<State> {
 		let mut req = BTreeMap::new();
 		req.insert("render", Value::Bool(render));
 		match self.act_space {
@@ -120,27 +122,29 @@ impl Environment {
 			Space::TUPLE{..} => panic!("Actions for Tuple spaces not implemented yet")
 		}
 
-		let state = self.client.post("/v1/envs/".to_string() + &self.instance_id + "/step/",
-									 req.to_json());
+		let state = try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/step/",
+									 	  req.to_json()));
 
-		State {
+		Ok(State {
 			observation: from_value(state.find("observation").unwrap().clone()).unwrap(),
 			reward: state.find("reward").unwrap().as_f64().unwrap(),
 			done: state.find("done").unwrap().as_bool().unwrap(),
 			info: state.find("info").unwrap().clone()
-		}
+		})
 	}
-	pub fn monitor_start(&mut self, directory: String, force: bool, resume: bool) {
+	pub fn monitor_start(&mut self, directory: String, force: bool, resume: bool) -> ClientResult<()> {
 		let mut req = BTreeMap::new();
 		req.insert("directory", Value::String(directory));
 		req.insert("force", Value::Bool(force));
 		req.insert("resume", Value::Bool(resume));
-		self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/start/",
-						 req.to_json());
+		try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/start/",
+						 	  req.to_json()));
+		Ok(())
 	}
-	pub fn monitor_stop(&mut self) {
-		self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/close/",
-						 Value::Null);
+	pub fn monitor_stop(&mut self) -> ClientResult<()> {
+		try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/close/",
+						 	  Value::Null));
+		Ok(())
 	}
 }
 
@@ -159,54 +163,53 @@ impl Client {
 
     	Client{address: addr, handle: handle}
     }
-    pub fn make(mut self, env_id: &str) -> Environment {
+    pub fn make(mut self, env_id: &str) -> ClientResult<Environment> {
     	let mut req: BTreeMap<&str, &str> = BTreeMap::new();
     	req.insert("env_id", env_id);
 
-    	let instance_id = self.post("/v1/envs/".to_string(), req.to_json());
+    	let instance_id = try!(self.post("/v1/envs/".to_string(), req.to_json()));
     	let instance_id = match instance_id.find("instance_id") {
     		Some(id) => id.as_str().unwrap(),
     		None => panic!("Unrecognized environment id: {}", env_id)
     	};
 
-    	let obs_space = self.get("/v1/envs/".to_string() + instance_id + "/observation_space/");
-    	//println!("observation space json:\n{}", to_string_pretty(&obs_space).unwrap());
+    	let obs_space = try!(self.get("/v1/envs/".to_string() + instance_id + "/observation_space/"));
+    	let act_space = try!(self.get("/v1/envs/".to_string() + instance_id + "/action_space/"));
 
-    	let act_space = self.get("/v1/envs/".to_string() + instance_id + "/action_space/");
-    	//println!("action space json:\n{}", to_string_pretty(&act_space).unwrap());
-
-    	Environment{client: Box::new(self), instance_id: instance_id.to_string(),
-    				act_space: Space::from_json(act_space.find("info").unwrap()),
-    				obs_space: Space::from_json(obs_space.find("info").unwrap())}
+    	Ok(Environment {
+    		client: Box::new(self), 
+    		instance_id: instance_id.to_string(),
+    		act_space: Space::from_json(act_space.find("info").unwrap()),
+    		obs_space: Space::from_json(obs_space.find("info").unwrap())})
     }
 
-    fn post(&mut self, route: String, request: Value) -> Value {
+    fn post(&mut self, route: String, request: Value) -> ClientResult<Value> {
     	let request = to_string_pretty(&request).unwrap();
     	let data = request.as_bytes();
     	let url = self.address.clone() + &route;
 
-    	self.handle.url(&url).unwrap();
-	    self.handle.post(true).unwrap();
-	    self.handle.post_field_size(data.len() as u64).unwrap();
-	    self.handle.post_fields_copy(data).unwrap();
+    	try!(self.handle.url(&url));
+	    try!(self.handle.post(true));
+	    try!(self.handle.post_field_size(data.len() as u64));
+	    try!(self.handle.post_fields_copy(data));
 	    
-	    let mut answer = Vec::new();
+	    let mut answer = Vec::new(); 
 	    {
 	    	let mut transfer = self.handle.transfer();
 		    transfer.write_function(|data| {
 		        answer.extend_from_slice(data);
 		        Ok(data.len())
 		    }).unwrap();
-		    transfer.perform().unwrap();
+		    try!(transfer.perform());
 	    }
 
-	    serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap()
+	    Ok(serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap())
     }
-    fn get(&mut self, route: String) -> Value {
+    fn get(&mut self, route: String) -> ClientResult<Value> {
     	let url = self.address.clone() + &route;
 
-    	self.handle.url(&url).unwrap();
-    	self.handle.post(false).unwrap();
+    	try!(self.handle.url(&url));
+    	try!(self.handle.post(false));
 
     	let mut answer = Vec::new();
 	    {
@@ -218,6 +221,6 @@ impl Client {
 		    transfer.perform().unwrap();
 	    }
 	    
-	    serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap()
+	    Ok(serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap())
     }
 }
