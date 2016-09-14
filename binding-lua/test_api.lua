@@ -1,6 +1,8 @@
 local function getTest(opt)
 	local gymClient = opt.gymClient
 	local verbose = opt.verbose
+	local render = opt.render
+	local video_callable = opt.video_callable
 	
 	-- debug mode, verbose output 
 	if verbose == false then
@@ -12,30 +14,28 @@ local function getTest(opt)
 	local function runTest(env_id)
 		require('math')
 		-- Set up client
-		base = 'http://127.0.0.1:5000'
+		local base = 'http://127.0.0.1:5000'
 		local client = gymClient.new(base)
 		print('Creation of client, server at ' .. base)
 		-- Set up environment
 		print('Creation of ' .. env_id)
-		instance_id = client:env_create(env_id)
+		local instance_id = client:env_create(env_id)
 		print('Created ' .. env_id)
 		print('****************************************************')
 		print('Get action space')
-		action_space = client:env_action_space_info(instance_id)
+		local action_space = client:env_action_space_info(instance_id)
 		print('Action space:')
 		print(action_space)
 		print('****************************************************')
 		print('Get observation space')
-		observation_space = client:env_observation_space_info(instance_id)
+		local observation_space = client:env_observation_space_info(instance_id)
 		print('Obervation space:')
 		print(observation_space)
 		print('****************************************************')
 		-- Run random experiment with monitor
-		outdir = '/tmp/random-agent-results'
-		video_callable = false
-		resume = false
-		force = true
-		render = true
+		local outdir = '/tmp/random-agent-results'
+		local resume = false
+		local force = true
 		print('Start monitor:')
 		client:env_monitor_start(instance_id, outdir, force, resume, video_callable)
 		print('Connected to monitor')
@@ -49,16 +49,16 @@ local function getTest(opt)
 		print(video_callable)
 		print('****************************************************')
 		print('Attempt environment reset:')
-		obs = client:env_reset(instance_id)
+		local obs = client:env_reset(instance_id)
 		print('Environment reset')
 		print('****************************************************')
 		print('Attempt sample action space:')
-		action = client:env_action_space_sample(instance_id)
+		local action = client:env_action_space_sample(instance_id)
 		print('Action:')
 		print(action)
 		print('****************************************************')
 		print('Attempt step in environment:')
-		ob, reward, done, info = client:env_step(instance_id, action, render)
+		local ob, reward, done, info = client:env_step(instance_id, action, render)
 		print('Success')
 		print('State:')
 		print(ob)
@@ -67,17 +67,17 @@ local function getTest(opt)
 		print(done)
 		print('Info: ')
 		print('****************************************************')
-		episode_count = 10
-		max_steps = 20
-		reward = 0
-		done = False
+		local episode_count = 2
+		local max_steps = 5
+		local reward = 0
+		local done = False
 		print('Setting up experiment with following configuration:')
 		print('Episodes:' .. episode_count)
 		print('Max steps:' .. max_steps)
 		for i = 1,episode_count do
 		   obs = client:env_reset(instance_id)
 		   for j = 1,max_steps do
-			  	action = math.random(0, 1)
+			  	action = client:env_action_space_sample(instance_id)
 		      ob, reward, done, info = client:env_step(instance_id, action, render)
 		      if done then
 					break
