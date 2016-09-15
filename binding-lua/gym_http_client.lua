@@ -108,8 +108,8 @@ function GymClient:env_monitor_start(instance_id, directory, force, resume, vide
    if not force then force = false end
    if not resume then resume = false end
    req_data = {directory = directory,
-			   force = tostring(force),
-			   resume = tostring(resume),
+            force = tostring(force),
+            resume = tostring(resume),
             video_callable = video_callable}
    route = '/v1/envs/'..instance_id..'/monitor/start/'
    resp_data  = self:post_request(route, req_data)
@@ -122,12 +122,12 @@ end
 
 function GymClient:upload(training_dir, algorithm_id, api_key)
    if not api_key then
-	  api_key = os.getenv('OPENAI_GYM_API_KEY')
+     api_key = os.getenv('OPENAI_GYM_API_KEY')
    end
    if not algorithm_id then algorithm_id = '' end
    req_data = {training_dir = training_dir,
-			   algorithm_id = algorithm_id,
-			   api_key = api_key}
+            algorithm_id = algorithm_id,
+            api_key = api_key}
    route = '/v1/upload/'
    resp = self:post_request(route, req_data)
    return resp
