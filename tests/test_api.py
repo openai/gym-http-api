@@ -1,6 +1,6 @@
 import nose2
 import requests
-import urlparse
+import six.moves.urllib.parse as urlparse
 import os
 import time
 
@@ -64,6 +64,23 @@ def test_action_space_discrete():
     action_info = client.env_action_space_info(instance_id)
     assert action_info['name'] == 'Discrete'
     assert action_info['n'] == 2
+
+@with_server
+def test_action_space_sample():
+    client = gym_http_client.Client(get_remote_base())
+    instance_id = client.env_create('CartPole-v0')
+    action = client.env_action_space_sample(instance_id)
+    assert 0 <= action < 2
+
+@with_server
+def test_action_space_contains():
+    client = gym_http_client.Client(get_remote_base())
+    instance_id = client.env_create('CartPole-v0')
+    action_info = client.env_action_space_info(instance_id)
+    assert action_info['n'] == 2
+    assert client.env_action_space_contains(instance_id, 0) == True
+    assert client.env_action_space_contains(instance_id, 1) == True
+    assert client.env_action_space_contains(instance_id, 2) == False
 
 @with_server
 def test_observation_space_box():
@@ -132,7 +149,7 @@ def test_bad_instance_id():
     for call in try_these:
         try:
             call('bad_id')
-        except gym_http_client.ServerError, e:
+        except gym_http_client.ServerError as e:
             assert 'Instance_id' in e.message
             assert e.status_code == 400
         else:
@@ -151,7 +168,7 @@ def test_missing_param_env_id():
     client = BadClient(get_remote_base())
     try:
         client.env_create('CartPole-v0')
-    except gym_http_client.ServerError, e:
+    except gym_http_client.ServerError as e:
         assert 'env_id' in e.message
         assert e.status_code == 400
     else:
@@ -176,7 +193,7 @@ def test_missing_param_action():
     client.env_reset(instance_id)
     try:
         client.env_step(instance_id, 1)
-    except gym_http_client.ServerError, e:
+    except gym_http_client.ServerError as e:
         assert 'action' in e.message
         assert e.status_code == 400
     else:
@@ -197,7 +214,7 @@ def test_missing_param_monitor_directory():
     instance_id = client.env_create('CartPole-v0')
     try:
         client.env_monitor_start(instance_id, 'tmp', force=True)
-    except gym_http_client.ServerError, e:
+    except gym_http_client.ServerError as e:
         assert 'directory' in e.message
         assert e.status_code == 400
     else:
@@ -228,7 +245,7 @@ def test_missing_param_upload_directory():
     client.env_monitor_close(instance_id)
     try:
         client.upload('tmp')
-    except gym_http_client.ServerError, e:
+    except gym_http_client.ServerError as e:
         assert 'training_dir' in e.message
         assert e.status_code == 400
     else:
@@ -252,7 +269,7 @@ def test_empty_param_api_key():
     client.env_monitor_close(instance_id)
     try:
         client.upload('tmp')
-    except gym_http_client.ServerError, e:
+    except gym_http_client.ServerError as e:
         assert 'api_key' in e.message
         assert e.status_code == 400
     else:
@@ -266,16 +283,14 @@ def test_create_malformed():
     client = gym_http_client.Client(get_remote_base())
     try:
         client.env_create('bad string')
-    except gym_http_client.ServerError, e:
+    except gym_http_client.ServerError as e:
         assert 'malformed environment ID' in e.message
         assert e.status_code == 400
     else:
         assert False
 
-# NOTE: I can't seem to make it *fail* to upload, even when
-# there's clearly no api_key passed...
-#@with_server
-#def test_missing_API_key():
+# @with_server
+# def test_missing_API_key():
 #    client = gym_http_client.Client(get_remote_base())
 #    cur_key = os.environ.get('OPENAI_GYM_API_KEY')
 #    os.environ['OPENAI_GYM_API_KEY'] = ''
@@ -291,4 +306,3 @@ def test_create_malformed():
 #    finally:
 #        if cur_key:
 #            os.environ['OPENAI_GYM_API_KEY'] = cur_key
-

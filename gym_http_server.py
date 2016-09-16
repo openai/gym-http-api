@@ -3,6 +3,7 @@ from functools import wraps
 import uuid
 import gym
 import numpy as np
+import six
 
 import logging
 logger = logging.getLogger(__name__)
@@ -56,12 +57,30 @@ class Envs(object):
 
     def step(self, instance_id, action, render):
         env = self._lookup_env(instance_id)
-        action_from_json = int(env.action_space.from_jsonable(action))
-        [observation, reward, done, info] = env.step(action_from_json)
+        if isinstance( action, six.integer_types ):
+            nice_action = action
+        else:
+            nice_action = np.array(action)
         if render: env.render()
+        [observation, reward, done, info] = env.step(nice_action)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
+    
+    def get_action_space_sample(self, instance_id):
+        env = self._lookup_env(instance_id)
+        action = env.action_space.sample()
+        if isinstance(action, (list, tuple)) or ('numpy' in str(type(action))):
+            try:
+                action = action.tolist()
+            except TypeError:
+                print(type(action))
+                print('TypeError')
+        return action
 
+    def get_action_space_contains(self, instance_id, x):
+        env = self._lookup_env(instance_id)
+        return env.action_space.contains(int(x))
+    
     def get_action_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
         return self._get_space_properties(env.action_space)
@@ -89,9 +108,13 @@ class Envs(object):
             
         return info
     
-    def monitor_start(self, instance_id, directory, force, resume):
+    def monitor_start(self, instance_id, directory, force, resume, video_callable):
         env = self._lookup_env(instance_id)
-        env.monitor.start(directory, force=force, resume=resume)
+        if video_callable == False:
+            v_c = lambda count: False
+        else:
+            v_c = lambda count: count % video_callable == 0
+        env.monitor.start(directory, force=force, resume=resume, video_callable=v_c)
 
     def monitor_close(self, instance_id):
         env = self._lookup_env(instance_id)
@@ -189,7 +212,7 @@ def env_reset(instance_id):
         for the environment instance
     Returns:
         - observation: the initial observation of the space
-    """  
+    """
     observation = envs.reset(instance_id)
     return jsonify(observation = observation)
 
@@ -233,6 +256,33 @@ def env_action_space_info(instance_id):
     info = envs.get_action_space_info(instance_id)
     return jsonify(info = info)
 
+@app.route('/v1/envs/<instance_id>/action_space/sample', methods=['GET'])
+def env_action_space_sample(instance_id):
+    """
+    Get a sample from the env's action_space
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
+    Returns:
+        - action: a randomly sampled element belonging to the action_space
+    """
+    action = envs.get_action_space_sample(instance_id)
+    return jsonify(action = action)
+
+@app.route('/v1/envs/<instance_id>/action_space/contains/<x>', methods=['GET'])
+def env_action_space_contains(instance_id, x):
+    """
+    Assess that value is a member of the env's action_space
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
+    - x: the value to be checked as member
+    Returns:
+        - member: whether the value passed as parameter belongs to the action_space
+    """
+    member = envs.get_action_space_contains(instance_id, x)
+    return jsonify(member = member)
+
 @app.route('/v1/envs/<instance_id>/observation_space/', methods=['GET'])
 def env_observation_space_info(instance_id):
     """
@@ -264,17 +314,14 @@ def env_monitor_start(instance_id):
         - resume (default=False): Retain the training data
         already in this directory, which will be merged with
         our new data
-    
-    (NOTE: the 'video_callable' parameter from the native
-    env.monitor.start function is NOT implemented)
     """  
     j = request.get_json()
 
     directory = get_required_param(j, 'directory')
     force = get_optional_param(j, 'force', False)
     resume = get_optional_param(j, 'resume', False)
-
-    envs.monitor_start(instance_id, directory, force, resume)
+    video_callable = get_optional_param(j, 'video_callable', False)
+    envs.monitor_start(instance_id, directory, force, resume, video_callable)
     return ('', 204)
 
 @app.route('/v1/envs/<instance_id>/monitor/close/', methods=['POST'])
@@ -335,5 +382,5 @@ def shutdown():
     return 'Server shutting down'
 
 if __name__ == '__main__':
+    print('Server starting at: ' + 'http://127.0.0.1:5000')
     app.run()
-

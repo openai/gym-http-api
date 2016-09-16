@@ -29,8 +29,8 @@ if __name__ == '__main__':
 
     # Run experiment, with monitor
     outdir = '/tmp/random-agent-results'
-    client.env_monitor_start(instance_id, outdir, force=True)
-
+    client.env_monitor_start(instance_id, outdir, force=True, resume=False, video_callable=False)
+    
     episode_count = 100
     max_steps = 200
     reward = 0
@@ -40,8 +40,9 @@ if __name__ == '__main__':
         ob = client.env_reset(instance_id)
 
         for j in range(max_steps):
-            action = agent.act(ob, reward, done)
-            ob, reward, done, _ = client.env_step(instance_id, action, render=True)
+            # action = agent.act(ob, reward, done)
+            action = client.env_action_space_sample(instance_id)
+            ob, reward, done, _ = client.env_step(instance_id, action, render=False)
             if done:
                 break
 
