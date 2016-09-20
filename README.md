@@ -1,4 +1,4 @@
-gym-http-api
+<img align="left" src="http://i.imgur.com/568Luwb.png">gym-http-api
 ============
 
 This project provides a local REST API to the [gym](https://github.com/openai/gym) open-source library, allowing development in languages other than python.
