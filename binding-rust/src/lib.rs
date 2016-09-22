@@ -137,6 +137,7 @@ impl Environment {
 		req.insert("directory", Value::String(directory));
 		req.insert("force", Value::Bool(force));
 		req.insert("resume", Value::Bool(resume));
+
 		try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/start/",
 						 	  req.to_json()));
 		Ok(())
@@ -212,7 +213,7 @@ impl Client {
 		    try!(transfer.perform());
 	    }
 
-	    Ok(serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap())
+	    Ok(serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap_or(Value::Null))
     }
     fn get(&mut self, route: String) -> ClientResult<Value> {
     	let url = self.address.clone() + &route;

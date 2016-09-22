@@ -9,12 +9,13 @@ fn main() {
 	let client = Client::new("http://localhost:5000".to_string());
 	let mut env = match client.make("CartPole-v0") {
 		Ok(env) => env,
-		Err(msg) => panic!("Could not make environment because of error: {}", msg)
+		Err(msg) => panic!("Could not make environment because of error:\n{}", msg)
 	};
 
 	//println!("observation space:\n{:?}\n", env.observation_space());
 	//println!("action space:\n{:?}\n", env.action_space());
 
+	let _ = env.monitor_start("/tmp/random-agent-results".to_string(), true, false);
 	for ep in 0..10 {
 		let mut tot_reward = 0.;
 		let _ = env.reset();
@@ -30,6 +31,7 @@ fn main() {
 		}
 		println!("Finished episode {} with total reward {}", ep, tot_reward);
 	}
+	let _ = env.monitor_stop();
 
 	println!("**********************************");
 }
