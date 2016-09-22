@@ -26,8 +26,7 @@ class Client(object):
             # error.
             resp.raise_for_status()
         if resp.status_code != 200 and "message" in j:  # descriptive message from server side
-            raise ServerError(message=j["message"],
-                              status_code=resp.status_code)
+            raise ServerError(message=j["message"], status_code=resp.status_code)
         resp.raise_for_status()
         return j
 
@@ -79,6 +78,18 @@ class Client(object):
         info = resp['info']
         return info
 
+    def env_action_space_sample(self, instance_id):
+        route = '/v1/envs/{}/action_space/sample'.format(instance_id)
+        resp = self._get_request(route)
+        action = resp['action']
+        return action
+
+    def env_action_space_contains(self, instance_id, x):
+        route = '/v1/envs/{}/action_space/contains/{}'.format(instance_id, x)
+        resp = self._get_request(route)
+        member = resp['member']
+        return member
+
     def env_observation_space_info(self, instance_id):
         route = '/v1/envs/{}/observation_space/'.format(instance_id)
         resp = self._get_request(route)
@@ -86,11 +97,12 @@ class Client(object):
         return info
 
     def env_monitor_start(self, instance_id, directory,
-                              force=False, resume=False):
+                              force=False, resume=False, video_callable=False):
         route = '/v1/envs/{}/monitor/start/'.format(instance_id)
         data = {'directory': directory,
                 'force': force,
-                'resume': resume}
+                'resume': resume,
+                'video_callable': video_callable}
         self._post_request(route, data)
 
     def env_monitor_close(self, instance_id):
@@ -141,7 +153,3 @@ if __name__ == '__main__':
     [observation, reward, done, info] = client.env_step(instance_id, 1, True)
     client.env_monitor_close(instance_id)
     client.upload(training_dir='tmp')
-
-    
-
-

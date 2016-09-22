@@ -1,4 +1,4 @@
-gym-http-api
+<img align="left" src="http://i.imgur.com/568Luwb.png">gym-http-api
 ============
 
 This project provides a local REST API to the [gym](https://github.com/openai/gym) open-source library, allowing development in languages other than python.
@@ -28,8 +28,8 @@ This code is intended to be run locally by a single user. The server runs in pyt
 
 To start the server from the command line, run this:
 
-    python gym_server.py
-
+    python gym_http_server.py
+    
 In a separate terminal, you can then try running the example python agent and see what happens:
 
     python example_agent.py  
