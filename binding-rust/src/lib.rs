@@ -146,6 +146,15 @@ impl Environment {
 						 	  Value::Null));
 		Ok(())
 	}
+	pub fn upload(&mut self, training_dir: String, api_key: String, algorithm_id: String) -> ClientResult<()> {
+		let mut req = BTreeMap::new();
+		req.insert("training_dir", training_dir);
+		req.insert("api_key", api_key);
+		req.insert("algorithm_id", algorithm_id);
+
+		try!(self.client.post("/v1/upload/".to_string(), req.to_json()));
+		Ok(())
+	}
 }
 
 pub struct Client {
