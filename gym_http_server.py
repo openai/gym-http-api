@@ -4,6 +4,7 @@ import uuid
 import gym
 import numpy as np
 import six
+import argparse
 
 import logging
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ class Envs(object):
         [observation, reward, done, info] = env.step(nice_action)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
-    
+
     def get_action_space_sample(self, instance_id):
         env = self._lookup_env(instance_id)
         action = env.action_space.sample()
@@ -80,7 +81,7 @@ class Envs(object):
     def get_action_space_contains(self, instance_id, x):
         env = self._lookup_env(instance_id)
         return env.action_space.contains(int(x))
-    
+
     def get_action_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
         return self._get_space_properties(env.action_space)
@@ -105,9 +106,9 @@ class Envs(object):
         elif info['name'] == 'HighLow':
             info['num_rows'] = space.num_rows
             info['matrix'] = [((float(x) if x != -np.inf else -1e100) if x != +np.inf else +1e100) for x in np.array(space.matrix).flatten()]
-            
+
         return info
-    
+
     def monitor_start(self, instance_id, directory, force, resume, video_callable):
         env = self._lookup_env(instance_id)
         if video_callable == False:
@@ -175,7 +176,7 @@ def handle_invalid_usage(error):
 def env_create():
     """
     Create an instance of the specified environment
-    
+
     Parameters:
         - env_id: gym environment ID string, such as 'CartPole-v0'
     Returns:
@@ -206,7 +207,7 @@ def env_reset(instance_id):
     """
     Reset the state of the environment and return an initial
     observation.
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
@@ -220,7 +221,7 @@ def env_reset(instance_id):
 def env_step(instance_id):
     """
     Run one timestep of the environment's dynamics.
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
@@ -231,7 +232,7 @@ def env_step(instance_id):
         - reward: amount of reward returned after previous action
         - done: whether the episode has ended
         - info: a dict containing auxiliary diagnostic information
-    """  
+    """
     json = request.get_json()
     action = get_required_param(json, 'action')
     render = get_optional_param(json, 'render', False)
@@ -244,7 +245,7 @@ def env_action_space_info(instance_id):
     """
     Get information (name and dimensions/bounds) of the env's
     action_space
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
@@ -252,7 +253,7 @@ def env_action_space_info(instance_id):
     - info: a dict containing 'name' (such as 'Discrete'), and
     additional dimensional info (such as 'n') which varies from
     space to space
-    """  
+    """
     info = envs.get_action_space_info(instance_id)
     return jsonify(info = info)
 
@@ -288,7 +289,7 @@ def env_observation_space_info(instance_id):
     """
     Get information (name and dimensions/bounds) of the env's
     observation_space
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
@@ -296,7 +297,7 @@ def env_observation_space_info(instance_id):
         - info: a dict containing 'name' (such as 'Discrete'),
         and additional dimensional info (such as 'n') which
         varies from space to space
-    """  
+    """
     info = envs.get_observation_space_info(instance_id)
     return jsonify(info = info)
 
@@ -304,7 +305,7 @@ def env_observation_space_info(instance_id):
 def env_monitor_start(instance_id):
     """
     Start monitoring.
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
@@ -314,7 +315,7 @@ def env_monitor_start(instance_id):
         - resume (default=False): Retain the training data
         already in this directory, which will be merged with
         our new data
-    """  
+    """
     j = request.get_json()
 
     directory = get_required_param(j, 'directory')
@@ -328,7 +329,7 @@ def env_monitor_start(instance_id):
 def env_monitor_close(instance_id):
     """
     Flush all monitor data to disk.
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
           for the environment instance
@@ -340,7 +341,7 @@ def env_monitor_close(instance_id):
 def env_close(instance_id):
     """
     Manually close an environment
-    
+
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
           for the environment instance
@@ -353,7 +354,7 @@ def upload():
     """
     Upload the results of training (as automatically recorded by
     your env's monitor) to OpenAI Gym.
-    
+
     Parameters:
         - training_dir: A directory containing the results of a
         training run.
@@ -361,7 +362,7 @@ def upload():
         - algorithm_id (default=None): An arbitrary string
         indicating the paricular version of the algorithm
         (including choices of parameters) you are running.
-        """  
+        """
     j = request.get_json()
     training_dir = get_required_param(j, 'training_dir')
     api_key      = get_required_param(j, 'api_key')
@@ -382,5 +383,10 @@ def shutdown():
     return 'Server shutting down'
 
 if __name__ == '__main__':
-    print('Server starting at: ' + 'http://127.0.0.1:5000')
-    app.run()
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-l', '--listen', help='interface to listen to', default='127.0.0.1')
+    parser.add_argument('-p', '--port', default=5000, type=int, help='port to bind to')
+
+    args = parser.parse_args()
+    print('Server starting at: ' + 'http://{}:{}'.format(args.listen, args.port))
+    app.run(host=args.listen, port=args.port)
