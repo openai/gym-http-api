@@ -6,8 +6,8 @@ import numpy as np
 import six
 
 import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 ########## Container for environments ##########
 class Envs(object):
@@ -383,4 +383,11 @@ def shutdown():
 
 if __name__ == '__main__':
     print('Server starting at: ' + 'http://127.0.0.1:5000')
-    app.run()
+    app.run(host='127.0.0.1', port=5000, debug=False)
+
+
+
+
+
+
+
