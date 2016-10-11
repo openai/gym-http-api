@@ -8,9 +8,6 @@ class RandomDiscreteAgent(object):
     def __init__(self, n):
         self.n = n
 
-    def act(self, observation, reward, done):
-        return np.random.randint(self.n)
-
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -40,9 +37,8 @@ if __name__ == '__main__':
         ob = client.env_reset(instance_id)
 
         for j in range(max_steps):
-            # action = agent.act(ob, reward, done)
             action = client.env_action_space_sample(instance_id)
-            ob, reward, done, _ = client.env_step(instance_id, action, render=False)
+            ob, reward, done, _ = client.env_step(instance_id, action, render=True)
             if done:
                 break
 
