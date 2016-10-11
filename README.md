@@ -172,3 +172,9 @@ Contributors
   * Greg Brockman
   * Flavio Truzzi
   * Oleg Klimov
+  * Jess Smith
+  * Kory Mathewson
+  * Leonardo Araujo dos Santos
+  * Paul Anton
+  * Ruben Fiszel
+  * Niven Achenjang

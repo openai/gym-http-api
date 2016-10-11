@@ -51,3 +51,9 @@ binding-cpp/gym-binding-cpp.creator
 binding-cpp/gym-binding-cpp.creator.user
 binding-cpp/gym-binding-cpp.files
 binding-cpp/gym-binding-cpp.includes
+
+# JS Binding
+binding-js/dist
+binding-js/node_modules
+binding-js/src/typings
+
