@@ -28,7 +28,7 @@ done = False
 for i = 1,episode_count do
    obs = client:env_reset(instance_id)
    for j = 1,max_steps do
-      action = client:env_action_space_sample(instance_id
+      action = client:env_action_space_sample(instance_id)
       ob, reward, done, info = client:env_step(instance_id, action, render)
       if done then
          break
