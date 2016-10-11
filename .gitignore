@@ -57,3 +57,6 @@ binding-js/dist
 binding-js/node_modules
 binding-js/src/typings
 
+#Rust binding
+binding-rust/Cargo.lock
+binding-rust/target
