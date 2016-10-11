@@ -7,7 +7,7 @@ base = 'http://127.0.0.1:5000'
 local client = GymClient.new(base)
 
 -- Set up environment
-env_id = 'CartPole-v0'
+env_id = 'Pendulum-v0'
 instance_id = client:env_create(env_id)
 
 action_space = client:env_action_space_info(env_id)

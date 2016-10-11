@@ -5,10 +5,11 @@ import gym
 import numpy as np
 import six
 import argparse
+import sys
 
 import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+logger = logging.getLogger('werkzeug')
+logger.setLevel(logging.ERROR)
 
 ########## Container for environments ##########
 class Envs(object):
@@ -67,17 +68,6 @@ class Envs(object):
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
 
-    def get_action_space_sample(self, instance_id):
-        env = self._lookup_env(instance_id)
-        action = env.action_space.sample()
-        if isinstance(action, (list, tuple)) or ('numpy' in str(type(action))):
-            try:
-                action = action.tolist()
-            except TypeError:
-                print(type(action))
-                print('TypeError')
-        return action
-
     def get_action_space_contains(self, instance_id, x):
         env = self._lookup_env(instance_id)
         return env.action_space.contains(int(x))
@@ -88,7 +78,14 @@ class Envs(object):
 
     def get_action_space_sample(self, instance_id):
         env = self._lookup_env(instance_id)
-        return env.action_space.sample()
+        action = env.action_space.sample()
+        if isinstance(action, (list, tuple)) or ('numpy' in str(type(action))):
+            try:
+                action = action.tolist()
+            except TypeError:
+                print(type(action))
+                print('TypeError')
+        return action
 
     def get_action_space_contains(self, instance_id, x):
  	env = self._lookup_env(instance_id)
