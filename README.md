@@ -16,7 +16,7 @@ Installation
 
 To download the code and install the requirements, you can run the following shell commands:
 
-    git clone https://github.com/catherio/gym-http-api
+    git clone https://github.com/openai/gym-http-api
     cd gym-http-api
     pip install -r requirements.txt
 
@@ -82,8 +82,7 @@ API specification
       * returns: `observation` -- the initial observation of the space
     
   * POST `/v1/envs/<instance_id>/step/`
-      * Reset the state of the environment and return an initial
-        observation.
+      *  Step though an environment using an action.
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance
 	  * param: `action` -- an action to take in the environment
@@ -170,6 +169,7 @@ Contributors
   * Catherine Olsson
   * Jie Tang
   * Greg Brockman
+  * Paul Hendricks
   * Flavio Truzzi
   * Oleg Klimov
   * Jess Smith
