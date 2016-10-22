@@ -7,6 +7,7 @@ A python client is included, to demonstrate how to interact with the server.
 
 Additional languages:
   * C++ (within this repository, author: Oleg Klimov)
+  * R (within this repository, author: Paul Hendricks)
   * lua (within this repository, work-in-progress)
   * Scala (in progress, author: Flavio Truzzi)
   * ... Contributions of clients in other languages are welcomed!
@@ -179,3 +180,4 @@ Contributors
   * Ruben Fiszel
   * Niven Achenjang
   * David Savage
+  
