@@ -1,4 +1,4 @@
-library(gym)
+library(gym) # devtools::install_github("paulhendricks/gym-R", subdir = "gym")
 
 remote_base <- 'http://127.0.0.1:5000'
 client <- create_GymClient(remote_base)
