@@ -1,17 +1,19 @@
 extern crate serde_json;
-extern crate curl;
+extern crate hyper;
 extern crate rand;
 
 use std::collections::BTreeMap;
+use std::io::Read;
 
 use serde_json::Value;
 use serde_json::value::{ToJson, from_value};
-use serde_json::ser::to_string_pretty;
 
-use curl::easy::{Easy, List};
+use hyper::client::Client;
+use hyper::header::Headers;
+
 use rand::{thread_rng, Rng};
 
-pub type ClientResult<T> = Result<T, curl::Error>;
+pub type GymResult<T> = Result<T, hyper::Error>;
 
 #[derive(Debug, Clone)]
 pub enum Space {
@@ -80,15 +82,15 @@ pub struct State {
 	pub observation:	Vec<f64>,
 	pub reward:			f64,
 	pub done:			bool,
-	pub info:			Value
+	pub info:			Value,
 }
 
 #[allow(dead_code)]
 pub struct Environment {
-	client:			Box<Client>,
+	client:			GymClient,
 	instance_id:	String,
 	act_space:		Space,
-	obs_space:		Space
+	obs_space:		Space,
 }
 
 impl Environment {
@@ -98,7 +100,7 @@ impl Environment {
 	pub fn observation_space(&self) -> Space {
 		self.obs_space.clone()
 	}
-	pub fn reset(&mut self) -> ClientResult<Vec<f64>> {
+	pub fn reset(&mut self) -> GymResult<Vec<f64>> {
 		let observation = try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/reset/", 
 										   		Value::Null));
 		let mut ret = Vec::new();
@@ -107,7 +109,7 @@ impl Environment {
 		}
 		Ok(ret)
 	}
-	pub fn step(&mut self, action: Vec<f64>, render: bool) -> ClientResult<State> {
+	pub fn step(&mut self, action: Vec<f64>, render: bool) -> GymResult<State> {
 		let mut req = BTreeMap::new();
 		req.insert("render", Value::Bool(render));
 		match self.act_space {
@@ -121,9 +123,9 @@ impl Environment {
 			},
 			Space::TUPLE{..} => panic!("Actions for Tuple spaces not implemented yet")
 		}
-
-		let state = try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/step/",
-									 	  req.to_json()));
+		
+		let path = "/v1/envs/".to_string() + &self.instance_id + "/step/";
+		let state = try!(self.client.post(path, req.to_json()));
 
 		Ok(State {
 			observation: from_value(state.find("observation").unwrap().clone()).unwrap(),
@@ -132,7 +134,7 @@ impl Environment {
 			info: state.find("info").unwrap().clone()
 		})
 	}
-	pub fn monitor_start(&mut self, directory: String, force: bool, resume: bool) -> ClientResult<()> {
+	pub fn monitor_start(&mut self, directory: String, force: bool, resume: bool) -> GymResult<()> {
 		let mut req = BTreeMap::new();
 		req.insert("directory", Value::String(directory));
 		req.insert("force", Value::Bool(force));
@@ -142,12 +144,12 @@ impl Environment {
 						 	  req.to_json()));
 		Ok(())
 	}
-	pub fn monitor_stop(&mut self) -> ClientResult<()> {
+	pub fn monitor_stop(&mut self) -> GymResult<()> {
 		try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/close/",
 						 	  Value::Null));
 		Ok(())
 	}
-	pub fn upload(&mut self, training_dir: String, api_key: String, algorithm_id: String) -> ClientResult<()> {
+	pub fn upload(&mut self, training_dir: String, api_key: String, algorithm_id: String) -> GymResult<()> {
 		let mut req = BTreeMap::new();
 		req.insert("training_dir", training_dir);
 		req.insert("api_key", api_key);
@@ -158,22 +160,24 @@ impl Environment {
 	}
 }
 
-pub struct Client {
+pub struct GymClient {
 	address:	String,
-	handle:		Easy
+	handle:		Client,
+	headers:	Headers,
 }
 
-impl Client {
-    pub fn new(addr: String) -> Client {
-    	let mut headers = List::new();
-    	headers.append("Content-Type: application/json").unwrap();
+impl GymClient {
+    pub fn new(addr: String) -> GymClient {
+		let mut headers = Headers::new();
+		headers.set_raw("Content-Type", vec![b"application/json".to_vec()]);
 
-    	let mut handle = Easy::new();
-    	handle.http_headers(headers).unwrap();
-
-    	Client{address: addr, handle: handle}
+    	GymClient {
+    		address: addr, 
+    		handle: Client::new(),
+    		headers: headers
+    	}
     }
-    pub fn make(mut self, env_id: &str) -> ClientResult<Environment> {
+    pub fn make(mut self, env_id: &str) -> GymResult<Environment> {
     	let mut req: BTreeMap<&str, &str> = BTreeMap::new();
     	req.insert("env_id", env_id);
 
@@ -187,50 +191,31 @@ impl Client {
     	let act_space = try!(self.get("/v1/envs/".to_string() + instance_id + "/action_space/"));
 
     	Ok(Environment {
-    		client: Box::new(self), 
+    		client: self,
     		instance_id: instance_id.to_string(),
     		act_space: Space::from_json(act_space.find("info").unwrap()),
     		obs_space: Space::from_json(obs_space.find("info").unwrap())})
     }
 
-    fn post(&mut self, route: String, request: Value) -> ClientResult<Value> {
-    	let request = to_string_pretty(&request).unwrap();
-    	let data = request.as_bytes();
+    fn post(&mut self, route: String, request: Value) -> GymResult<Value> {
     	let url = self.address.clone() + &route;
+    	let mut resp = try!(self.handle.post(&url)
+    							  	   .body(&request.to_string())
+    							  	   .headers(self.headers.clone())
+    							  	   .send());
 
-    	try!(self.handle.url(&url));
-	    try!(self.handle.post(true));
-	    try!(self.handle.post_field_size(data.len() as u64));
-	    try!(self.handle.post_fields_copy(data));
-	    
-	    let mut answer = Vec::new(); 
-	    {
-	    	let mut transfer = self.handle.transfer();
-		    transfer.write_function(|data| {
-		        answer.extend_from_slice(data);
-		        Ok(data.len())
-		    }).unwrap();
-		    try!(transfer.perform());
-	    }
+    	let mut json = String::new();
+    	let _ = resp.read_to_string(&mut json);
 
-	    Ok(serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap_or(Value::Null))
+	    Ok(serde_json::from_str(&json).unwrap_or(Value::Null))
     }
-    fn get(&mut self, route: String) -> ClientResult<Value> {
+    fn get(&mut self, route: String) -> GymResult<Value> {
     	let url = self.address.clone() + &route;
+    	let mut resp = try!(self.handle.get(&url)
+    							  	   .send());
+    	let mut json = String::new();
+    	let _ = resp.read_to_string(&mut json);
 
-    	try!(self.handle.url(&url));
-    	try!(self.handle.post(false));
-
-    	let mut answer = Vec::new();
-	    {
-	    	let mut transfer = self.handle.transfer();
-		    transfer.write_function(|data| {
-		        answer.extend_from_slice(data);
-		        Ok(data.len())
-		    }).unwrap();
-		    transfer.perform().unwrap();
-	    }
-	    
-	    Ok(serde_json::from_str(&String::from_utf8(answer).unwrap()).unwrap())
+		Ok(serde_json::from_str(&json).unwrap_or(Value::Null))
     }
 }
