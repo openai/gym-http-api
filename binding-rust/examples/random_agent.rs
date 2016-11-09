@@ -2,7 +2,6 @@ extern crate gym;
 
 use gym::*;
 
-#[test]
 fn main() {
 	println!("**********************************");
 
