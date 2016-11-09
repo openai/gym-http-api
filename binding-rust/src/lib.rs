@@ -30,18 +30,19 @@ impl Space {
 				Space::DISCRETE{n: n}
 			},
 			"Box" => {
-				let mut shape = Vec::new();
-				for val in info.find("shape").unwrap().as_array().unwrap() {
-					shape.push(val.as_u64().unwrap());
-				}
-				let mut high = Vec::new();
-				for val in info.find("high").unwrap().as_array().unwrap() {
-					high.push(val.as_f64().unwrap());
-				}
-				let mut low = Vec::new();
-				for val in info.find("low").unwrap().as_array().unwrap() {
-					low.push(val.as_f64().unwrap());
-				}
+				let shape = info.find("shape").unwrap().as_array().unwrap()
+								.into_iter().map(|x| x.as_u64().unwrap())
+								.collect::<Vec<_>>();
+
+
+				let high = info.find("high").unwrap().as_array().unwrap()
+							   .into_iter().map(|x| x.as_f64().unwrap())
+							   .collect::<Vec<_>>();
+							   
+				let low = info.find("low").unwrap().as_array().unwrap()
+							  .into_iter().map(|x| x.as_f64().unwrap())
+							  .collect::<Vec<_>>();
+
 				Space::BOX{shape: shape, high: high, low: low}
 			},
 			"Tuple" => panic!("Parsing for Tuple spaces is not yet implemented"),
@@ -55,7 +56,7 @@ impl Space {
 				vec![(rng.gen::<u64>()%n) as f64]
 			},
 			Space::BOX{ref shape, ref high, ref low} => {
-				let mut ret = Vec::new();
+				let mut ret = Vec::with_capacity(shape.iter().map(|x| *x as usize).product());
 				let mut index = 0;
 				for &i in shape {
 					for _ in 0..i {
@@ -94,19 +95,19 @@ pub struct Environment {
 }
 
 impl Environment {
-	pub fn action_space(&self) -> Space {
-		self.act_space.clone()
+	pub fn action_space<'a>(&'a self) -> &'a Space {
+		&self.act_space
 	}
-	pub fn observation_space(&self) -> Space {
-		self.obs_space.clone()
+	pub fn observation_space<'a>(&'a self) -> &'a Space {
+		&self.obs_space
 	}
 	pub fn reset(&mut self) -> GymResult<Vec<f64>> {
-		let observation = try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/reset/", 
-										   		Value::Null));
-		let mut ret = Vec::new();
-		for val in observation.find("observation").unwrap().as_array().unwrap() {
-			ret.push(val.as_f64().unwrap());
-		}
+		let path = "/v1/envs/".to_string() + &self.instance_id + "/reset/";
+		let observation = try!(self.client.post(path, Value::Null));
+
+		let ret: Vec<_> = observation.find("observation").unwrap().as_array().unwrap()
+									 .into_iter().map(|x| x.as_f64().unwrap())
+									 .collect();
 		Ok(ret)
 	}
 	pub fn step(&mut self, action: Vec<f64>, render: bool) -> GymResult<State> {
@@ -140,13 +141,13 @@ impl Environment {
 		req.insert("force", Value::Bool(force));
 		req.insert("resume", Value::Bool(resume));
 
-		try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/start/",
-						 	  req.to_json()));
+		let path = "/v1/envs/".to_string() + &self.instance_id + "/monitor/start/";
+		try!(self.client.post(path, req.to_json()));
 		Ok(())
 	}
 	pub fn monitor_stop(&mut self) -> GymResult<()> {
-		try!(self.client.post("/v1/envs/".to_string() + &self.instance_id + "/monitor/close/",
-						 	  Value::Null));
+		let path = "/v1/envs/".to_string() + &self.instance_id + "/monitor/close/";
+		try!(self.client.post(path, Value::Null));
 		Ok(())
 	}
 	pub fn upload(&mut self, training_dir: String, api_key: String, algorithm_id: String) -> GymResult<()> {
