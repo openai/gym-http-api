@@ -197,6 +197,10 @@ impl GymClient {
     		act_space: Space::from_json(act_space.find("info").unwrap()),
     		obs_space: Space::from_json(obs_space.find("info").unwrap())})
     }
+    pub fn get_envs(&mut self) -> GymResult<BTreeMap<String, String>> {
+    	let json = try!(self.get("/v1/envs/".to_string()));
+    	Ok(from_value(json.find("all_envs").unwrap().clone()).unwrap())
+    }
 
     fn post(&mut self, route: String, request: Value) -> GymResult<Value> {
     	let url = self.address.clone() + &route;

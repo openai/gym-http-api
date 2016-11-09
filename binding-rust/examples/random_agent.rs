@@ -5,7 +5,9 @@ use gym::*;
 fn main() {
 	println!("**********************************");
 
-	let client = GymClient::new("http://localhost:5000".to_string());
+	let mut client = GymClient::new("http://localhost:5000".to_string());
+	//println!("already running environments:\n{:?}\n", client.get_envs().unwrap());
+
 	let mut env = match client.make("CartPole-v0") {
 		Ok(env) => env,
 		Err(msg) => panic!("Could not make environment because of error:\n{}", msg)
