@@ -63,7 +63,8 @@ class Envs(object):
             nice_action = action
         else:
             nice_action = np.array(action)
-        if render: env.render()
+        if render:
+            env.render()
         [observation, reward, done, info] = env.step(nice_action)
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
@@ -88,8 +89,8 @@ class Envs(object):
         return action
 
     def get_action_space_contains(self, instance_id, x):
- 	env = self._lookup_env(instance_id)
-	return env.action_space.contains(int(x))
+        env = self._lookup_env(instance_id)
+        return env.action_space.contains(int(x))
 
     def get_observation_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
