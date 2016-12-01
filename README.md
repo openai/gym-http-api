@@ -5,12 +5,7 @@ This project provides a local REST API to the [gym](https://github.com/openai/gy
 
 A python client is included, to demonstrate how to interact with the server.
 
-Additional languages:
-  * C++ (within this repository, author: Oleg Klimov)
-  * R (within this repository, author: Paul Hendricks)
-  * lua (within this repository, work-in-progress)
-  * Scala (in progress, author: Flavio Truzzi)
-  * ... Contributions of clients in other languages are welcomed!
+Contributions of clients in other languages are welcomed!
 
 Installation
 ============
@@ -142,29 +137,6 @@ API specification
       * Request a server shutdown
       * Currently used by the integration tests to repeatedly create and destroy fresh copies of the server running in a separate thread
 
-TODOs
-===============
-
-python TODOs
-- Make the directory structure better conform to standard python package structures (http://www.kennethreitz.org/essays/repository-structure-and-python, http://peterdowns.com/posts/first-time-with-pypi.html)
-- Implement 'sample' (and test it)
-- Implement 'contains' (and test it)
-- Docker integration
-- Handle ResetNeeded while monitor is active
-- Handle APIConnectionError: Unexpected error communicating with OpenAI Gym
-- Check: was anything improved by adding session / socket reuse?
-- Reports of "broken pipe" errors: reproduce and investigate
-- Measure latency/performance. How slow is HTTP, Flask? What is the use case for this implementation, versus a potential future faster ZeroMQ implementation?
-- Make remote environments have the same interface as non-remote environments
-- Get Travis CI working
-- Test all possible environments in integration tests
-- Handle the error thrown if the directory isn't cleared for the monitor
-- Document the fact that two-monitors-open will cause a problem; be clear that this is meant to be one-client
-
-lua client wishlist:
-- Error handling, similar to what the python client currently has
-- Implement the ability to set "render=True"
-
 Contributors
 ============
   * Catherine Olsson
@@ -180,4 +152,5 @@ Contributors
   * Ruben Fiszel
   * Niven Achenjang
   * David Savage
+  * Matthias Richard
   
