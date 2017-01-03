@@ -60,3 +60,6 @@ binding-js/src/typings
 #Rust binding
 binding-rust/Cargo.lock
 binding-rust/target
+
+# Haskell binding
+binding-hs/.stack-work/*
