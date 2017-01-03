@@ -1,6 +1,7 @@
-{-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators     #-}
 
 module Lib
     ( run
@@ -23,19 +24,34 @@ newtype Environment = Environment { all_envs :: Object }
 instance ToJSON Environment
 instance FromJSON Environment
 
-type GymAPI = "v1" :> "envs" :> Get '[JSON] Environment
+newtype EnvID = EnvID { env_id :: T.Text }
+  deriving Generic
+
+instance ToJSON EnvID
+
+type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] EnvID :> Post '[JSON] Object
+         :<|> "v1" :> "envs" :> Get '[JSON] Environment
 
 gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
-getEnvs :: Manager -> BaseUrl -> ExceptT ServantError IO Environment
-getEnvs = client gymAPI
+envCreate :: EnvID -> Manager -> BaseUrl -> ExceptT ServantError IO Object
+envListAll :: Manager -> BaseUrl -> ExceptT ServantError IO Environment
+
+envCreate :<|> envListAll = client gymAPI
 
 run :: IO ()
 run = do
+  let url = BaseUrl Http "localhost" 5000 ""
+
   manager <- newManager defaultManagerSettings
-  res <- runExceptT $ getEnvs manager
-       $ BaseUrl Http "localhost" 5000 ""
+  inst    <- runExceptT $ envCreate (EnvID "CartPole-v0") manager url
+  res     <- runExceptT $ envListAll manager url
+
+  case inst of
+    Left err -> print err
+    Right ok -> print $ encode ok
+
   case res of
     Left err  -> putStrLn $ "Error: " ++ show err
-    Right env -> print env
+    Right env -> print $ encode env
