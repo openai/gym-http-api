@@ -29,6 +29,8 @@ library
                      , transformers
                      , wai
                      , warp
+                     , QuickCheck
+                     , quickcheck-instances
 
   default-language:    Haskell2010
 
@@ -46,6 +48,18 @@ test-suite binding-hs-test
   main-is:             Spec.hs
   build-depends:       base
                      , binding-hs
+                     , process
+                     , transformers
+                     , servant-client
+                     , servant
+                     , warp
+                     , http-types
+                     , http-client 
+                     , hspec
+                     , text
+                     , servant-mock
+                     , servant-server
+                     , unordered-containers
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
