@@ -25,6 +25,7 @@ library
                      , mtl
                      , servant
                      , servant-client
+                     , servant-lucid
                      , text
                      , transformers
                      , wai

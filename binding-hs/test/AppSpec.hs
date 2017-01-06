@@ -51,7 +51,13 @@ spec = do
         Environment es <- try host envListAll
         es `shouldSatisfy` (not . null)
 
-    context "POST v1/envs/:instance_id/reset" $ do
+    context "POST v1/envs/:instance_id/reset/" $ do
       it "returns an observation space" $ \ host -> do
         Observation o <- try host (envReset "id")
         o `shouldSatisfy` (not . null)
+
+    context "POST v1/envs/:instance_id/step/" $ do
+      it "returns some information about the environment" $ \ host -> do
+        Step o r d i <- try host (envStep "id" (Action 0 False))
+        o `shouldSatisfy` (not . null)
+
