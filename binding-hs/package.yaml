@@ -1,0 +1,36 @@
+name: gym-http-api
+version: 0.1.0.0
+
+ghc-options: -Wall
+
+default-extensions:
+  - OverloadedStrings
+  - LambdaCase
+
+dependencies:
+  - base
+  - wreq
+  - aeson
+  - lens-aeson
+  - microlens-platform
+  - text
+  - vector
+  - unordered-containers
+
+library:
+  source-dirs: src
+
+# tests:
+#   doctest:
+#     main: DocTest.hs
+#     source-dirs: test
+#     dependencies:
+#       - gym-http-api
+#       - doctest
+# 
+#   spec:
+#     main: Spec.hs
+#     source-dirs: test
+#     dependencies:
+#       - gym-http-api
+#       - hspec
