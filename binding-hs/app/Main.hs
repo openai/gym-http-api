@@ -1,6 +1,6 @@
 module Main where
 
-import           Lib
+import           Agent
 
 main :: IO ()
-main = run
+main = runAgent
