@@ -39,8 +39,6 @@ library
     , text
     , transformers
   exposed-modules:
-      Agent
-      Client
       OpenAI.Gym.Client
       OpenAI.Gym.Prelude
   default-language: Haskell2010
