@@ -1,27 +1,15 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedStrings     #-}
+module Main where
 
-module Agent
-  ( runAgent
-  ) where
+import           OpenAI.Gym.Client
 
-import           Client
-import           Control.Monad              (replicateM_, when)
-import           Control.Monad.Loops        (whileM_)
-import           Control.Monad.Trans.Except (runExceptT)
-import           Data.Aeson                 (encode)
-import           Network.HTTP.Client        (Manager, defaultManagerSettings,
-                                             newManager)
-import           Servant.Client             (BaseUrl (..), Scheme (Http))
-
-runAgent :: IO ()
-runAgent = do
+main :: IO ()
+main = do
   -- Set up client
   let url = BaseUrl Http "localhost" 5000 ""
   manager <- newManager defaultManagerSettings
 
   -- Set up environment
-  id <- runExceptT $ envCreate (EnvID "CartPole-v0") manager url
+  id <- runExceptT $ envCreate (EnvID CartPoleV0) manager url
   case id of
     Left err                           -> print err
     Right ok@InstID {instance_id = id} -> do
@@ -34,9 +22,9 @@ runAgent = do
       ms <- runExceptT $ envMonitorStart id (Monitor outdir True False False) manager url
 
       let episodeCount = 100
-          maxSteps = 200
-          reward = 0
-          done = False
+          maxSteps     = 200
+          reward       = 0
+          done         = False
 
       replicateM_ episodeCount $
         do ob <- runExceptT $ envReset id manager url

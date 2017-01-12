@@ -1,51 +1,54 @@
+-- This file has been generated from package.yaml by hpack version 0.15.0.
+--
+-- see: https://github.com/sol/hpack
+
 name:                binding-hs
 version:             0.1.0.0
-synopsis:            Initial project template from stack
 description:         Haskell binding for the OpenAi gym API
-homepage:            https://github.com/openai/gym-http-api
+homepage:            https://github.com/openai/gym-http-api#readme
+bug-reports:         https://github.com/openai/gym-http-api/issues
 license:             MIT
 license-file:        ../LICENSE
 author:              Daniel Lucsanszky
 maintainer:          dl3913@ic.ac.uk
 category:            Web
 build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+cabal-version:       >= 1.10
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     Client
-                     , Agent
-  build-depends:       base >= 4.7 && < 5
-                     , aeson
-                     , http-client
-                     , monad-loops
-                     , unordered-containers
-                     , servant
-                     , servant-client
-                     , servant-lucid
-                     , text
-                     , transformers
-
-  default-language:    Haskell2010
-
-executable binding-hs-exe
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , binding-hs
-  default-language:    Haskell2010
-
-test-suite binding-hs-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , binding-hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-K1K
-  default-language:    Haskell2010
+extra-source-files:
+    README.md
 
 source-repository head
-  type:     git
-  location: https://github.com/Lucsanszky/binding-hs
+  type: git
+  location: https://github.com/openai/gym-http-api
+  subdir: binding-hs
+
+library
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings DuplicateRecordFields
+  exposed-modules:
+      OpenAI.Gym.Client
+      OpenAI.Gym.Prelude
+  build-depends:
+      base >=4.7 && <5
+    , aeson
+    , http-client
+    , monad-loops
+    , unordered-containers
+    , servant
+    , servant-client
+    , servant-lucid
+    , text
+    , transformers
+  default-language: Haskell2010
+
+executable agent
+  main-is: Agent.hs
+  hs-source-dirs:
+      examples
+  default-extensions: OverloadedStrings DuplicateRecordFields
+  build-depends:
+      base >=4.7 && <5
+    , binding-hs
+  default-language: Haskell2010

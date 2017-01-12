@@ -1,12 +1,11 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Client
-  ( envCreate
+module OpenAI.Gym.Client
+  ( module OpenAI.Gym.Prelude
+  , envCreate
   , envListAll
   , envReset
   , envStep
@@ -19,6 +18,7 @@ module Client
   , envClose
   , upload
   , shutdownServer
+  , GymEnv (..)
   , EnvID (..)
   , InstID (..)
   , Environment (..)
@@ -31,38 +31,57 @@ module Client
   , Config (..)
   ) where
 
-import           Data.Aeson          (FromJSON, Object (..), ToJSON)
-import qualified Data.HashMap.Strict as HM (HashMap (..))
-import           Data.Proxy          (Proxy (..))
-import qualified Data.Text           as T (Text)
-import           GHC.Generics
-import           Network.HTTP.Client (Manager, defaultManagerSettings,
-                                      newManager)
-import           Servant.API
-import           Servant.Client      (BaseUrl (..), ClientM, client)
-import           Servant.HTML.Lucid  (HTML)
+import           Data.Text          (pack)
+import           OpenAI.Gym.Prelude
 
 --------------------------------------------------------------------------------
--- | Data types and instances
+-- DATA TYPES AND INSTANCES
 
-newtype EnvID = EnvID { env_id :: T.Text }
+data GymEnv
+  -- | Classic Control Environments
+  = CartPoleV0               -- ^ Balance a pole on a cart (for a short time).
+  | CartPoleV1               -- ^ Balance a pole on a cart.
+  | AcrobotV1                -- ^ Swing up a two-link robot.
+  | MountainCarV0            -- ^ Drive up a big hill.
+  | MountainCarContinuousV0  -- ^ Drive up a big hill with continuous control.
+  | PendulumV0               -- ^ Swing up a pendulum.
+
+  -- | Atari Games
+  | PongRamV0                -- ^ Maximize score in the game Pong, with RAM as input
+  | PongV0                   -- ^ Maximize score in the game Pong
+  deriving (Eq, Enum, Ord)
+
+instance Show GymEnv where
+  show CartPoleV0              = "CartPole-v0"
+  show CartPoleV1              = "CartPole-v1"
+  show AcrobotV1               = "Acrobot-v1"
+  show MountainCarV0           = "MountainCar-v0"
+  show MountainCarContinuousV0 = "MountainCarContinuous-v0"
+  show PendulumV0              = "Pendulum-v0"
+  show PongRamV0               = "Pong-ram-v0"
+  show PongV0                  = "Pong-v0"
+
+instance ToJSON GymEnv where
+  toJSON = String . pack . show
+
+newtype EnvID = EnvID { env_id :: GymEnv }
   deriving Generic
 
 instance ToJSON EnvID
 
-newtype InstID = InstID { instance_id :: T.Text }
+newtype InstID = InstID { instance_id :: Text }
   deriving (Eq, Show, Generic)
 
 instance ToJSON InstID
 instance FromJSON InstID
 
-newtype Environment = Environment { all_envs :: HM.HashMap T.Text T.Text }
+newtype Environment = Environment { all_envs :: HashMap Text Text }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Environment
 instance FromJSON Environment
 
-newtype Observation = Observation { observation :: [Double] }
+newtype Observation = Observation { observation :: Value }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Observation
@@ -74,10 +93,9 @@ data Step = Step
   } deriving Generic
 
 instance ToJSON Step
-instance FromJSON Step
 
 data Outcome = Outcome
-  { observation :: ![Double]
+  { observation :: !Value
   , reward      :: !Double
   , done        :: !Bool
   , info        :: !Object
@@ -99,7 +117,7 @@ instance ToJSON Action
 instance FromJSON Action
 
 data Monitor = Monitor
-  { directory      :: !T.Text
+  { directory      :: !Text
   , force          :: !Bool
   , resume         :: !Bool
   , video_callable :: !Bool
@@ -108,9 +126,9 @@ data Monitor = Monitor
 instance ToJSON Monitor
 
 data Config = Config
-  { training_dir :: !T.Text
-  , algorithm_id :: !T.Text
-  , api_key      :: !T.Text
+  { training_dir :: !Text
+  , algorithm_id :: !Text
+  , api_key      :: !Text
   } deriving Generic
 
 instance ToJSON Config
@@ -119,61 +137,61 @@ instance MimeUnrender HTML () where
     mimeUnrender _ _ = return ()
 
 --------------------------------------------------------------------------------
--- | The API represented as a type
+-- THE API REPRESENTED AS A TYPE
 
 type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] EnvID :> Post '[JSON] InstID
          :<|> "v1" :> "envs" :> Get '[JSON] Environment
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text
+              :> Capture "instance_id" Text
               :> "reset" :> Post '[JSON] Observation
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text
+              :> Capture "instance_id" Text
               :> ReqBody '[JSON] Step :> "step" :> Post '[JSON] Outcome
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text
+              :> Capture "instance_id" Text
               :> "action_space" :> Get '[JSON] Info
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text
+              :> Capture "instance_id" Text
               :> "action_space" :> "sample" :> Get '[JSON] Action
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text
+              :> Capture "instance_id" Text
               :> "action_space" :> "contains" :> Capture "x" Int
               :> Get '[JSON] Object
          :<|> "v1" :> "envs"
-              :> Capture "instance_od" T.Text :> "observation_space"
+              :> Capture "instance_od" Text :> "observation_space"
               :> Get '[JSON] Info
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text :> ReqBody '[JSON] Monitor
+              :> Capture "instance_id" Text :> ReqBody '[JSON] Monitor
               :> "monitor" :> "start" :> Post '[HTML] ()
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text
+              :> Capture "instance_id" Text
               :> "monitor" :> "close" :> Post '[HTML] ()
          :<|> "v1" :> "envs"
-              :> Capture "instance_id" T.Text :> "close"
+              :> Capture "instance_id" Text :> "close"
               :> Post '[HTML] ()
          :<|> "v1" :> "upload" :> ReqBody '[JSON] Config :> Post '[HTML] ()
          :<|> "v1" :> "shutdown" :> Post '[HTML] ()
 
 --------------------------------------------------------------------------------
--- | Proxy for the API
+-- PROXY FOR THE API
 
 gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
 --------------------------------------------------------------------------------
--- | Automatically derived query functions
+-- AUTOMATICALLY DERIVED QUERY FUNCTIONS
 
 envCreate               :: EnvID -> Manager -> BaseUrl -> ClientM InstID
 envListAll              :: Manager -> BaseUrl -> ClientM Environment
-envReset                :: T.Text -> Manager -> BaseUrl -> ClientM Observation
-envStep                 :: T.Text -> Step -> Manager -> BaseUrl -> ClientM Outcome
-envActionSpaceInfo      :: T.Text -> Manager -> BaseUrl -> ClientM Info
-envActionSpaceSample    :: T.Text -> Manager -> BaseUrl -> ClientM Action
-envActionSpaceContains  :: T.Text -> Int -> Manager -> BaseUrl -> ClientM Object
-envObservationSpaceInfo :: T.Text -> Manager -> BaseUrl -> ClientM Info
-envMonitorStart         :: T.Text -> Monitor -> Manager -> BaseUrl -> ClientM ()
-envMonitorClose         :: T.Text -> Manager -> BaseUrl -> ClientM ()
-envClose                :: T.Text -> Manager -> BaseUrl -> ClientM ()
+envReset                :: Text -> Manager -> BaseUrl -> ClientM Observation
+envStep                 :: Text -> Step -> Manager -> BaseUrl -> ClientM Outcome
+envActionSpaceInfo      :: Text -> Manager -> BaseUrl -> ClientM Info
+envActionSpaceSample    :: Text -> Manager -> BaseUrl -> ClientM Action
+envActionSpaceContains  :: Text -> Int -> Manager -> BaseUrl -> ClientM Object
+envObservationSpaceInfo :: Text -> Manager -> BaseUrl -> ClientM Info
+envMonitorStart         :: Text -> Monitor -> Manager -> BaseUrl -> ClientM ()
+envMonitorClose         :: Text -> Manager -> BaseUrl -> ClientM ()
+envClose                :: Text -> Manager -> BaseUrl -> ClientM ()
 upload                  :: Config -> Manager -> BaseUrl -> ClientM ()
 shutdownServer          :: Manager -> BaseUrl -> ClientM ()
 

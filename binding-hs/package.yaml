@@ -1,0 +1,46 @@
+name: binding-hs
+version: '0.1.0.0'
+description: Haskell binding for the OpenAi gym API
+category: Web
+author: Daniel Lucsanszky
+maintainer: dl3913@ic.ac.uk
+license: MIT
+license-file: ../LICENSE
+github: openai/gym-http-api/binding-hs
+extra-source-files:
+- README.md
+default-extensions:
+  - OverloadedStrings
+  - DuplicateRecordFields
+library:
+  source-dirs: src
+  dependencies:
+  - base >=4.7 && <5
+  - aeson
+  - http-client
+  - monad-loops
+  - unordered-containers
+  - servant
+  - servant-client
+  - servant-lucid
+  - text
+  - transformers
+executables:
+  agent:
+    main: Agent.hs
+    source-dirs: examples
+    dependencies:
+    - base >=4.7 && <5
+    - binding-hs
+
+# tests:
+  # binding-hs-test:
+    # main: Spec.hs
+    # source-dirs: test
+    # ghc-options:
+    # - -threaded
+    # - -rtsopts
+    # - -with-rtsopts=-K1K
+    # dependencies:
+    # - base
+    # - binding-hs
