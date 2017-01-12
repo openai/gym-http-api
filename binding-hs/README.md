@@ -13,3 +13,10 @@ stack exec binding-hs-exe
 - [ ] Added environment variable functionality to obtain the API key
 - [ ] Optimization (lagging can be detected while running the example agent)
 - [ ] Test suite
+
+## Required HTTP Libraries
+- aeson
+- http-client
+- servant
+- servant-client
+- servant-lucid

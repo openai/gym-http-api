@@ -81,7 +81,7 @@ newtype Environment = Environment { all_envs :: HashMap Text Text }
 instance ToJSON Environment
 instance FromJSON Environment
 
-newtype Observation = Observation { observation :: Value }
+newtype Observation = Observation { observation :: Array }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Observation
@@ -95,7 +95,7 @@ data Step = Step
 instance ToJSON Step
 
 data Outcome = Outcome
-  { observation :: !Value
+  { observation :: !Array
   , reward      :: !Double
   , done        :: !Bool
   , info        :: !Object
