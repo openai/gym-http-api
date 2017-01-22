@@ -1,5 +1,7 @@
-First of all, you will need install [boot] (https://github.com/boot-clj/boot)
+First of all, you will need install [boot] (https://github.com/boot-clj/boot).
+
 It is great tool like leiningen, but sometimes lein is overhead.
+
 For *Linux/OS X* you can simple type this:
 ```sh
 sudo bash -c "cd /usr/local/bin && curl -fsSLo boot https://github.com/boot-clj/boot-bin/releases/download/latest/boot.sh && chmod 755 boot"
