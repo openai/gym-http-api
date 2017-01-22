@@ -64,3 +64,6 @@ binding-rust/target
 # Haskell binding
 binding-hs/.stack-work/*
 binding-hs/*.tags
+
+# Clojure binding
+.nrepl-port
