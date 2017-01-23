@@ -15,12 +15,11 @@
   (let [instance-id (env-create env-id)]
     (env-monitor-start instance-id output-dir force resume video)
     (doseq [_ (range episode-count)]
-      (do
-        (env-reset instance-id)
-        (loop [s max-steps
-               done done]
-          (when-not done
-            (recur (inc s) (done-in-loop instance-id))))))
+      (env-reset instance-id)
+      (loop [s max-steps
+             done done]
+        (when-not done
+          (recur (inc s) (done-in-loop instance-id)))))
     (env-monitor-close instance-id)))
 
 (deftask example
@@ -30,4 +29,4 @@
                 :resume false
                 :video true
                 :done false
-                :render true}))
+                :render false}))
