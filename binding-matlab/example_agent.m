@@ -13,7 +13,7 @@ env_id = 'CartPole-v0';
 instance_id = client.env_create(env_id);
 
 %% Run random experiment with monitor
-outdir = 'tmp/random-agent-results';
+outdir = '/tmp/random-matlab-agent-results';
 client.env_monitor_start(instance_id, outdir, true);
 render = false;
 
@@ -25,11 +25,11 @@ done = false;
 for i = 1:episode_count
    obs = client.env_reset(instance_id);
    for j=1:max_steps
-       action = rand();
+       action = client.env_action_space_sample(instance_id);
        [ob, reward, done, info] = ...
            client.env_step(instance_id, action, render);
        if done
-          break; 
+          break;
        end
    end
 end
@@ -42,6 +42,4 @@ client.env_monitor_close(instance_id);
 % the client side.
 client.upload(outdir);
 
-%% Close server
-%client.shutdown_server();
 fprintf('Matlab client test ended\n');
