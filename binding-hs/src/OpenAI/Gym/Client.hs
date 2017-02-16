@@ -69,18 +69,23 @@ withConnection fn = do
 
 -- * Wrapped servant calls
 
+-- | Create an instance of the specified environment
 envCreate :: EnvID -> GymClient InstID
 envCreate = withConnection . envCreate'
 
+-- | List all environments running on the server
 envListAll :: GymClient Environment
 envListAll = withConnection envListAll'
 
+-- | Reset the state of the environment and return an initial observation.
 envReset :: Text -> GymClient Observation
 envReset = withConnection . envReset'
 
+-- | Step though an environment using an action.
 envStep :: Text -> Step -> GymClient Outcome
 envStep a b = withConnection $ envStep' a b
 
+-- | Get information (name and dimensions/bounds) of the env's @action_space@
 envActionSpaceInfo :: Text -> GymClient Info
 envActionSpaceInfo = withConnection . envActionSpaceInfo'
 
@@ -90,21 +95,26 @@ envActionSpaceSample = withConnection . envActionSpaceSample'
 envActionSpaceContains :: Text -> Int -> GymClient Object
 envActionSpaceContains a b = withConnection $ envActionSpaceContains' a b
 
+-- | Get information (name and dimensions/bounds) of the env's @observation_space@
 envObservationSpaceInfo :: Text -> GymClient Info
 envObservationSpaceInfo = withConnection . envObservationSpaceInfo'
 
+-- | Start monitoring
 envMonitorStart :: Text -> Monitor -> GymClient ()
 envMonitorStart a b = withConnection $ envMonitorStart' a b
 
+-- | Flush all monitor data to disk
 envMonitorClose :: Text -> GymClient ()
 envMonitorClose = withConnection . envMonitorClose'
 
 envClose :: Text -> GymClient ()
 envClose = withConnection . envClose'
 
+-- | Flush all monitor data to disk
 upload :: Config -> GymClient ()
 upload = withConnection . upload'
 
+-- | Request a server shutdown
 shutdownServer :: GymClient ()
 shutdownServer = withConnection shutdownServer'
 
