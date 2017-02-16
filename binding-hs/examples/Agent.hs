@@ -7,27 +7,27 @@ import Control.Monad (replicateM_, when)
 import OpenAI.Gym.Client
 
 
-setupAgent :: Manager -> BaseUrl -> GymClient InstID
-setupAgent manager url = do
-  inst@InstID{instance_id} <- envCreate (EnvID CartPoleV0) manager url
-  envActionSpaceInfo instance_id manager url
+setupAgent :: GymClient InstID
+setupAgent = do
+  inst@InstID{instance_id} <- envCreate (EnvID CartPoleV0)
+  envActionSpaceInfo instance_id
   return inst
 
 
-withMonitor :: InstID -> Manager -> BaseUrl -> GymClient () -> GymClient Monitor
-withMonitor InstID{instance_id} manager url agent = do
-  envMonitorStart instance_id configs manager url
+withMonitor :: InstID -> GymClient () -> GymClient Monitor
+withMonitor InstID{instance_id} agent = do
+  envMonitorStart instance_id configs
   agent
-  envMonitorClose instance_id manager url
+  envMonitorClose instance_id
   return configs
   where
     configs :: Monitor
     configs = Monitor "/tmp/random-agent-results" True False False
 
 
-exampleAgent :: InstID -> Manager -> BaseUrl -> GymClient ()
-exampleAgent InstID{instance_id} manager url = do
-  envReset instance_id manager url
+exampleAgent :: InstID -> GymClient ()
+exampleAgent InstID{instance_id} = do
+  envReset instance_id
   go 0 False
   where
     maxSteps :: Int
@@ -38,8 +38,8 @@ exampleAgent InstID{instance_id} manager url = do
 
     go :: Int -> Bool -> GymClient ()
     go x done = do
-      Action{action} <- envActionSpaceSample instance_id manager url
-      Outcome ob reward done _ <- envStep instance_id (Step action True) manager url
+      Action{action} <- envActionSpaceSample instance_id
+      Outcome ob reward done _ <- envStep instance_id (Step action True)
       when (not done && x < 200) $ go (x + 1) done
 
 
@@ -47,14 +47,14 @@ exampleAgent InstID{instance_id} manager url = do
 main :: IO ()
 main = do
   manager <- newManager defaultManagerSettings
-  out <- runExceptT . getGymClient $ do
-    inst <- setupAgent manager url
-    Monitor{directory} <- withMonitor inst manager url $
-      replicateM_ episodeCount $ exampleAgent inst manager url
+  out <- runGymClient manager url $ do
+    inst <- setupAgent
+    Monitor{directory} <- withMonitor inst $
+      replicateM_ episodeCount (exampleAgent inst)
 
     -- Upload to the scoreboard.
     -- TODO: Implement environment variable support.
-    upload (Config directory "algo" "") manager url
+    upload (Config directory "algo" "")
 
   case out of
    Left err -> print err

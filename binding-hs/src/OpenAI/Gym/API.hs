@@ -14,7 +14,6 @@ module OpenAI.Gym.API where
 import OpenAI.Gym.Prelude
 import OpenAI.Gym.Data
 
-
 type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] EnvID :> Post '[JSON] InstID
          :<|> "v1" :> "envs" :> Get '[JSON] Environment
          :<|> "v1" :> "envs"
@@ -52,9 +51,15 @@ type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] EnvID :> Post '[JSON] InstID
 gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
+
 newtype GymClient a =
-  GymClient { getGymClient :: ClientM a }
+  GymClient { getGymClient :: ReaderT (Manager, BaseUrl) ClientM a }
   deriving (Functor, Applicative, Monad)
+
+
+runGymClient :: Manager -> BaseUrl -> GymClient a -> IO (Either ServantError a)
+runGymClient m u client = runExceptT $ runReaderT (getGymClient client) (m, u)
+
 
 envCreate'               :: EnvID   -> Manager -> BaseUrl -> ClientM InstID
 envListAll'              :: Manager -> BaseUrl -> ClientM Environment
@@ -87,42 +92,50 @@ envCreate'
   = client gymAPI
 
 
-envCreate :: EnvID -> Manager -> BaseUrl -> GymClient InstID
-envCreate a b c = GymClient $ envCreate' a b c
+getConnection :: GymClient (Manager, BaseUrl)
+getConnection = GymClient ask
 
-envListAll :: Manager -> BaseUrl -> GymClient Environment
-envListAll a b = GymClient $ envListAll' a b
+withConnection :: (Manager -> BaseUrl -> ClientM a) -> GymClient a
+withConnection fn = do
+  (mgr, url) <- getConnection
+  GymClient . ReaderT . const $ fn mgr url
 
-envReset :: Text -> Manager -> BaseUrl -> GymClient Observation
-envReset a b c = GymClient $ envReset' a b c
+envCreate :: EnvID -> GymClient InstID
+envCreate = withConnection . envCreate'
 
-envStep :: Text -> Step -> Manager -> BaseUrl -> GymClient Outcome
-envStep a b c d = GymClient $ envStep' a b c d
+envListAll :: GymClient Environment
+envListAll = withConnection envListAll'
 
-envActionSpaceInfo :: Text -> Manager -> BaseUrl -> GymClient Info
-envActionSpaceInfo a b c = GymClient $ envActionSpaceInfo' a b c
+envReset :: Text -> GymClient Observation
+envReset = withConnection . envReset'
 
-envActionSpaceSample :: Text -> Manager -> BaseUrl -> GymClient Action
-envActionSpaceSample a b c = GymClient $ envActionSpaceSample' a b c
+envStep :: Text -> Step -> GymClient Outcome
+envStep a b = withConnection $ envStep' a b
 
-envActionSpaceContains :: Text -> Int -> Manager -> BaseUrl -> GymClient Object
-envActionSpaceContains a b c d = GymClient $ envActionSpaceContains' a b c d
+envActionSpaceInfo :: Text -> GymClient Info
+envActionSpaceInfo = withConnection . envActionSpaceInfo'
 
-envObservationSpaceInfo :: Text -> Manager -> BaseUrl -> GymClient Info
-envObservationSpaceInfo a b c = GymClient $ envObservationSpaceInfo' a b c
+envActionSpaceSample :: Text -> GymClient Action
+envActionSpaceSample = withConnection . envActionSpaceSample'
 
-envMonitorStart :: Text -> Monitor -> Manager -> BaseUrl -> GymClient ()
-envMonitorStart a b c d = GymClient $ envMonitorStart' a b c d
+envActionSpaceContains :: Text -> Int -> GymClient Object
+envActionSpaceContains a b = withConnection $ envActionSpaceContains' a b
 
-envMonitorClose :: Text -> Manager -> BaseUrl -> GymClient ()
-envMonitorClose a b c = GymClient $ envMonitorClose' a b c
+envObservationSpaceInfo :: Text -> GymClient Info
+envObservationSpaceInfo = withConnection . envObservationSpaceInfo'
 
-envClose :: Text -> Manager -> BaseUrl -> GymClient ()
-envClose a b c = GymClient $ envClose' a b c
+envMonitorStart :: Text -> Monitor -> GymClient ()
+envMonitorStart a b = withConnection $ envMonitorStart' a b
 
-upload :: Config -> Manager -> BaseUrl -> GymClient ()
-upload a b c = GymClient $ upload' a b c
+envMonitorClose :: Text -> GymClient ()
+envMonitorClose = withConnection . envMonitorClose'
 
-shutdownServer :: Manager -> BaseUrl -> GymClient ()
-shutdownServer a b = GymClient $ shutdownServer' a b
+envClose :: Text -> GymClient ()
+envClose = withConnection . envClose'
+
+upload :: Config -> GymClient ()
+upload = withConnection . upload'
+
+shutdownServer :: GymClient ()
+shutdownServer = withConnection shutdownServer'
 
