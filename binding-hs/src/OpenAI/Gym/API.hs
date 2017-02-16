@@ -7,8 +7,6 @@
 -------------------------------------------------------------------------------
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveFunctor #-}
 module OpenAI.Gym.API where
 
 import OpenAI.Gym.Prelude
@@ -52,15 +50,6 @@ gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
 
-newtype GymClient a =
-  GymClient { getGymClient :: ReaderT (Manager, BaseUrl) ClientM a }
-  deriving (Functor, Applicative, Monad)
-
-
-runGymClient :: Manager -> BaseUrl -> GymClient a -> IO (Either ServantError a)
-runGymClient m u client = runExceptT $ runReaderT (getGymClient client) (m, u)
-
-
 envCreate'               :: EnvID   -> Manager -> BaseUrl -> ClientM InstID
 envListAll'              :: Manager -> BaseUrl -> ClientM Environment
 envReset'                :: Text    -> Manager -> BaseUrl -> ClientM Observation
@@ -91,51 +80,4 @@ envCreate'
   :<|> shutdownServer'
   = client gymAPI
 
-
-getConnection :: GymClient (Manager, BaseUrl)
-getConnection = GymClient ask
-
-withConnection :: (Manager -> BaseUrl -> ClientM a) -> GymClient a
-withConnection fn = do
-  (mgr, url) <- getConnection
-  GymClient . ReaderT . const $ fn mgr url
-
-envCreate :: EnvID -> GymClient InstID
-envCreate = withConnection . envCreate'
-
-envListAll :: GymClient Environment
-envListAll = withConnection envListAll'
-
-envReset :: Text -> GymClient Observation
-envReset = withConnection . envReset'
-
-envStep :: Text -> Step -> GymClient Outcome
-envStep a b = withConnection $ envStep' a b
-
-envActionSpaceInfo :: Text -> GymClient Info
-envActionSpaceInfo = withConnection . envActionSpaceInfo'
-
-envActionSpaceSample :: Text -> GymClient Action
-envActionSpaceSample = withConnection . envActionSpaceSample'
-
-envActionSpaceContains :: Text -> Int -> GymClient Object
-envActionSpaceContains a b = withConnection $ envActionSpaceContains' a b
-
-envObservationSpaceInfo :: Text -> GymClient Info
-envObservationSpaceInfo = withConnection . envObservationSpaceInfo'
-
-envMonitorStart :: Text -> Monitor -> GymClient ()
-envMonitorStart a b = withConnection $ envMonitorStart' a b
-
-envMonitorClose :: Text -> GymClient ()
-envMonitorClose = withConnection . envMonitorClose'
-
-envClose :: Text -> GymClient ()
-envClose = withConnection . envClose'
-
-upload :: Config -> GymClient ()
-upload = withConnection . upload'
-
-shutdownServer :: GymClient ()
-shutdownServer = withConnection shutdownServer'
 

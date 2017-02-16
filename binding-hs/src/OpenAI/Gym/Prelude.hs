@@ -1,3 +1,10 @@
+-------------------------------------------------------------------------------
+-- |
+-- Module    :  OpenAI.Gym.Client
+-- License   :  MIT
+-- Stability :  experimental
+-- Portability: non-portable
+-------------------------------------------------------------------------------
 {-# LANGUAGE MultiParamTypeClasses #-}
 module OpenAI.Gym.Prelude (module P) where
 

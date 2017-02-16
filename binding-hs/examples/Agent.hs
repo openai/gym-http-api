@@ -1,3 +1,12 @@
+-------------------------------------------------------------------------------
+-- |
+-- Module    :  Main
+-- License   :  MIT
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- Example of how to build an agent using OpenAI.Gym.Client
+-------------------------------------------------------------------------------
 {-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
@@ -43,10 +52,10 @@ exampleAgent InstID{instance_id} = do
       when (not done && x < 200) $ go (x + 1) done
 
 
-
 main :: IO ()
 main = do
   manager <- newManager defaultManagerSettings
+
   out <- runGymClient manager url $ do
     inst <- setupAgent
     Monitor{directory} <- withMonitor inst $
@@ -57,8 +66,8 @@ main = do
     upload (Config directory "algo" "")
 
   case out of
-   Left err -> print err
-   Right ok  -> print $ encode ok
+    Left err -> print err
+    Right ok  -> print $ encode ok
 
   where
     url :: BaseUrl
