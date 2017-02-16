@@ -7,7 +7,6 @@
 -------------------------------------------------------------------------------
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveFunctor #-}
 module OpenAI.Gym.API where
@@ -127,6 +126,3 @@ upload a b c = GymClient $ upload' a b c
 shutdownServer :: Manager -> BaseUrl -> GymClient ()
 shutdownServer a b = GymClient $ shutdownServer' a b
 
-
-instance MimeUnrender HTML () where
-    mimeUnrender _ _ = return ()

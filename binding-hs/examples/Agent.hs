@@ -1,7 +1,9 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
-import OpenAI.Gym.Prelude
+import Prelude
+import Control.Monad (replicateM_, when)
+
 import OpenAI.Gym.Client
 
 
