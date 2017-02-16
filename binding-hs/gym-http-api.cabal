@@ -2,14 +2,14 @@
 --
 -- see: https://github.com/sol/hpack
 
-name:           binding-hs
+name:           gym-http-api
 version:        0.1.0.0
 description:    Haskell binding for the OpenAi gym API
 category:       Web
 homepage:       https://github.com/openai/gym-http-api#readme
 bug-reports:    https://github.com/openai/gym-http-api/issues
-author:         Daniel Lucsanszky
-maintainer:     dl3913@ic.ac.uk
+author:         Daniel Lucsanszky, Sam Stites
+maintainer:     dl3913@ic.ac.uk, sam@stites.io
 license:        MIT
 license-file:   ../LICENSE
 build-type:     Simple
@@ -39,16 +39,18 @@ library
     , text
     , transformers
   exposed-modules:
+      OpenAI.Gym.API
       OpenAI.Gym.Client
+      OpenAI.Gym.Data
       OpenAI.Gym.Prelude
   default-language: Haskell2010
 
-executable agent
+executable example
   main-is: Agent.hs
   hs-source-dirs:
       examples
   default-extensions: OverloadedStrings DuplicateRecordFields
   build-depends:
       base >=4.7 && <5
-    , binding-hs
+    , gym-http-api
   default-language: Haskell2010

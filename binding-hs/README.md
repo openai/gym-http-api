@@ -4,7 +4,7 @@
 ```
 stack setup
 stack build
-stack exec binding-hs-exe
+stack exec example
 ```
 
 ## Checklist
