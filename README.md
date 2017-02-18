@@ -25,10 +25,10 @@ This code is intended to be run locally by a single user. The server runs in pyt
 To start the server from the command line, run this:
 
     python gym_http_server.py
-    
+
 In a separate terminal, you can then try running the example python agent and see what happens:
 
-    python example_agent.py  
+    python example_agent.py
 
 The example lua agent behaves very similarly:
 
@@ -67,7 +67,7 @@ API specification
 
   * GET `/v1/envs/`
       * List all environments running on the server
-	  * returns: `envs` -- dict mapping `instance_id` to `env_id` 
+	  * returns: `envs` -- dict mapping `instance_id` to `env_id`
 	    (e.g. `{'3c657dbc': 'CartPole-v0'}`) for every env on the server
 
   * POST `/v1/envs/<instance_id>/reset/`
@@ -76,7 +76,7 @@ API specification
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
         for the environment instance
       * returns: `observation` -- the initial observation of the space
-    
+
   * POST `/v1/envs/<instance_id>/step/`
       *  Step though an environment using an action.
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
@@ -92,7 +92,7 @@ API specification
       * Get information (name and dimensions/bounds) of the env's
         `action_space`
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance  
+        for the environment instance
       * returns: `info` -- a dict containing 'name' (such as 'Discrete'), and
     additional dimensional info (such as 'n') which varies from
     space to space
@@ -101,7 +101,7 @@ API specification
       * Get information (name and dimensions/bounds) of the env's
         `observation_space`
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance  
+        for the environment instance
       * returns: `info` -- a dict containing 'name' (such as 'Discrete'), and
     additional dimensional info (such as 'n') which varies from
     space to space
@@ -109,7 +109,7 @@ API specification
   * POST `/v1/envs/<instance_id>/monitor/start/`
       * Start monitoring
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance  
+        for the environment instance
       * param: `force` (default=False) -- Clear out existing training
         data from this directory (by deleting every file
         prefixed with "openaigym.")
@@ -122,7 +122,7 @@ API specification
   * POST `/v1/envs/<instance_id>/monitor/close/`
       * Flush all monitor data to disk
       * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance 
+        for the environment instance
 
   * POST `/v1/upload/`
       * Flush all monitor data to disk
@@ -132,25 +132,12 @@ API specification
       * param: `algorithm_id` (default=None) -- An arbitrary string
         indicating the paricular version of the algorithm
         (including choices of parameters) you are running.
-   
+
   * POST `/v1/shutdown/`
       * Request a server shutdown
       * Currently used by the integration tests to repeatedly create and destroy fresh copies of the server running in a separate thread
 
 Contributors
 ============
-  * Catherine Olsson
-  * Jie Tang
-  * Greg Brockman
-  * Paul Hendricks
-  * Flavio Truzzi
-  * Oleg Klimov
-  * Jess Smith
-  * Kory Mathewson
-  * Leonardo Araujo dos Santos
-  * Paul Anton
-  * Ruben Fiszel
-  * Niven Achenjang
-  * David Savage
-  * Matthias Richard
-  
+
+See the [contributors page] (https://github.com/openai/gym-http-api/graphs/contributors1)
