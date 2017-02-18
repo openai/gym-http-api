@@ -1,59 +1,77 @@
+-------------------------------------------------------------------------------
+-- |
+-- Module    :  Main
+-- License   :  MIT
+-- Stability :  experimental
+-- Portability: non-portable
+--
+-- Example of how to build an agent using OpenAI.Gym.Client
+-------------------------------------------------------------------------------
+{-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
-import           OpenAI.Gym.Client
+import Prelude
+import Control.Monad (replicateM_, when)
+
+import OpenAI.Gym.Client
+
+
+setupAgent :: GymClient InstID
+setupAgent = do
+  inst@InstID{instance_id} <- envCreate (EnvID CartPoleV0)
+  envActionSpaceInfo instance_id
+  return inst
+
+
+withMonitor :: InstID -> GymClient () -> GymClient Monitor
+withMonitor InstID{instance_id} agent = do
+  envMonitorStart instance_id configs
+  agent
+  envMonitorClose instance_id
+  return configs
+  where
+    configs :: Monitor
+    configs = Monitor "/tmp/random-agent-results" True False False
+
+
+exampleAgent :: InstID -> GymClient ()
+exampleAgent InstID{instance_id} = do
+  envReset instance_id
+  go 0 False
+  where
+    maxSteps :: Int
+    maxSteps = 200
+
+    reward :: Int
+    reward = 0
+
+    go :: Int -> Bool -> GymClient ()
+    go x done = do
+      Action{action} <- envActionSpaceSample instance_id
+      Outcome ob reward done _ <- envStep instance_id (Step action True)
+      when (not done && x < 200) $ go (x + 1) done
+
 
 main :: IO ()
 main = do
-  -- Set up client
-  let url = BaseUrl Http "localhost" 5000 ""
   manager <- newManager defaultManagerSettings
 
-  -- Set up environment
-  id <- runExceptT $ envCreate (EnvID CartPoleV0) manager url
-  case id of
-    Left err                           -> print err
-    Right ok@InstID {instance_id = id} -> do
+  out <- runGymClient manager url $ do
+    inst <- setupAgent
+    Monitor{directory} <- withMonitor inst $
+      replicateM_ episodeCount (exampleAgent inst)
 
-      -- Set up agent
-      actionSpaceInfo <- runExceptT $ envActionSpaceInfo id manager url
+    -- Upload to the scoreboard.
+    -- TODO: Implement environment variable support.
+    upload (Config directory "algo" "")
 
-      -- Run experiment with monitor
-      let outdir = "/tmp/random-agent-results"
-      ms <- runExceptT $ envMonitorStart id (Monitor outdir True False False) manager url
+  case out of
+    Left err -> print err
+    Right ok  -> print $ encode ok
 
-      let episodeCount = 100
-          maxSteps     = 200
-          reward       = 0
-          done         = False
+  where
+    url :: BaseUrl
+    url = BaseUrl Http "localhost" 5000 ""
 
-      replicateM_ episodeCount $
-        do ob <- runExceptT $ envReset id manager url
-           case ob of
-             Left err -> print err
-             Right _  -> return ()
-
-           let loop x = do
-                 act <- runExceptT $ envActionSpaceSample id manager url
-                 case act of
-                   Left err                  -> print err
-                   Right Action {action = a} -> do
-
-                     outcome <- runExceptT $ envStep id (Step a True) manager url
-                     case outcome of
-                       Left err                         -> print err
-                       Right (Outcome ob reward done _) ->
-                         when (not done && x < 200) $ loop (x + 1)
-           loop 0
-
-      -- Dump result info to disk
-      close <- runExceptT $ envMonitorClose id manager url
-      case close of
-        Left err -> print err
-        Right ok -> print $ encode ok
-
-      -- Upload to the scoreboard.
-      -- TODO: Implement environment variable support.
-      up <- runExceptT $ upload (Config outdir "algo" "") manager url
-      case up of
-        Left err -> print err
-        Right _  -> return ()
+    episodeCount :: Int
+    episodeCount = 100

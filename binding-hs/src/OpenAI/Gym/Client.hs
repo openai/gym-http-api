@@ -1,10 +1,18 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeOperators         #-}
-
+-------------------------------------------------------------------------------
+-- |
+-- Module    :  OpenAI.Gym.Client
+-- License   :  MIT
+-- Stability :  experimental
+-- Portability: non-portable
+-------------------------------------------------------------------------------
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveFunctor #-}
 module OpenAI.Gym.Client
-  ( module OpenAI.Gym.Prelude
+  ( module X -- TODO: this module is a little messy. This should just be reexports to X
+  , GymClient(..)
+  , runGymClient
+  , getConnection
+  , withConnection
   , envCreate
   , envListAll
   , envReset
@@ -18,193 +26,95 @@ module OpenAI.Gym.Client
   , envClose
   , upload
   , shutdownServer
-  , GymEnv (..)
-  , EnvID (..)
-  , InstID (..)
-  , Environment (..)
-  , Observation (..)
-  , Step (..)
-  , Outcome (..)
-  , Info (..)
-  , Action (..)
-  , Monitor (..)
-  , Config (..)
   ) where
 
-import           Data.Text          (pack)
-import           OpenAI.Gym.Prelude
+import OpenAI.Gym.Data as X
 
---------------------------------------------------------------------------------
--- DATA TYPES AND INSTANCES
+-- minimal re-exports for any client dependencies
+import Data.Aeson as X
+import Control.Monad.Trans.Except as X (runExceptT)
+import Network.HTTP.Client as X
+  ( Manager(..)
+  , newManager
+  , defaultManagerSettings
+  )
+import Servant.Client as X
+  ( BaseUrl(..)
+  , Scheme(..)
+  )
 
-data GymEnv
-  -- | Classic Control Environments
-  = CartPoleV0               -- ^ Balance a pole on a cart (for a short time).
-  | CartPoleV1               -- ^ Balance a pole on a cart.
-  | AcrobotV1                -- ^ Swing up a two-link robot.
-  | MountainCarV0            -- ^ Drive up a big hill.
-  | MountainCarContinuousV0  -- ^ Drive up a big hill with continuous control.
-  | PendulumV0               -- ^ Swing up a pendulum.
+-- ========================================================================= --
 
-  -- | Atari Games
-  | PongRamV0                -- ^ Maximize score in the game Pong, with RAM as input
-  | PongV0                   -- ^ Maximize score in the game Pong
-  deriving (Eq, Enum, Ord)
+import OpenAI.Gym.API
+import OpenAI.Gym.Prelude
 
-instance Show GymEnv where
-  show CartPoleV0              = "CartPole-v0"
-  show CartPoleV1              = "CartPole-v1"
-  show AcrobotV1               = "Acrobot-v1"
-  show MountainCarV0           = "MountainCar-v0"
-  show MountainCarContinuousV0 = "MountainCarContinuous-v0"
-  show PendulumV0              = "Pendulum-v0"
-  show PongRamV0               = "Pong-ram-v0"
-  show PongV0                  = "Pong-v0"
 
-instance ToJSON GymEnv where
-  toJSON = String . pack . show
+-- | GymClient is our primary computational context
+newtype GymClient a =
+  GymClient { getGymClient :: ReaderT (Manager, BaseUrl) ClientM a }
+  deriving (Functor, Applicative, Monad)
 
-newtype EnvID = EnvID { env_id :: GymEnv }
-  deriving Generic
 
-instance ToJSON EnvID
+runGymClient :: Manager -> BaseUrl -> GymClient a -> IO (Either ServantError a)
+runGymClient m u client = runExceptT $ runReaderT (getGymClient client) (m, u)
 
-newtype InstID = InstID { instance_id :: Text }
-  deriving (Eq, Show, Generic)
+getConnection :: GymClient (Manager, BaseUrl)
+getConnection = GymClient ask
 
-instance ToJSON InstID
-instance FromJSON InstID
+-- | So that we don't have to make calls with the manager and baseurl each time
+withConnection :: (Manager -> BaseUrl -> ClientM a) -> GymClient a
+withConnection fn = do
+  (mgr, url) <- getConnection
+  GymClient . ReaderT . const $ fn mgr url
 
-newtype Environment = Environment { all_envs :: HashMap Text Text }
-  deriving (Eq, Show, Generic)
+-- * Wrapped servant calls
 
-instance ToJSON Environment
-instance FromJSON Environment
+-- | Create an instance of the specified environment
+envCreate :: EnvID -> GymClient InstID
+envCreate = withConnection . envCreate'
 
-newtype Observation = Observation { observation :: Array }
-  deriving (Eq, Show, Generic)
+-- | List all environments running on the server
+envListAll :: GymClient Environment
+envListAll = withConnection envListAll'
 
-instance ToJSON Observation
-instance FromJSON Observation
+-- | Reset the state of the environment and return an initial observation.
+envReset :: Text -> GymClient Observation
+envReset = withConnection . envReset'
 
-data Step = Step
-  { action :: !Int
-  , render :: !Bool
-  } deriving Generic
+-- | Step though an environment using an action.
+envStep :: Text -> Step -> GymClient Outcome
+envStep a b = withConnection $ envStep' a b
 
-instance ToJSON Step
+-- | Get information (name and dimensions/bounds) of the env's @action_space@
+envActionSpaceInfo :: Text -> GymClient Info
+envActionSpaceInfo = withConnection . envActionSpaceInfo'
 
-data Outcome = Outcome
-  { observation :: !Array
-  , reward      :: !Double
-  , done        :: !Bool
-  , info        :: !Object
-  } deriving (Eq, Show, Generic)
+envActionSpaceSample :: Text -> GymClient Action
+envActionSpaceSample = withConnection . envActionSpaceSample'
 
-instance ToJSON Outcome
-instance FromJSON Outcome
+envActionSpaceContains :: Text -> Int -> GymClient Object
+envActionSpaceContains a b = withConnection $ envActionSpaceContains' a b
 
-newtype Info = Info { info :: Object }
-  deriving (Eq, Show, Generic)
+-- | Get information (name and dimensions/bounds) of the env's @observation_space@
+envObservationSpaceInfo :: Text -> GymClient Info
+envObservationSpaceInfo = withConnection . envObservationSpaceInfo'
 
-instance ToJSON Info
-instance FromJSON Info
+-- | Start monitoring
+envMonitorStart :: Text -> Monitor -> GymClient ()
+envMonitorStart a b = withConnection $ envMonitorStart' a b
 
-newtype Action = Action { action :: Int }
-  deriving (Eq, Show, Generic)
+-- | Flush all monitor data to disk
+envMonitorClose :: Text -> GymClient ()
+envMonitorClose = withConnection . envMonitorClose'
 
-instance ToJSON Action
-instance FromJSON Action
+envClose :: Text -> GymClient ()
+envClose = withConnection . envClose'
 
-data Monitor = Monitor
-  { directory      :: !Text
-  , force          :: !Bool
-  , resume         :: !Bool
-  , video_callable :: !Bool
-  } deriving Generic
+-- | Flush all monitor data to disk
+upload :: Config -> GymClient ()
+upload = withConnection . upload'
 
-instance ToJSON Monitor
+-- | Request a server shutdown
+shutdownServer :: GymClient ()
+shutdownServer = withConnection shutdownServer'
 
-data Config = Config
-  { training_dir :: !Text
-  , algorithm_id :: !Text
-  , api_key      :: !Text
-  } deriving Generic
-
-instance ToJSON Config
-
-instance MimeUnrender HTML () where
-    mimeUnrender _ _ = return ()
-
---------------------------------------------------------------------------------
--- THE API REPRESENTED AS A TYPE
-
-type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] EnvID :> Post '[JSON] InstID
-         :<|> "v1" :> "envs" :> Get '[JSON] Environment
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "reset" :> Post '[JSON] Observation
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> ReqBody '[JSON] Step :> "step" :> Post '[JSON] Outcome
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "action_space" :> Get '[JSON] Info
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "action_space" :> "sample" :> Get '[JSON] Action
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "action_space" :> "contains" :> Capture "x" Int
-              :> Get '[JSON] Object
-         :<|> "v1" :> "envs"
-              :> Capture "instance_od" Text :> "observation_space"
-              :> Get '[JSON] Info
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text :> ReqBody '[JSON] Monitor
-              :> "monitor" :> "start" :> Post '[HTML] ()
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "monitor" :> "close" :> Post '[HTML] ()
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text :> "close"
-              :> Post '[HTML] ()
-         :<|> "v1" :> "upload" :> ReqBody '[JSON] Config :> Post '[HTML] ()
-         :<|> "v1" :> "shutdown" :> Post '[HTML] ()
-
---------------------------------------------------------------------------------
--- PROXY FOR THE API
-
-gymAPI :: Proxy GymAPI
-gymAPI = Proxy
-
---------------------------------------------------------------------------------
--- AUTOMATICALLY DERIVED QUERY FUNCTIONS
-
-envCreate               :: EnvID -> Manager -> BaseUrl -> ClientM InstID
-envListAll              :: Manager -> BaseUrl -> ClientM Environment
-envReset                :: Text -> Manager -> BaseUrl -> ClientM Observation
-envStep                 :: Text -> Step -> Manager -> BaseUrl -> ClientM Outcome
-envActionSpaceInfo      :: Text -> Manager -> BaseUrl -> ClientM Info
-envActionSpaceSample    :: Text -> Manager -> BaseUrl -> ClientM Action
-envActionSpaceContains  :: Text -> Int -> Manager -> BaseUrl -> ClientM Object
-envObservationSpaceInfo :: Text -> Manager -> BaseUrl -> ClientM Info
-envMonitorStart         :: Text -> Monitor -> Manager -> BaseUrl -> ClientM ()
-envMonitorClose         :: Text -> Manager -> BaseUrl -> ClientM ()
-envClose                :: Text -> Manager -> BaseUrl -> ClientM ()
-upload                  :: Config -> Manager -> BaseUrl -> ClientM ()
-shutdownServer          :: Manager -> BaseUrl -> ClientM ()
-
-envCreate :<|> envListAll
-          :<|> envReset
-          :<|> envStep
-          :<|> envActionSpaceInfo
-          :<|> envActionSpaceSample
-          :<|> envActionSpaceContains
-          :<|> envObservationSpaceInfo
-          :<|> envMonitorStart
-          :<|> envMonitorClose
-          :<|> envClose
-          :<|> upload
-          :<|> shutdownServer
-             = client gymAPI
