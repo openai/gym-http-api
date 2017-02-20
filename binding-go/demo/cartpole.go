@@ -66,8 +66,9 @@ func main() {
 	must(client.CloseMonitor(id))
 
 	// Uncomment the code below to upload to the Gym website.
-	// Note: you must set the OPENAI_GYM_API_KEY or set the
-	// second argument of Upload() to a non-empty string.
+	// Note: you must set the OPENAI_GYM_API_KEY environment
+	// variable or set the second argument of Upload() to a
+	// non-empty string.
 	//
 	//     must(client.Upload("/tmp/cartpole-monitor", "", ""))
 	//
