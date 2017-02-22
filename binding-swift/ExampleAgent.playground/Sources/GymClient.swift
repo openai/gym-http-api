@@ -52,6 +52,25 @@ open class GymClient {
         }
     }
     
+//    // ActionSpace fetches the action space.
+//    func (c *Client) ActionSpace(id InstanceID) (*Space, error) {
+//    return c.getSpace(id, "action_space")
+//    }
+//    
+    
+//    // ObservationSpace fetches the observation space.
+//    func (c *Client) ObservationSpace(id InstanceID) (*Space, error) {
+//    return c.getSpace(id, "observation_space")
+//    }
+    
+    func actionSpace(instanceID:InstanceID, callback:@escaping (Space) -> Void) {
+        getSpace(instanceID: instanceID, name: "action_space", callback: callback)
+        
+    }
+    
+    func observationSpace(instanceID:InstanceID, callback:@escaping (Space) -> Void) {
+        getSpace(instanceID: instanceID, name: "observation_space", callback: callback)
+    }
     
     
     // MARK: Helpers
@@ -85,6 +104,13 @@ open class GymClient {
         task.resume()
     }
     
+    func getSpace(instanceID:InstanceID, name:String, callback:@escaping (Space) -> Void) {
+        get(url: baseURL.appendingPathComponent("\(instanceID)/\(name)/")) { (json) in
+            let dict = (json as! [String:AnyObject])["info"] as! [String:AnyObject]
+            let space = Space(jsonDict: dict)
+            callback(space)
+        }
+    }
 }
 
 // MARK: Models
@@ -106,6 +132,17 @@ public struct Space {
     // Properties for HighLow spaces.
     let numberOfRows:Int?
     let matrix:[Double]?
+    
+    init(jsonDict:[String:AnyObject]) {
+        name = jsonDict["name"] as! String
+        
+        shape = jsonDict["shape"] as! [Int]?
+        low = jsonDict["low"] as! [Double]?
+        high = jsonDict["high"] as! [Double]?
+        n = jsonDict["n"] as! Int?
+        numberOfRows = jsonDict["num_rows"] as! Int?
+        matrix = jsonDict["matrix"] as! [Double]?
+    }
 }
 
 public typealias InstanceID = String
