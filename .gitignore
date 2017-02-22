@@ -69,6 +69,4 @@ binding-hs/*.tags
 .nrepl-port
 
 #Swift binding
-*.xcuserdata
-*.xcuserstate
-xcuserdata
+binding-swift/*.xcuserstate
