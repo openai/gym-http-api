@@ -70,4 +70,4 @@ binding-hs/*.tags
 
 #Swift binding
 binding-swift/*.xcuserstate
-binding-swift/xcuserdata
+binding-swift/ExampleAgent.playground/playground.xcworkspace/xcuserdata
