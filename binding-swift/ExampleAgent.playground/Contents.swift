@@ -1,9 +1,18 @@
 
-var str = "Hello, playground"
+import PlaygroundSupport
+import Foundation
 
-let client = GymClient()
+PlaygroundPage.current.needsIndefiniteExecution = true
 
-client.test()
+let client = GymClient(baseURL: URL(string:"http://localhost:5000")!)
+
+client.listAll { instanceEnvMap in
+    print("Got map: \(instanceEnvMap)")
+}
+
+client.create(envID: "CartPole-v0") { (instanceID) in
+    print("Got instance ID: \(instanceID)")
+}
 
 
 
