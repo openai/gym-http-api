@@ -22,6 +22,37 @@ open class GymClient {
         }
     }
     
+    // Reset resets the environment instance.
+    //
+    // The resulting observation type may vary.
+    // For discrete spaces, it is an int.
+    // For vector spaces, it is a []float64.
+    
+    open func reset(instanceID:InstanceID, callback:@escaping (Observation) -> Void) {
+        post(url: baseURL.appendingPathComponent("/reset/")) { (json) in
+            let obs = (json as! [String:AnyObject])["observation"]!
+            callback(Observation(base: obs))
+        }
+    }
+    
+    // Step takes a step in the environment.
+    //
+    // The action type may vary.
+    // For discrete spaces, it should be an int.
+    // For vector spaces, it should be a []float64 or a
+    // []float32.
+    //
+    // See Reset() for information on the observation type.
+    
+    open func step(instanceID:InstanceID, action:Action, render:Bool = false, callback:@escaping (StepResult) -> Void) {
+        let parameter = ["action":action.base, "render":render] as [String : Any]
+        post(url: baseURL.appendingPathComponent("/\(instanceID)/step"), parameter: parameter) { (json) in
+            let result = StepResult(jsonDict: json as! [String:AnyObject])
+            callback(result)
+        }
+    }
+    
+    
     
     // MARK: Helpers
     
@@ -36,12 +67,14 @@ open class GymClient {
         task.resume()
     }
     
-    private func post(url:URL, parameter:Any, callback:@escaping (Any?) -> Void) {
+    private func post(url:URL, parameter:Any? = nil, callback:@escaping (Any?) -> Void) {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
-        request.httpBody = try! JSONSerialization.data(withJSONObject: parameter, options: [])
+        if let parameter = parameter {
+            request.httpBody = try! JSONSerialization.data(withJSONObject: parameter, options: [])
+        }
         let task = URLSession.shared.dataTask(with:request) { (data, _, error) in
             if let error = error {
                 print(error)
@@ -77,3 +110,40 @@ public struct Space {
 
 public typealias InstanceID = String
 public typealias EnvID = String
+
+public typealias Action = MultiValueType
+public typealias Observation = MultiValueType
+
+public struct MultiValueType {
+    let base:AnyObject
+    
+    init(base:AnyObject) {
+        self.base = base
+        if vectorValue == nil && discreteValue == nil {
+            print("Unsupported value type: \(base)")
+        }
+    }
+    
+    var vectorValue:[Double]? {
+        return base as? [Double]
+    }
+    
+    var discreteValue:Int? {
+        return base as? Int
+    }
+}
+
+public struct StepResult {
+    let observation:Observation
+    let reward:Double
+    let done:Bool
+    let info:[String:AnyObject]
+    
+    init(jsonDict:[String:AnyObject]) {
+        self.observation = Observation(base: jsonDict["observation"]!)
+        self.reward =  jsonDict["reward"] as! Double
+        self.done = jsonDict["done"] as! Bool
+        self.info = jsonDict["info"] as! [String:AnyObject]
+ 
+    }
+}
