@@ -70,3 +70,4 @@ binding-hs/*.tags
 
 #Swift binding
 binding-swift/*.xcuserstate
+binding-swift/xcuserdata
