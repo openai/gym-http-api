@@ -22,27 +22,12 @@ open class GymClient {
         }
     }
     
-    // Reset resets the environment instance.
-    //
-    // The resulting observation type may vary.
-    // For discrete spaces, it is an int.
-    // For vector spaces, it is a []float64.
-    
     open func reset(instanceID:InstanceID, callback:@escaping (Observation) -> Void) {
-        post(url: baseURL.appendingPathComponent("/reset/")) { (json) in
+        post(url: baseURL.appendingPathComponent("/v1/envs/reset/")) { (json) in
             let obs = (json as! [String:AnyObject])["observation"]!
             callback(Observation(base: obs))
         }
     }
-    
-    // Step takes a step in the environment.
-    //
-    // The action type may vary.
-    // For discrete spaces, it should be an int.
-    // For vector spaces, it should be a []float64 or a
-    // []float32.
-    //
-    // See Reset() for information on the observation type.
     
     open func step(instanceID:InstanceID, action:Action, render:Bool = false, callback:@escaping (StepResult) -> Void) {
         let parameter = ["action":action.base, "render":render] as [String : Any]
@@ -52,35 +37,38 @@ open class GymClient {
         }
     }
     
-//    // ActionSpace fetches the action space.
-//    func (c *Client) ActionSpace(id InstanceID) (*Space, error) {
-//    return c.getSpace(id, "action_space")
-//    }
-//    
-    
-//    // ObservationSpace fetches the observation space.
-//    func (c *Client) ObservationSpace(id InstanceID) (*Space, error) {
-//    return c.getSpace(id, "observation_space")
-//    }
-    
-    func actionSpace(instanceID:InstanceID, callback:@escaping (Space) -> Void) {
+    open func actionSpace(instanceID:InstanceID, callback:@escaping (Space) -> Void) {
         getSpace(instanceID: instanceID, name: "action_space", callback: callback)
-        
     }
     
-    func observationSpace(instanceID:InstanceID, callback:@escaping (Space) -> Void) {
+    open func observationSpace(instanceID:InstanceID, callback:@escaping (Space) -> Void) {
         getSpace(instanceID: instanceID, name: "observation_space", callback: callback)
     }
     
+    open func sampleAction(instanceID:InstanceID, callback:@escaping (Action) -> Void) {
+        get(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/action_space/sample")) { (json) in
+            let action = (json as! [String:AnyObject])["action"]!
+            callback(Action(base:action))
+        }
+    }
+    
+    open func containsAction(instanceID:InstanceID, action:Action, callback:@escaping (Bool) -> Void) {
+        guard action.discreteValue != nil else { fatalError("Currently only int action types are supported") }
+        get(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/action_space/contains")) { (json) in
+            let member = (json as! [String:Bool])["member"]!
+            callback(member)
+        }
+    }
     
     // MARK: Helpers
     
     private func get(url:URL, parameter:Any? = nil, callback:@escaping (Any?) -> Void) {
-        let task = URLSession.shared.dataTask(with: url) { (data, _, error) in
+        let task = URLSession.shared.dataTask(with: url) { (data, res, error) in
             if let error = error {
                 print(error)
             }
-            let json = try! JSONSerialization.jsonObject(with: data!, options: [])
+            
+            let json = try! JSONSerialization.jsonObject(with: data!, options: [.allowFragments])
             callback(json)
         }
         task.resume()
@@ -104,8 +92,8 @@ open class GymClient {
         task.resume()
     }
     
-    func getSpace(instanceID:InstanceID, name:String, callback:@escaping (Space) -> Void) {
-        get(url: baseURL.appendingPathComponent("\(instanceID)/\(name)/")) { (json) in
+    private func getSpace(instanceID:InstanceID, name:String, callback:@escaping (Space) -> Void) {
+        get(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/\(name)/")) { (json) in
             let dict = (json as! [String:AnyObject])["info"] as! [String:AnyObject]
             let space = Space(jsonDict: dict)
             callback(space)

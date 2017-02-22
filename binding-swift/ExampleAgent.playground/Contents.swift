@@ -12,7 +12,8 @@ client.listAll { instanceEnvMap in
 
 client.create(envID: "CartPole-v0") { (instanceID) in
     print("Got instance ID: \(instanceID)")
+    
+    client.observationSpace(instanceID: instanceID) { (space) in
+        print(space)
+    }
 }
-
-
-
