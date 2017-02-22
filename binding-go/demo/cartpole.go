@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	gym "github.com/unixpickle/gym-http-api/binding-go"
+	gym "github.com/openai/gym-http-api/binding-go"
 )
 
 const BaseURL = "http://localhost:5000"

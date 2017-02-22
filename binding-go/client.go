@@ -209,7 +209,7 @@ func (c *Client) StartMonitor(id InstanceID, dir string, force, resume, videoCal
 
 // CloseMonitor stops monitoring the environment.
 func (c *Client) CloseMonitor(id InstanceID) error {
-	if err := c.get(id.path()+"/monitor/close/", nil); err != nil {
+	if err := c.post(id.path()+"/monitor/close/", struct{}{}, nil); err != nil {
 		return fmt.Errorf("close monitor: %s", err)
 	}
 	return nil
