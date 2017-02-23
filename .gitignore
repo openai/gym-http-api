@@ -67,3 +67,8 @@ binding-hs/*.tags
 
 # Clojure binding
 .nrepl-port
+
+#Swift binding
+binding-swift/*.xcuserstate
+binding-swift/ExampleAgent.playground/playground.xcworkspace/xcuserdata
+binding-swift/ExampleAgent.playground/xcuserdata
