@@ -56,7 +56,7 @@ open class GymClient {
     
     open func containsAction(instanceID:InstanceID, action:Action) -> Bool {
         guard action.discreteValue != nil else { fatalError("Currently only int action types are supported") }
-        let json = get(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/action_space/contains/"))
+        let json = get(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/action_space/contains/\(action.discreteValue!)"))
         let member = (json as! [String:Bool])["member"]!
         return member
     }
@@ -157,21 +157,21 @@ public struct Space {
     
     // Name is the name of the space, such as "Box", "HighLow",
     // or "Discrete".
-    let name:String
+    public let name:String
     
     // Properties for Box spaces.
-    let shape:[Int]?
-    let low:[Double]?
-    let high:[Double]?
+    public let shape:[Int]?
+    public let low:[Double]?
+    public let high:[Double]?
     
     // Properties for Discrete spaces.
-    let n:Int?
+    public let n:Int?
     
     // Properties for HighLow spaces.
-    let numberOfRows:Int?
-    let matrix:[Double]?
+    public let numberOfRows:Int?
+    public let matrix:[Double]?
     
-    init(jsonDict:[String:AnyObject]) {
+    public init(jsonDict:[String:AnyObject]) {
         name = jsonDict["name"] as! String
         
         shape = jsonDict["shape"] as! [Int]?
