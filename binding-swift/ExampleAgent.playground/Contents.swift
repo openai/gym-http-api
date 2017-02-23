@@ -13,7 +13,7 @@ print(client.actionSpace(instanceID: id))
 print(client.observationSpace(instanceID: id))
 
 // Start recording, and wipe out old recordings
-client.startMonitor(instanceID: id, directory: baseDirectory, force: true, resume: false, videoCallable: false)
+client.startMonitor(instanceID: id, directory: baseDirectory, force: true, resume: false, videoCallable: true)
 
 // Refresh to get our first observation
 let obs = client.reset(instanceID: id)
