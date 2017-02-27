@@ -89,10 +89,6 @@ class Envs(object):
                 print('TypeError')
         return action
 
-    def get_action_space_contains(self, instance_id, x):
-        env = self._lookup_env(instance_id)
-        return env.action_space.contains(int(x))
-
     def get_observation_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
         return self._get_space_properties(env.observation_space)
