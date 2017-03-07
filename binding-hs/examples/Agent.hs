@@ -47,8 +47,8 @@ exampleAgent InstID{instance_id} = do
 
     go :: Int -> Bool -> GymClient ()
     go x done = do
-      Action{action} <- envActionSpaceSample instance_id
-      Outcome ob reward done _ <- envStep instance_id (Step action True)
+      Action a <- envActionSpaceSample instance_id
+      Outcome ob reward done _ <- envStep instance_id (Step a True)
       when (not done && x < 200) $ go (x + 1) done
 
 

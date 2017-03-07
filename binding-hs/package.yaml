@@ -12,7 +12,6 @@ extra-source-files:
 
 default-extensions:
   - OverloadedStrings
-  - DuplicateRecordFields
 
 library:
   source-dirs: src

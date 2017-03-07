@@ -26,7 +26,7 @@ source-repository head
 library
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DuplicateRecordFields
+  default-extensions: OverloadedStrings
   build-depends:
       base >=4.7 && <5
     , aeson
@@ -49,7 +49,7 @@ executable example
   main-is: Agent.hs
   hs-source-dirs:
       examples
-  default-extensions: OverloadedStrings DuplicateRecordFields
+  default-extensions: OverloadedStrings
   build-depends:
       base >=4.7 && <5
     , gym-http-api

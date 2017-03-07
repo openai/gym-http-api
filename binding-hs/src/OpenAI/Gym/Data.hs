@@ -21,7 +21,8 @@ module OpenAI.Gym.Data
   ) where
 
 import OpenAI.Gym.Prelude
-import qualified Data.Text as T
+import qualified Data.Text  as T
+import qualified Data.Aeson as A
 
 data GymEnv
   -- | Classic Control Environments
@@ -72,11 +73,16 @@ instance ToJSON Environment
 instance FromJSON Environment
 
 
-newtype Observation = Observation { observation :: Array }
+data Observation = Observation !Array
   deriving (Eq, Show, Generic)
 
-instance ToJSON Observation
-instance FromJSON Observation
+
+instance ToJSON Observation where
+    toJSON (Observation arr) = object ["observation" .= arr]
+
+instance FromJSON Observation where
+    parseJSON (Object v) = Observation <$> v .: "observation"
+    parseJSON _          = mempty
 
 
 data Step = Step
@@ -98,18 +104,24 @@ instance ToJSON Outcome
 instance FromJSON Outcome
 
 
-newtype Info = Info { info :: Object }
+data Info = Info !Object
   deriving (Eq, Show, Generic)
 
-instance ToJSON Info
-instance FromJSON Info
+instance ToJSON Info where
+    toJSON (Info i) = object ["info" .= i]
+instance FromJSON Info where
+    parseJSON (Object v) = Info <$> v .: "info"
+    parseJSON _          = mempty
 
 
-newtype Action = Action { action :: Int }
+data Action = Action !Int
   deriving (Eq, Show, Generic)
 
-instance ToJSON Action
-instance FromJSON Action
+instance ToJSON Action where
+    toJSON (Action i) = object ["action" .= i]
+instance FromJSON Action where
+    parseJSON (Object v) = Action <$> v .: "action"
+    parseJSON _          = mempty
 
 
 data Monitor = Monitor
