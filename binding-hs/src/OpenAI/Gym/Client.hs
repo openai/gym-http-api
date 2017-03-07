@@ -52,7 +52,7 @@ import OpenAI.Gym.Prelude
 -- | GymClient is our primary computational context
 newtype GymClient a =
   GymClient { getGymClient :: ReaderT (Manager, BaseUrl) ClientM a }
-  deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad, MonadIO)
 
 
 runGymClient :: Manager -> BaseUrl -> GymClient a -> IO (Either ServantError a)

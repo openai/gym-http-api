@@ -22,6 +22,7 @@ import Network.HTTP.Client        as P hiding (Proxy, responseBody, responseStat
 import Servant.API                as P
 import Servant.Client             as P
 import Servant.HTML.Lucid         as P (HTML)
+import Control.Monad.IO.Class     as P
 
 instance MimeUnrender HTML () where
     mimeUnrender _ _ = return ()
