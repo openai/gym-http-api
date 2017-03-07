@@ -28,7 +28,8 @@ library
       src
   default-extensions: OverloadedStrings
   build-depends:
-      base >=4.7 && <5
+      exceptions
+    , base >=4.7 && <5
     , aeson
     , http-client
     , monad-loops
@@ -38,7 +39,6 @@ library
     , servant-lucid
     , text
     , transformers
-    , exceptions
   exposed-modules:
       OpenAI.Gym.API
       OpenAI.Gym.Client
@@ -52,6 +52,7 @@ executable example
       examples
   default-extensions: OverloadedStrings
   build-depends:
-      base >=4.7 && <5
+      exceptions
+    , base >=4.7 && <5
     , gym-http-api
   default-language: Haskell2010

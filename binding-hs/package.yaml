@@ -13,6 +13,9 @@ extra-source-files:
 default-extensions:
   - OverloadedStrings
 
+dependencies:
+  - exceptions
+
 library:
   source-dirs: src
   dependencies:
@@ -26,7 +29,6 @@ library:
   - servant-lucid
   - text
   - transformers
-  - exceptions
 
 executables:
   example:
