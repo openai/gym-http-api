@@ -66,12 +66,12 @@ instance ToJSON Environment
 instance FromJSON Environment
 
 
-data Observation = Observation !Array
+data Observation = Observation !Value
   deriving (Eq, Show, Generic)
 
 
 instance ToJSON Observation where
-    toJSON (Observation arr) = object ["observation" .= arr]
+    toJSON (Observation v) = object ["observation" .= v]
 
 instance FromJSON Observation where
     parseJSON (Object v) = Observation <$> v .: "observation"
@@ -79,7 +79,7 @@ instance FromJSON Observation where
 
 
 data Step = Step
-  { action :: !Int
+  { action :: !Value
   , render :: !Bool
   } deriving Generic
 
@@ -87,7 +87,7 @@ instance ToJSON Step
 
 
 data Outcome = Outcome
-  { observation :: !Array
+  { observation :: !Value
   , reward      :: !Double
   , done        :: !Bool
   , info        :: !Object
@@ -101,13 +101,13 @@ data Info = Info !Object
   deriving (Eq, Show, Generic)
 
 instance ToJSON Info where
-    toJSON (Info i) = object ["info" .= i]
+    toJSON (Info v) = object ["info" .= v]
 instance FromJSON Info where
     parseJSON (Object v) = Info <$> v .: "info"
     parseJSON _          = mempty
 
 
-data Action = Action !Int
+data Action = Action !Value
   deriving (Eq, Show, Generic)
 
 instance ToJSON Action where

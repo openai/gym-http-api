@@ -12,6 +12,8 @@ module Main where
 
 import Prelude
 import Control.Monad (replicateM_, when)
+import Control.Monad.Catch
+import Control.Exception.Base
 
 import OpenAI.Gym.Client
 
