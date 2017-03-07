@@ -26,6 +26,7 @@ module OpenAI.Gym.Client
   , envClose
   , upload
   , shutdownServer
+  , ServantError(..)
   ) where
 
 import OpenAI.Gym.Data as X
@@ -33,6 +34,7 @@ import OpenAI.Gym.Data as X
 -- minimal re-exports for any client dependencies
 import Data.Aeson as X
 import Control.Monad.Trans.Except as X (runExceptT)
+import Control.Monad.Catch (MonadThrow)
 import Network.HTTP.Client as X
   ( Manager(..)
   , newManager
@@ -52,7 +54,7 @@ import OpenAI.Gym.Prelude
 -- | GymClient is our primary computational context
 newtype GymClient a =
   GymClient { getGymClient :: ReaderT (Manager, BaseUrl) ClientM a }
-  deriving (Functor, Applicative, Monad, MonadIO)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadThrow)
 
 
 runGymClient :: Manager -> BaseUrl -> GymClient a -> IO (Either ServantError a)

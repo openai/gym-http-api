@@ -38,6 +38,7 @@ library
     , servant-lucid
     , text
     , transformers
+    , exceptions
   exposed-modules:
       OpenAI.Gym.API
       OpenAI.Gym.Client

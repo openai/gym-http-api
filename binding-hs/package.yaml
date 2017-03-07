@@ -26,6 +26,7 @@ library:
   - servant-lucid
   - text
   - transformers
+  - exceptions
 
 executables:
   example:
