@@ -122,7 +122,6 @@ class Envs(object):
             v_c = lambda count: False
         else:
             v_c = lambda count: count % video_callable == 0
-        #env.monitor.start(directory, force=force, resume=resume, video_callable=v_c)
         self.envs[instance_id] = wrappers.Monitor(env, directory, force=force, resume=resume, video_callable=v_c) 
 
     def monitor_close(self, instance_id):
