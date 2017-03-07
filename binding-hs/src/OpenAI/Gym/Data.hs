@@ -8,7 +8,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 module OpenAI.Gym.Data
   ( GymEnv (..)
-  , EnvID (..)
   , InstID (..)
   , Environment (..)
   , Observation (..)
@@ -50,13 +49,7 @@ instance Show GymEnv where
   show PongV0                  = "Pong-v0"
 
 instance ToJSON GymEnv where
-  toJSON = String . T.pack . show
-
-
-newtype EnvID = EnvID { env_id :: GymEnv }
-  deriving Generic
-
-instance ToJSON EnvID
+  toJSON env = object [ "env_id" .= show env ]
 
 
 newtype InstID = InstID { instance_id :: Text }

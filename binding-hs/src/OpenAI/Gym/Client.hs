@@ -70,7 +70,7 @@ withConnection fn = do
 -- * Wrapped servant calls
 
 -- | Create an instance of the specified environment
-envCreate :: EnvID -> GymClient InstID
+envCreate :: GymEnv -> GymClient InstID
 envCreate = withConnection . envCreate'
 
 -- | List all environments running on the server

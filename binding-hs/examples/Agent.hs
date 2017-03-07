@@ -18,7 +18,7 @@ import OpenAI.Gym.Client
 
 setupAgent :: GymClient InstID
 setupAgent = do
-  inst@InstID{instance_id} <- envCreate (EnvID CartPoleV0)
+  inst@InstID{instance_id} <- envCreate CartPoleV0
   envActionSpaceInfo instance_id
   return inst
 

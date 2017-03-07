@@ -12,7 +12,7 @@ module OpenAI.Gym.API where
 import OpenAI.Gym.Prelude
 import OpenAI.Gym.Data
 
-type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] EnvID :> Post '[JSON] InstID
+type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] GymEnv :> Post '[JSON] InstID
          :<|> "v1" :> "envs" :> Get '[JSON] Environment
          :<|> "v1" :> "envs"
               :> Capture "instance_id" Text
@@ -50,7 +50,7 @@ gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
 
-envCreate'               :: EnvID   -> Manager -> BaseUrl -> ClientM InstID
+envCreate'               :: GymEnv  -> Manager -> BaseUrl -> ClientM InstID
 envListAll'              :: Manager -> BaseUrl -> ClientM Environment
 envReset'                :: Text    -> Manager -> BaseUrl -> ClientM Observation
 envStep'                 :: Text    -> Step    -> Manager -> BaseUrl -> ClientM Outcome
