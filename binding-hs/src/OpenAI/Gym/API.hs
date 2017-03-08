@@ -12,38 +12,20 @@ module OpenAI.Gym.API where
 import OpenAI.Gym.Prelude
 import OpenAI.Gym.Data
 
-type GymAPI = "v1" :> "envs" :> ReqBody '[JSON] GymEnv :> Post '[JSON] InstID
-         :<|> "v1" :> "envs" :> Get '[JSON] Environment
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "reset" :> Post '[JSON] Observation
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> ReqBody '[JSON] Step :> "step" :> Post '[JSON] Outcome
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "action_space" :> Get '[JSON] Info
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "action_space" :> "sample" :> Get '[JSON] Action
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "action_space" :> "contains" :> Capture "x" Int
-              :> Get '[JSON] Object
-         :<|> "v1" :> "envs"
-              :> Capture "instance_od" Text :> "observation_space"
-              :> Get '[JSON] Info
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text :> ReqBody '[JSON] Monitor
-              :> "monitor" :> "start" :> Post '[HTML] ()
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text
-              :> "monitor" :> "close" :> Post '[HTML] ()
-         :<|> "v1" :> "envs"
-              :> Capture "instance_id" Text :> "close"
-              :> Post '[HTML] ()
-         :<|> "v1" :> "upload" :> ReqBody '[JSON] Config :> Post '[HTML] ()
-         :<|> "v1" :> "shutdown" :> Post '[HTML] ()
+type GymAPI
+  = "v1" :> ( "envs" :> ( ReqBody '[JSON] GymEnv :> Post '[JSON] InstID
+                     :<|> Get '[JSON] Environment
+                     :<|> Capture "instance_id" InstID :> "reset" :> Post '[JSON] Observation
+                     :<|> Capture "instance_id" InstID :> "step"  :> ReqBody '[JSON] Step :> Post '[JSON] Outcome
+                     :<|> Capture "instance_id" InstID :> "action_space" :> Get '[JSON] Info
+                     :<|> Capture "instance_id" InstID :> "action_space" :> "sample"   :> Get '[JSON] Action
+                     :<|> Capture "instance_id" InstID :> "action_space" :> "contains" :> Capture "x" Int :> Get '[JSON] Object
+                     :<|> Capture "instance_id" InstID :> "observation_space"  :> Get '[JSON] Info
+                     :<|> Capture "instance_id" InstID :> "monitor" :> "start" :> ReqBody '[JSON] Monitor :> Post '[HTML] ()
+                     :<|> Capture "instance_id" InstID :> "monitor" :> "close" :> Post '[HTML] ()
+                     :<|> Capture "instance_id" InstID :> "close"   :> Post '[HTML] ())
+         :<|> "upload" :> ReqBody '[JSON] Config :> Post '[HTML] ()
+         :<|> "shutdown" :> Post '[HTML] ())
 
 
 gymAPI :: Proxy GymAPI
@@ -65,7 +47,7 @@ upload'                  :: Config  -> Manager -> BaseUrl -> ClientM ()
 shutdownServer'          :: Manager -> BaseUrl -> ClientM ()
 
 
-envCreate'
+(envCreate'
   :<|> envListAll'
   :<|> envReset'
   :<|> envStep'
@@ -75,7 +57,7 @@ envCreate'
   :<|> envObservationSpaceInfo'
   :<|> envMonitorStart'
   :<|> envMonitorClose'
-  :<|> envClose'
+  :<|> envClose')
   :<|> upload'
   :<|> shutdownServer'
   = client gymAPI
