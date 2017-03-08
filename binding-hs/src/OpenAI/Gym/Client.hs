@@ -80,36 +80,36 @@ envListAll :: GymClient Environment
 envListAll = withConnection envListAll'
 
 -- | Reset the state of the environment and return an initial observation.
-envReset :: Text -> GymClient Observation
+envReset :: InstID -> GymClient Observation
 envReset = withConnection . envReset'
 
 -- | Step though an environment using an action.
-envStep :: Text -> Step -> GymClient Outcome
+envStep :: InstID -> Step -> GymClient Outcome
 envStep a b = withConnection $ envStep' a b
 
 -- | Get information (name and dimensions/bounds) of the env's @action_space@
-envActionSpaceInfo :: Text -> GymClient Info
+envActionSpaceInfo :: InstID -> GymClient Info
 envActionSpaceInfo = withConnection . envActionSpaceInfo'
 
-envActionSpaceSample :: Text -> GymClient Action
+envActionSpaceSample :: InstID -> GymClient Action
 envActionSpaceSample = withConnection . envActionSpaceSample'
 
-envActionSpaceContains :: Text -> Int -> GymClient Object
+envActionSpaceContains :: InstID -> Int -> GymClient Object
 envActionSpaceContains a b = withConnection $ envActionSpaceContains' a b
 
 -- | Get information (name and dimensions/bounds) of the env's @observation_space@
-envObservationSpaceInfo :: Text -> GymClient Info
+envObservationSpaceInfo :: InstID -> GymClient Info
 envObservationSpaceInfo = withConnection . envObservationSpaceInfo'
 
 -- | Start monitoring
-envMonitorStart :: Text -> Monitor -> GymClient ()
+envMonitorStart :: InstID -> Monitor -> GymClient ()
 envMonitorStart a b = withConnection $ envMonitorStart' a b
 
 -- | Flush all monitor data to disk
-envMonitorClose :: Text -> GymClient ()
+envMonitorClose :: InstID -> GymClient ()
 envMonitorClose = withConnection . envMonitorClose'
 
-envClose :: Text -> GymClient ()
+envClose :: InstID -> GymClient ()
 envClose = withConnection . envClose'
 
 -- | Flush all monitor data to disk

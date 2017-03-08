@@ -20,16 +20,16 @@ import OpenAI.Gym.Client
 
 setupAgent :: GymClient InstID
 setupAgent = do
-  inst@InstID{instance_id} <- envCreate CartPoleV0
-  envActionSpaceInfo instance_id
+  inst <- envCreate CartPoleV0
+  envActionSpaceInfo inst
   return inst
 
 
 withMonitor :: InstID -> GymClient () -> GymClient Monitor
-withMonitor InstID{instance_id} agent = do
-  envMonitorStart instance_id configs
+withMonitor inst agent = do
+  envMonitorStart inst configs
   agent
-  envMonitorClose instance_id
+  envMonitorClose inst
   return configs
   where
     configs :: Monitor
@@ -37,8 +37,8 @@ withMonitor InstID{instance_id} agent = do
 
 
 exampleAgent :: InstID -> GymClient ()
-exampleAgent InstID{instance_id} = do
-  envReset instance_id
+exampleAgent inst = do
+  envReset inst
   go 0 False
   where
     maxSteps :: Int
@@ -49,8 +49,8 @@ exampleAgent InstID{instance_id} = do
 
     go :: Int -> Bool -> GymClient ()
     go x done = do
-      Action a <- envActionSpaceSample instance_id
-      Outcome ob reward done _ <- envStep instance_id (Step a True)
+      Action a <- envActionSpaceSample inst
+      Outcome ob reward done _ <- envStep inst (Step a True)
       when (not done && x < 200) $ go (x + 1) done
 
 

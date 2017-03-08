@@ -6,7 +6,11 @@
 -- Portability: non-portable
 -------------------------------------------------------------------------------
 {-# LANGUAGE MultiParamTypeClasses #-}
-module OpenAI.Gym.Prelude (module P) where
+module OpenAI.Gym.Prelude
+  ( module P
+  , parseSingleton
+  , toSingleton
+  ) where
 
 import Control.Monad              as P
 import Control.Monad.Loops        as P
@@ -23,6 +27,15 @@ import Servant.API                as P
 import Servant.Client             as P
 import Servant.HTML.Lucid         as P (HTML)
 import Control.Monad.IO.Class     as P
+import Data.Aeson.Types (Parser)
 
 instance MimeUnrender HTML () where
     mimeUnrender _ _ = return ()
+
+parseSingleton :: FromJSON a => (a -> b) -> Text -> Value -> Parser b
+parseSingleton fn f (Object v) = fn <$> v .: f
+parseSingleton fn f _          = mempty
+
+toSingleton :: ToJSON a => Text -> a -> Value
+toSingleton f a = object [ f .= toJSON a ]
+

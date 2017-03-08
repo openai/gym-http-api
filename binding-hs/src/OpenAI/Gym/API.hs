@@ -34,15 +34,15 @@ gymAPI = Proxy
 
 envCreate'               :: GymEnv  -> Manager -> BaseUrl -> ClientM InstID
 envListAll'              :: Manager -> BaseUrl -> ClientM Environment
-envReset'                :: Text    -> Manager -> BaseUrl -> ClientM Observation
-envStep'                 :: Text    -> Step    -> Manager -> BaseUrl -> ClientM Outcome
-envActionSpaceInfo'      :: Text    -> Manager -> BaseUrl -> ClientM Info
-envActionSpaceSample'    :: Text    -> Manager -> BaseUrl -> ClientM Action
-envActionSpaceContains'  :: Text    -> Int     -> Manager -> BaseUrl -> ClientM Object
-envObservationSpaceInfo' :: Text    -> Manager -> BaseUrl -> ClientM Info
-envMonitorStart'         :: Text    -> Monitor -> Manager -> BaseUrl -> ClientM ()
-envMonitorClose'         :: Text    -> Manager -> BaseUrl -> ClientM ()
-envClose'                :: Text    -> Manager -> BaseUrl -> ClientM ()
+envReset'                :: InstID  -> Manager -> BaseUrl -> ClientM Observation
+envStep'                 :: InstID  -> Step    -> Manager -> BaseUrl -> ClientM Outcome
+envActionSpaceInfo'      :: InstID  -> Manager -> BaseUrl -> ClientM Info
+envActionSpaceSample'    :: InstID  -> Manager -> BaseUrl -> ClientM Action
+envActionSpaceContains'  :: InstID  -> Int     -> Manager -> BaseUrl -> ClientM Object
+envObservationSpaceInfo' :: InstID  -> Manager -> BaseUrl -> ClientM Info
+envMonitorStart'         :: InstID  -> Monitor -> Manager -> BaseUrl -> ClientM ()
+envMonitorClose'         :: InstID  -> Manager -> BaseUrl -> ClientM ()
+envClose'                :: InstID  -> Manager -> BaseUrl -> ClientM ()
 upload'                  :: Config  -> Manager -> BaseUrl -> ClientM ()
 shutdownServer'          :: Manager -> BaseUrl -> ClientM ()
 

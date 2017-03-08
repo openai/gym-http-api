@@ -52,11 +52,17 @@ instance ToJSON GymEnv where
   toJSON env = object [ "env_id" .= show env ]
 
 
-newtype InstID = InstID { instance_id :: Text }
+data InstID = InstID !Text
   deriving (Eq, Show, Generic)
 
-instance ToJSON InstID
-instance FromJSON InstID
+instance ToHttpApiData InstID where
+  toUrlPiece (InstID i) = i
+
+instance ToJSON InstID where
+  toJSON (InstID i) = toSingleton "instance_id" i
+
+instance FromJSON InstID where
+  parseJSON = parseSingleton InstID "instance_id"
 
 
 newtype Environment = Environment { all_envs :: HashMap Text Text }
@@ -69,13 +75,11 @@ instance FromJSON Environment
 data Observation = Observation !Value
   deriving (Eq, Show, Generic)
 
-
 instance ToJSON Observation where
-    toJSON (Observation v) = object ["observation" .= v]
+  toJSON (Observation v) = toSingleton "observation" v
 
 instance FromJSON Observation where
-    parseJSON (Object v) = Observation <$> v .: "observation"
-    parseJSON _          = mempty
+  parseJSON = parseSingleton Observation "observation"
 
 
 data Step = Step
@@ -101,20 +105,20 @@ data Info = Info !Object
   deriving (Eq, Show, Generic)
 
 instance ToJSON Info where
-    toJSON (Info v) = object ["info" .= v]
+  toJSON (Info v) = toSingleton "info" v
+
 instance FromJSON Info where
-    parseJSON (Object v) = Info <$> v .: "info"
-    parseJSON _          = mempty
+  parseJSON = parseSingleton Info "info"
 
 
 data Action = Action !Value
   deriving (Eq, Show, Generic)
 
 instance ToJSON Action where
-    toJSON (Action i) = object ["action" .= i]
+  toJSON (Action v) = toSingleton "action" v
+
 instance FromJSON Action where
-    parseJSON (Object v) = Action <$> v .: "action"
-    parseJSON _          = mempty
+  parseJSON = parseSingleton Action "action"
 
 
 data Monitor = Monitor
