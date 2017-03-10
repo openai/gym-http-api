@@ -6,6 +6,7 @@
 -- Portability: non-portable
 -------------------------------------------------------------------------------
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 module OpenAI.Gym.Prelude
   ( module P
   , parseSingleton
@@ -27,6 +28,7 @@ import Servant.API                as P
 import Servant.Client             as P
 import Servant.HTML.Lucid         as P (HTML)
 import Control.Monad.IO.Class     as P
+import Prelude                    as P
 import Data.Aeson.Types (Parser)
 
 instance MimeUnrender HTML () where
