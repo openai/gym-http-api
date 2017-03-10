@@ -32,34 +32,34 @@ gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
 
-envCreate'               :: GymEnv  -> Manager -> BaseUrl -> ClientM InstID
-envListAll'              :: Manager -> BaseUrl -> ClientM Environment
-envReset'                :: InstID  -> Manager -> BaseUrl -> ClientM Observation
-envStep'                 :: InstID  -> Step    -> Manager -> BaseUrl -> ClientM Outcome
-envActionSpaceInfo'      :: InstID  -> Manager -> BaseUrl -> ClientM Info
-envActionSpaceSample'    :: InstID  -> Manager -> BaseUrl -> ClientM Action
-envActionSpaceContains'  :: InstID  -> Int     -> Manager -> BaseUrl -> ClientM Object
-envObservationSpaceInfo' :: InstID  -> Manager -> BaseUrl -> ClientM Info
-envMonitorStart'         :: InstID  -> Monitor -> Manager -> BaseUrl -> ClientM ()
-envMonitorClose'         :: InstID  -> Manager -> BaseUrl -> ClientM ()
-envClose'                :: InstID  -> Manager -> BaseUrl -> ClientM ()
-upload'                  :: Config  -> Manager -> BaseUrl -> ClientM ()
-shutdownServer'          :: Manager -> BaseUrl -> ClientM ()
+envCreate               :: GymEnv  -> ClientM InstID
+envListAll              :: ClientM Environment
+envReset                :: InstID  -> ClientM Observation
+envStep                 :: InstID  -> Step    -> ClientM Outcome
+envActionSpaceInfo      :: InstID  -> ClientM Info
+envActionSpaceSample    :: InstID  -> ClientM Action
+envActionSpaceContains  :: InstID  -> Int     -> ClientM Object
+envObservationSpaceInfo :: InstID  -> ClientM Info
+envMonitorStart         :: InstID  -> Monitor -> ClientM ()
+envMonitorClose         :: InstID  -> ClientM ()
+envClose                :: InstID  -> ClientM ()
+upload                  :: Config  -> ClientM ()
+shutdownServer          :: ClientM ()
 
 
-(envCreate'
-  :<|> envListAll'
-  :<|> envReset'
-  :<|> envStep'
-  :<|> envActionSpaceInfo'
-  :<|> envActionSpaceSample'
-  :<|> envActionSpaceContains'
-  :<|> envObservationSpaceInfo'
-  :<|> envMonitorStart'
-  :<|> envMonitorClose'
-  :<|> envClose')
-  :<|> upload'
-  :<|> shutdownServer'
+(envCreate
+  :<|> envListAll
+  :<|> envReset
+  :<|> envStep
+  :<|> envActionSpaceInfo
+  :<|> envActionSpaceSample
+  :<|> envActionSpaceContains
+  :<|> envObservationSpaceInfo
+  :<|> envMonitorStart
+  :<|> envMonitorClose
+  :<|> envClose)
+  :<|> upload
+  :<|> shutdownServer
   = client gymAPI
 
 
