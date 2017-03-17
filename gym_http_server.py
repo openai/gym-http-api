@@ -222,6 +222,8 @@ def env_reset(instance_id):
         - observation: the initial observation of the space
     """
     observation = envs.reset(instance_id)
+    if np.isscalar(observation):
+        observation = observation.item()
     return jsonify(observation = observation)
 
 @app.route('/v1/envs/<instance_id>/step/', methods=['POST'])
