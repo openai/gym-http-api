@@ -95,7 +95,7 @@ def test_observation_space_box():
 
 @with_server
 def test_reset():
-    client = gym_http_client.Client(get_remote_base())    
+    client = gym_http_client.Client(get_remote_base())
 
     instance_id = client.env_create('CartPole-v0')
     init_obs = client.env_reset(instance_id)
@@ -110,6 +110,7 @@ def test_step():
    client = gym_http_client.Client(get_remote_base())
 
    instance_id = client.env_create('CartPole-v0')
+   client.env_reset(instance_id)
    [observation, reward, done, info] = client.env_step(instance_id, 0)
    assert len(observation) == 4
    assert type(reward) == float
@@ -117,6 +118,7 @@ def test_step():
    assert type(info) == dict
 
    instance_id = client.env_create('FrozenLake-v0')
+   client.env_reset(instance_id)
    [observation, reward, done, info] = client.env_step(instance_id, 0)
    assert type(observation) == int
 
