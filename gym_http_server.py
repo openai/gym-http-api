@@ -89,9 +89,14 @@ class Envs(object):
                 print('TypeError')
         return action
 
+    def get_observation_space_contains(self, instance_id, props):
+        env = self._lookup_env(instance_id)
+        return env.observation_space.contains(int(x))
+
     def get_observation_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
-        return self._get_space_properties(env.observation_space)
+        space = self._get_space_properties(env.observation_space)
+        return space
 
     def _get_space_properties(self, space):
         info = {}
@@ -109,7 +114,6 @@ class Envs(object):
         elif info['name'] == 'HighLow':
             info['num_rows'] = space.num_rows
             info['matrix'] = [((float(x) if x != -np.inf else -1e100) if x != +np.inf else +1e100) for x in np.array(space.matrix).flatten()]
-
         return info
 
     def monitor_start(self, instance_id, directory, force, resume, video_callable):
@@ -284,12 +288,28 @@ def env_action_space_contains(instance_id, x):
     Parameters:
         - instance_id: a short identifier (such as '3c657dbc')
         for the environment instance
-	- x: the value to be checked as member
+	    - x: the value to be checked as member
     Returns:
         - member: whether the value passed as parameter belongs to the action_space
     """  
 
     member = envs.get_action_space_contains(instance_id, x)
+    return jsonify(member = member)
+
+@app.route('/v1/envs/<instance_id>/observation_space/contains', methods=['GET'])
+def env_observation_space_contains(instance_id):
+    """
+    Assess that the parameters are members of the env's observation_space
+
+    Parameters:
+        - instance_id: a short identifier (such as '3c657dbc')
+        for the environment instance
+    Returns:
+        - member: whether all the values passed belong to the observation_space
+    """
+    j = request.get_json()
+    member = envs.get_observation_space_contains(instance_id, j)
+    
     return jsonify(member = member)
 
 @app.route('/v1/envs/<instance_id>/observation_space/', methods=['GET'])
