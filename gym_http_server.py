@@ -91,10 +91,12 @@ class Envs(object):
 
     def get_observation_space_contains(self, instance_id, j):
         env = self._lookup_env(instance_id)
-        # for prop in j {
-        #     if env.observation_space[prop]
-        # }
-        return env.observation_space.contains(int(x))
+        for key, value in j.items():
+            if hasattr(env.observation_space, key) == False:
+                return False
+            if env.observation_space[key] != value:
+                return False
+        return True
 
     def get_observation_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
@@ -299,7 +301,7 @@ def env_action_space_contains(instance_id, x):
     member = envs.get_action_space_contains(instance_id, x)
     return jsonify(member = member)
 
-@app.route('/v1/envs/<instance_id>/observation_space/contains', methods=['GET'])
+@app.route('/v1/envs/<instance_id>/observation_space/contains', methods=['POST'])
 def env_observation_space_contains(instance_id):
     """
     Assess that the parameters are members of the env's observation_space
@@ -312,7 +314,6 @@ def env_observation_space_contains(instance_id):
     """
     j = request.get_json()
     member = envs.get_observation_space_contains(instance_id, j)
-    
     return jsonify(member = member)
 
 @app.route('/v1/envs/<instance_id>/observation_space/', methods=['GET'])
