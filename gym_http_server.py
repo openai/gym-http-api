@@ -93,15 +93,16 @@ class Envs(object):
         env = self._lookup_env(instance_id)
         for key, value in j.items():
             if hasattr(env.observation_space, key) == False:
+                print('Does not contain attribute: ',key)
                 return False
             if env.observation_space[key] != value:
+                print('Values for {} do not match. Passed: {}. Observed: {}'.format(key, value, env.observation_space[key]))
                 return False
         return True
 
     def get_observation_space_info(self, instance_id):
         env = self._lookup_env(instance_id)
-        space = self._get_space_properties(env.observation_space)
-        return space
+        return self._get_space_properties(env.observation_space)
 
     def _get_space_properties(self, space):
         info = {}
@@ -142,7 +143,6 @@ class Envs(object):
 ########## App setup ##########
 app = Flask(__name__)
 envs = Envs()
-    
 ########## Error handling ##########
 class InvalidUsage(Exception):
     status_code = 400

@@ -64,7 +64,7 @@ open class GymClient {
     }
     
     
-    /// Checks if an observation is contained in the observation space.
+    /// Checks if observations are all contained in the observation space.
     open func containsObservation(instanceID:InstanceID, observations:[String:Any]) -> Bool {
         let json = post(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/observation_space/contains"), parameter: observations)
         let isMember = (json as! [String:Bool])["member"]!
