@@ -9,6 +9,8 @@
             "pythonPath": "${config.python.pythonPath}",
             "program": "${file}",
             "cwd": "${workspaceRoot}",
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
@@ -31,6 +33,8 @@
             },
             "program": "${file}",
             "cwd": "${workspaceRoot}",
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
@@ -45,6 +49,8 @@
             "pythonPath": "${config.python.pythonPath}",
             "module": "module.name",
             "cwd": "${workspaceRoot}",
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
@@ -58,8 +64,10 @@
             "stopOnEntry": true,
             "pythonPath": "${config.python.pythonPath}",
             "program": "${file}",
-            "cwd": "null",
+            "cwd": null,
             "console": "integratedTerminal",
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit"
@@ -72,8 +80,10 @@
             "stopOnEntry": true,
             "pythonPath": "${config.python.pythonPath}",
             "program": "${file}",
-            "cwd": "null",
+            "cwd": null,
             "console": "externalTerminal",
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit"
@@ -91,6 +101,8 @@
                 "runserver",
                 "--noreload"
             ],
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
@@ -114,6 +126,7 @@
                 "--no-debugger",
                 "--no-reload"
             ],
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
@@ -129,10 +142,31 @@
             "program": "${workspaceRoot}/run.py",
             "cwd": "${workspaceRoot}",
             "args": [],
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
                 "RedirectOutput"
+            ]
+        },
+        {
+            "name": "Pyramid",
+            "type": "python",
+            "request": "launch",
+            "stopOnEntry": true,
+            "pythonPath": "${config.python.pythonPath}",
+            "cwd": "${workspaceRoot}",
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
+            "args": [
+                "${workspaceRoot}/development.ini"
+            ],
+            "debugOptions": [
+                "WaitOnAbnormalExit",
+                "WaitOnNormalExit",
+                "RedirectOutput",
+                "Pyramid"
             ]
         },
         {
@@ -148,6 +182,8 @@
                 "runserver",
                 "--noreload=True"
             ],
+            "env": null,
+            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",

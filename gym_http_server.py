@@ -89,8 +89,11 @@ class Envs(object):
                 print('TypeError')
         return action
 
-    def get_observation_space_contains(self, instance_id, props):
+    def get_observation_space_contains(self, instance_id, j):
         env = self._lookup_env(instance_id)
+        # for prop in j {
+        #     if env.observation_space[prop]
+        # }
         return env.observation_space.contains(int(x))
 
     def get_observation_space_info(self, instance_id):
@@ -137,7 +140,7 @@ class Envs(object):
 ########## App setup ##########
 app = Flask(__name__)
 envs = Envs()
-
+    
 ########## Error handling ##########
 class InvalidUsage(Exception):
     status_code = 400
