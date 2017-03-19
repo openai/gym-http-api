@@ -11,6 +11,7 @@ let id = client.create(envID: "CartPole-v0")
 // Verify action and observation space
 print(client.actionSpace(instanceID: id))
 print(client.observationSpace(instanceID: id))
+print(client.containsObservation(instanceID: id, observations: ["name":"Box"]))
 
 // Start recording, and wipe out old recordings
 client.startMonitor(instanceID: id, directory: baseDirectory, force: true, resume: false, videoCallable: true)

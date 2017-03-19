@@ -63,6 +63,14 @@ open class GymClient {
         return getSpace(instanceID: instanceID, name: "observation_space")
     }
     
+    
+    /// Checks if an observation is contained in the observation space.
+    open func containsObservation(instanceID:InstanceID, observations:[String:Any]) -> Bool {
+        let json = post(url: baseURL.appendingPathComponent("/v1/envs/\(instanceID)/observation_space/contains"), parameter: observations)
+        let isMember = (json as! [String:Bool])["member"]!
+        return isMember
+    }
+    
     /// Get information (name and dimensions/bounds) of the env's action_space
     open func actionSpace(instanceID:InstanceID) -> Space {
         return getSpace(instanceID: instanceID, name: "action_space")
@@ -132,9 +140,20 @@ open class GymClient {
     // MARK: Helpers
     
     private func get(url:URL, parameter:Any? = nil) -> Any? {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
         var json:Any?
+        
         let semaphore = DispatchSemaphore(value: 0)
-        let task = URLSession.shared.dataTask(with: url) { (data, res, error) in
+        if let parameter = parameter {
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.addValue("application/json", forHTTPHeaderField: "Accept")
+            request.httpBody = try! JSONSerialization.data(withJSONObject: parameter, options: [.prettyPrinted])
+            let j = try! JSONSerialization.jsonObject(with: request.httpBody!, options: [.allowFragments])
+            print(j)
+        }
+        let task = URLSession.shared.dataTask(with: request) { (data, res, error) in
             self.httpErrorHandler(data: data, res: res, error: error)
             
             json = try! JSONSerialization.jsonObject(with: data!, options: [.allowFragments])
