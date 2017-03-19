@@ -31,6 +31,8 @@ while true {
     print("Result on iteration \(count). \nReward: \(result.reward). Observation: \(result.observation).")
     count += 1
     if result.done {
+// Uncomment the following line to endlessly repeat
+//        client.reset(instanceID: id)
         break
     }
 }
