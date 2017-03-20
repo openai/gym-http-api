@@ -96,6 +96,12 @@ class Client(object):
         info = resp['info']
         return info
 
+    def env_observation_space_contains(self, instance_id, params):
+        route = '/v1/envs/{}/observation_space/contains'.format(instance_id)
+        resp = self._post_request(route, params)
+        member = resp['member']
+        return member
+
     def env_monitor_start(self, instance_id, directory,
                               force=False, resume=False, video_callable=False):
         route = '/v1/envs/{}/monitor/start/'.format(instance_id)
