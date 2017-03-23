@@ -85,7 +85,7 @@ instance FromJSON Observation where
 data Step = Step
   { action :: !Value
   , render :: !Bool
-  } deriving Generic
+  } deriving (Eq, Generic, Show)
 
 instance ToJSON Step
 
@@ -126,7 +126,7 @@ data Monitor = Monitor
   , force          :: !Bool
   , resume         :: !Bool
   , video_callable :: !Bool
-  } deriving Generic
+  } deriving (Generic, Eq, Show)
 
 instance ToJSON Monitor
 
@@ -135,7 +135,7 @@ data Config = Config
   { training_dir :: !Text
   , algorithm_id :: !Text
   , api_key      :: !Text
-  } deriving Generic
+  } deriving (Generic, Eq, Show)
 
 instance ToJSON Config
 
