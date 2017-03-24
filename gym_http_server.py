@@ -7,6 +7,7 @@ import numpy as np
 import six
 import argparse
 import sys
+import json
 
 import logging
 logger = logging.getLogger('werkzeug')
@@ -91,12 +92,11 @@ class Envs(object):
 
     def get_observation_space_contains(self, instance_id, j):
         env = self._lookup_env(instance_id)
+        info = self._get_space_properties(env.observation_space)
         for key, value in j.items():
-            if hasattr(env.observation_space, key) == False:
-                print('Does not contain attribute: ',key)
-                return False
-            if env.observation_space[key] != value:
-                print('Values for {} do not match. Passed: {}. Observed: {}'.format(key, value, env.observation_space[key]))
+            # Convert both values to json for comparibility
+            if json.dumps(info[key]) != json.dumps(value):
+                print('Values for "{}" do not match. Passed "{}", Observed "{}".'.format(key, value, info[key]))
                 return False
         return True
 
