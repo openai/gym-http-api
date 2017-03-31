@@ -1,11 +1,11 @@
 language: python
 python:
 - '2.7'
-- '3.4'
+- '3.5'
 before_install:
 - Xvfb :12 -screen 0 800x600x24 +extension RANDR &
 env:
   global:
     secure: rwRcKoBUVrkOhfKbp/bd70nKxPAGWsHxbFCgvh+2yBroZuvmt982zlcBR6CHnuEopKaSETVPnA62gPGOu6GKvW+QU04ZLXxwolv8GJnWiElUo2cWwkvRnOssTfSjKHfPKvSkefWP/O0uhsHfku68fDsspovRkOSpB7gVGoF3JC18xHQPeHIG54EqSUbYz+CrhnJFRHgDoa9kcgAP9mXmKUCskvzOYc210nkcbFo8eURhEvaiOtQ/okMGmRa8Hf/fseMZv+Fdi5RiGp3NUSEu7l67FnmPeqZ+cdIJTJywujMcyd8C/dgjwTLExOD+HP5qo3/PhbDR5b8+F85SU8ITO0f1jKRDd3eeu+auKmf6cXERqCcKcA6l/I2dbDrVKNrQcQPqYNyQ6IzmOvS0A4PIbscjU59FM7c48/EW5JnuicRMKzgth5FevkzeWhOJjWdun4dTSlYpPtSZlBsYneRnNLw+abQTMSYZGMENDME/V4ZpqKGvRsEFQHRxn3A3uevZuBFg7vWzKoYaUAqMg8Mgh5T9pBrlqFxH2T17Zrf81eoKQijboGMpVXbpN11ofwuBY2Hw+Fhexsoz0cy6vAL8feBisD6YCKmu7MLbfZIT6Zbq8KUdRDWrJgJkXMPxyO6Wup91vu7vUXKdpPZFEfCaqD5zvic7Nup+nKQPEbgtZ9s=
 install: pip install -r requirements.txt
-script: nose2
+script: env PYTHONPATH=$PYTHONPATH:. py.test
