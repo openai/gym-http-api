@@ -3,6 +3,7 @@ import requests
 import six.moves.urllib.parse as urlparse
 import os
 import time
+import pytest
 
 from threading import Thread
 
@@ -45,6 +46,9 @@ def with_server(fn):
     fn.teardown = teardown_background_server
     return fn
 
+needs_api_key = pytest.mark.skipif(os.environ.get('OPENAI_GYM_API_KEY') is None, reason="needs OPENAI_GYM_API_KEY")
+
+
 ########## TESTS ##########
 
 ##### Valid use cases #####
@@ -59,7 +63,7 @@ def test_create_destroy():
 
 @with_server
 def test_action_space_discrete():
-    client = gym_http_client.Client(get_remote_base())    
+    client = gym_http_client.Client(get_remote_base())
     instance_id = client.env_create('CartPole-v0')
     action_info = client.env_action_space_info(instance_id)
     assert action_info['name'] == 'Discrete'
@@ -84,7 +88,7 @@ def test_action_space_contains():
 
 @with_server
 def test_observation_space_box():
-    client = gym_http_client.Client(get_remote_base())    
+    client = gym_http_client.Client(get_remote_base())
     instance_id = client.env_create('CartPole-v0')
     obs_info = client.env_observation_space_info(instance_id)
     assert obs_info['name'] == 'Box'
@@ -122,6 +126,7 @@ def test_step():
    [observation, reward, done, info] = client.env_step(instance_id, 0)
    assert type(observation) == int
 
+@needs_api_key
 @with_server
 def test_monitor_start_close_upload():
     assert os.environ.get('OPENAI_GYM_API_KEY')
@@ -180,7 +185,7 @@ def test_missing_param_env_id():
 def test_missing_param_action():
     ''' Test client failure to provide JSON param: action'''
     class BadClient(gym_http_client.Client):
-        def env_step(self, instance_id, action):    
+        def env_step(self, instance_id, action):
             route = '/v1/envs/{}/step/'.format(instance_id)
             data = {} # deliberately omit action
             resp = self._post_request(route, data)
@@ -222,6 +227,7 @@ def test_missing_param_monitor_directory():
     else:
         assert False
 
+@needs_api_key
 @with_server
 def test_missing_param_upload_directory():
     ''' Test client failure to provide JSON param: directory'''
@@ -260,7 +266,7 @@ def test_empty_param_api_key():
         def upload(self, training_dir, algorithm_id=None, api_key=None):
             route = '/v1/upload/'
             data = {'algorithm_id': algorithm_id,
-                    'training_dir': 'tmp', 
+                    'training_dir': 'tmp',
                     'api_key': ''} # deliberately empty string
             self._post_request(route, data)
     client = BadClient(get_remote_base())
