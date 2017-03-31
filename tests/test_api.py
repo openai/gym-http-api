@@ -1,4 +1,3 @@
-import nose2
 import requests
 import six.moves.urllib.parse as urlparse
 import os
