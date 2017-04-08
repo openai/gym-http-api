@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from flask import Flask, request, jsonify
 from functools import wraps
 import uuid
@@ -128,7 +129,6 @@ class Envs(object):
             v_c = lambda count: False
         else:
             v_c = lambda count: count % video_callable == 0
-        #env.monitor.start(directory, force=force, resume=resume, video_callable=v_c)
         self.envs[instance_id] = wrappers.Monitor(env, directory, force=force, resume=resume, video_callable=v_c) 
 
     def monitor_close(self, instance_id):
@@ -228,6 +228,8 @@ def env_reset(instance_id):
         - observation: the initial observation of the space
     """
     observation = envs.reset(instance_id)
+    if np.isscalar(observation):
+        observation = observation.item()
     return jsonify(observation = observation)
 
 @app.route('/v1/envs/<instance_id>/step/', methods=['POST'])
