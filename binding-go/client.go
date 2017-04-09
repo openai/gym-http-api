@@ -309,24 +309,63 @@ func responseErrorMessage(resp []byte) error {
 	return nil
 }
 
-func normalizeSpaceElem(obs interface{}) (interface{}, error) {
-	if obs == nil {
+func normalizeSpaceElem(oneDObs interface{}) (interface{}, error) {
+	if oneDObs == nil {
 		return nil, errors.New("unsupported observation: nil")
 	}
-	switch obs := obs.(type) {
+	switch oneDObs := oneDObs.(type) {
 	case float64:
-		return int(obs), nil
+		return oneDObs, nil
 	case []interface{}:
-		res := make([]float64, len(obs))
-		for i, x := range obs {
-			var ok bool
-			res[i], ok = x.(float64)
-			if !ok {
-				return nil, fmt.Errorf("unsupported observation: %v", obs)
+		switch twoDObs := oneDObs[0].(type) {
+		case float64:
+			var oneDOk bool
+			oneDRes := make([]float64, len(oneDObs))
+			for i, oneD := range oneDObs {
+				oneDRes[i], oneDOk = oneD.(float64)
 			}
+			if !oneDOk {
+				return nil, fmt.Errorf("unsupported observation: %v", oneDObs)
+			}
+			return oneDRes, nil
+		case []interface{}:
+			switch threeDObs := twoDObs[0].(type) {
+			case float64:
+				var twoDOk bool
+				twoDRes := make([][]float64, len(oneDObs))
+				for i, _ := range oneDObs {
+					twoDRes[i] = make([]float64, len(twoDObs))
+					for j, twoD := range twoDObs {
+						twoDRes[i][j], twoDOk = twoD.(float64)
+					}
+				}
+				if !twoDOk {
+					return nil, fmt.Errorf("unsupported observation: %v", oneDObs)
+				}
+				return twoDRes, nil
+			case []interface{}:
+				var threeOk bool
+				threeDRes := make([][][]float64, len(oneDObs))
+				for i, _ := range oneDObs {
+					threeDRes[i] = make([][]float64, len(twoDObs))
+					for j, _ := range twoDObs {
+						threeDRes[i][j] = make([]float64, len(threeDObs))
+						for k, threeD := range threeDObs {
+							threeDRes[i][j][k], threeOk = threeD.(float64)
+						}
+					}
+				}
+				if !threeOk {
+					return nil, fmt.Errorf("unsupported observation: %v", oneDObs)
+				}
+				return threeDRes, nil
+			default:
+				return nil, fmt.Errorf("unsupported observation: %v", oneDObs)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported observation: %v", oneDObs)
 		}
-		return res, nil
 	default:
-		return nil, fmt.Errorf("unsupported observation: %v", obs)
+		return nil, fmt.Errorf("unsupported observation: %v", oneDObs)
 	}
 }
