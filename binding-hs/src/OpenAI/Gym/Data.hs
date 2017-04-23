@@ -32,6 +32,9 @@ data GymEnv
   | MountainCarContinuousV0  -- ^ Drive up a big hill with continuous control.
   | PendulumV0               -- ^ Swing up a pendulum.
 
+  -- Toy text games
+  | FrozenLakeV0             -- ^ Swing up a pendulum.
+
   -- | Atari Games
   | PongRamV0                -- ^ Maximize score in the game Pong, with RAM as input
   | PongV0                   -- ^ Maximize score in the game Pong
@@ -45,6 +48,7 @@ instance Show GymEnv where
   show MountainCarV0           = "MountainCar-v0"
   show MountainCarContinuousV0 = "MountainCarContinuous-v0"
   show PendulumV0              = "Pendulum-v0"
+  show FrozenLakeV0            = "FrozenLake-v0"
   show PongRamV0               = "Pong-ram-v0"
   show PongV0                  = "Pong-v0"
 
