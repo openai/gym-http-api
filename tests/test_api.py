@@ -97,6 +97,16 @@ def test_observation_space_box():
     assert len(obs_info['high']) == 4
 
 @with_server
+def test_observation_space_contains():
+    client = gym_http_client.Client(get_remote_base())
+    instance_id = client.env_create('CartPole-v0')
+    obs_info = client.env_observation_space_info(instance_id)
+    assert obs_info['name'] == 'Box'
+    assert client.env_observation_space_contains(instance_id, {"name":"Box"})
+    assert client.env_observation_space_contains(instance_id, {"shape": (4,)})
+    assert client.env_observation_space_contains(instance_id, {"name":"Box", "shape": (4,)})
+
+@with_server
 def test_reset():
     client = gym_http_client.Client(get_remote_base())
 

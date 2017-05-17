@@ -37,6 +37,7 @@ tutorial/*.html
 # IDE files
 .eggs
 .tox
+.vscode/
 
 # PyCharm project files
 .idea
