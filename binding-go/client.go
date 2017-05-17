@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strconv"
 )
 
@@ -317,16 +318,48 @@ func normalizeSpaceElem(obs interface{}) (interface{}, error) {
 	case float64:
 		return int(obs), nil
 	case []interface{}:
-		res := make([]float64, len(obs))
-		for i, x := range obs {
-			var ok bool
-			res[i], ok = x.(float64)
-			if !ok {
-				return nil, fmt.Errorf("unsupported observation: %v", obs)
-			}
+		if len(obs) == 0 {
+			return nil, errors.New("unsupported observation: empty array")
+		} else if _, isFloat := obs[0].(float64); isFloat {
+			return normalizeOneDimSpace(obs)
+		} else {
+			return normalizeMultiDimSpace(obs)
 		}
-		return res, nil
 	default:
 		return nil, fmt.Errorf("unsupported observation: %v", obs)
 	}
+}
+
+func normalizeOneDimSpace(obs []interface{}) ([]float64, error) {
+	res := make([]float64, len(obs))
+	for i, x := range obs {
+		var isFloat bool
+		res[i], isFloat = x.(float64)
+		if !isFloat {
+			return nil, errors.New("unsupported observation: heterogeneous array")
+		}
+	}
+	return res, nil
+}
+
+func normalizeMultiDimSpace(obs []interface{}) (interface{}, error) {
+	firstElem, err := normalizeSpaceElem(obs[0])
+	if err != nil {
+		return nil, err
+	}
+	elemType := reflect.TypeOf(firstElem)
+	sliceType := reflect.SliceOf(elemType)
+	slice := reflect.MakeSlice(sliceType, len(obs), len(obs))
+	for i, x := range obs {
+		obj, err := normalizeSpaceElem(x)
+		if err != nil {
+			return nil, err
+		}
+		val := reflect.ValueOf(obj)
+		if val.Type() != elemType {
+			return nil, errors.New("unsupported observation: heterogeneous array")
+		}
+		slice.Index(i).Set(val)
+	}
+	return slice.Interface(), nil
 }

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
-from functools import wraps
 import uuid
 import gym
-from gym import wrappers
 import numpy as np
 import six
 import argparse
 import sys
 import json
+
 
 import logging
 logger = logging.getLogger('werkzeug')
@@ -42,9 +41,11 @@ class Envs(object):
         except KeyError:
             raise InvalidUsage('Instance_id {} unknown'.format(instance_id))
 
-    def create(self, env_id):
+    def create(self, env_id, seed=None):
         try:
             env = gym.make(env_id)
+            if seed:
+                env.seed(seed)
         except gym.error.Error:
             raise InvalidUsage("Attempted to look up malformed environment ID '{}'".format(env_id))
 
@@ -129,7 +130,7 @@ class Envs(object):
             v_c = lambda count: False
         else:
             v_c = lambda count: count % video_callable == 0
-        self.envs[instance_id] = wrappers.Monitor(env, directory, force=force, resume=resume, video_callable=v_c) 
+        self.envs[instance_id] = gym.wrappers.Monitor(env, directory, force=force, resume=resume, video_callable=v_c) 
 
     def monitor_close(self, instance_id):
         env = self._lookup_env(instance_id)
@@ -142,6 +143,7 @@ class Envs(object):
 
 ########## App setup ##########
 app = Flask(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 envs = Envs()
 ########## Error handling ##########
 class InvalidUsage(Exception):
@@ -192,6 +194,7 @@ def env_create():
 
     Parameters:
         - env_id: gym environment ID string, such as 'CartPole-v0'
+        - seed: set the seed for this env's random number generator(s).
     Returns:
         - instance_id: a short identifier (such as '3c657dbc')
         for the created environment instance. The instance_id is
@@ -199,7 +202,8 @@ def env_create():
         manipulated
     """
     env_id = get_required_param(request.get_json(), 'env_id')
-    instance_id = envs.create(env_id)
+    seed = get_optional_param(request.get_json(), 'seed', None)
+    instance_id = envs.create(env_id, seed)
     return jsonify(instance_id = instance_id)
 
 @app.route('/v1/envs/', methods=['GET'])

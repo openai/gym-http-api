@@ -1,4 +1,4 @@
-# Pkg.clone("https://github.com/paulhendricks/OpenAIGymAPI.jl.git")
+# Pkg.clone("https://github.com/JuliaML/OpenAIGymAPI.jl.git")
 using OpenAIGymAPI
 
 remote_base = "http://127.0.0.1:5000"

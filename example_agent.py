@@ -1,6 +1,4 @@
 import logging
-import os, sys
-import numpy as np
 
 from gym_http_client import Client
 

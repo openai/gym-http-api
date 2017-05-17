@@ -12,18 +12,23 @@ extra-source-files:
 
 default-extensions:
   - OverloadedStrings
-  - DuplicateRecordFields
+
+dependencies:
+  - exceptions
+  - http-client
+  - servant-client
 
 library:
   source-dirs: src
+  other-modules:
+  - OpenAI.Gym.Prelude
+
   dependencies:
   - base >=4.7 && <5
   - aeson
-  - http-client
   - monad-loops
   - unordered-containers
   - servant
-  - servant-client
   - servant-lucid
   - text
   - transformers
