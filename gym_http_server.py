@@ -133,6 +133,7 @@ class Envs(object):
 
 ########## App setup ##########
 app = Flask(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 envs = Envs()
 
 ########## Error handling ##########
