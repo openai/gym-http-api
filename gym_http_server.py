@@ -38,9 +38,11 @@ class Envs(object):
         except KeyError:
             raise InvalidUsage('Instance_id {} unknown'.format(instance_id))
 
-    def create(self, env_id):
+    def create(self, env_id, seed=None):
         try:
             env = gym.make(env_id)
+            if seed:
+                env.seed(seed)
         except gym.error.Error:
             raise InvalidUsage("Attempted to look up malformed environment ID '{}'".format(env_id))
 
@@ -185,6 +187,7 @@ def env_create():
 
     Parameters:
         - env_id: gym environment ID string, such as 'CartPole-v0'
+        - seed: set the seed for this env's random number generator(s).
     Returns:
         - instance_id: a short identifier (such as '3c657dbc')
         for the created environment instance. The instance_id is
@@ -192,7 +195,8 @@ def env_create():
         manipulated
     """
     env_id = get_required_param(request.get_json(), 'env_id')
-    instance_id = envs.create(env_id)
+    seed = get_optional_param(request.get_json(), 'seed', None)
+    instance_id = envs.create(env_id, seed)
     return jsonify(instance_id = instance_id)
 
 @app.route('/v1/envs/', methods=['GET'])
