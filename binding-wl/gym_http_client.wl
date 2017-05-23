@@ -45,7 +45,7 @@ gymSafeRequestExecute[_] := Throw[$unknownError]
 gymPOSTRequest[server_String, route_String, data_Association] := gymSafeRequestExecute[
 	HTTPRequest[server <> route, 
 		<|
-			"Body" -> ExportString[data, "RawJSON"],
+			"Body" -> Developer`WriteRawJSONString[data],
 			Method -> "POST",
 			"ContentType" -> "application/json"
 		|>
