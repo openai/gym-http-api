@@ -25,9 +25,9 @@ gymSafeRequestExecute[req_HTTPRequest] := Module[
 	{res, body, msg},
 	res = Quiet @ URLRead[req];
 	If[FailureQ[res], Throw[res]];
-	body = Quiet @ ImportString[res["Body"], "RawJSON"];
+	body = Developer`ReadRawJSONString[res["Body"]];
 	If[!AssociationQ[body], Throw[$unknownError]];
-
+	
 	If[res["StatusCodeDescription"] =!= "OK", 
 		msg = Lookup[body, "message", Throw[$unknownError]];
 		Throw @ Failure["ServerError", <|
