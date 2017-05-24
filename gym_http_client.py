@@ -156,6 +156,8 @@ if __name__ == '__main__':
     # Run a single step
     client.env_monitor_start(instance_id, directory='tmp', force=True)
     init_obs = client.env_reset(instance_id)
-    [observation, reward, done, info] = client.env_step(instance_id, 1, True)
+    done = False
+    while not done:
+      [observation, reward, done, info] = client.env_step(instance_id, 1, True)
     client.env_monitor_close(instance_id)
     client.upload(training_dir='tmp')
