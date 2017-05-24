@@ -145,7 +145,9 @@ def test_monitor_start_close_upload():
     instance_id = client.env_create('CartPole-v0')
     client.env_monitor_start(instance_id, 'tmp', force=True)
     client.env_reset(instance_id)
-    client.env_step(instance_id, 1)
+    done = False
+    while not done:
+      [observation, reward, done, info] = client.env_step(instance_id, 1, True)
     client.env_monitor_close(instance_id)
     client.upload('tmp')
 
