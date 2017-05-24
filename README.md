@@ -1,6 +1,9 @@
 <img align="left" src="http://i.imgur.com/568Luwb.png">gym-http-api
 ============
 
+[![Build Status](https://travis-ci.org/stites/gym-http-api.svg?branch=master)](https://travis-ci.org/stites/gym-http-api)
+
+
 This project provides a local REST API to the [gym](https://github.com/openai/gym) open-source library, allowing development in languages other than python.
 
 A python client is included, to demonstrate how to interact with the server.
