@@ -147,7 +147,7 @@ def test_monitor_start_close_upload():
     client.env_reset(instance_id)
     done = False
     while not done:
-      [observation, reward, done, info] = client.env_step(instance_id, 1, True)
+      [observation, reward, done, info] = client.env_step(instance_id, 1, False)
     client.env_monitor_close(instance_id)
     client.upload('tmp')
 
