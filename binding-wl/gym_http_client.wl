@@ -18,6 +18,8 @@ ShutdownGymServer;
 
 GymEnvironmentObject;
 
+GymUpload;
+
 Begin["`Private`"]
 
 $DefaultServer = "http://127.0.0.1:5000";
@@ -150,7 +152,7 @@ EnvClose[ins_GymEnvironmentObject] := Catch @ Module[{},
 ]
 
 (*************************)	
-EnvStep["
+SetUsage["
 EnvStep[GymEnvironmentObject[id$], act$] steps through an environment using \
 an action act$. EnvReset[GymEnvironmentObject[id$]] must be called before the first \
 call to EnvStep. 
@@ -166,7 +168,7 @@ EnvStep[ins_GymEnvironmentObject, action_, render_:False] := Catch @ Module[
 ]
 
 (*************************)	
-EnvReset["
+SetUsage["
 EnvReset[GymEnvironmentObject[id$]] resets the state of the environment and \
 returns an initial observation.
 "]
@@ -179,7 +181,7 @@ EnvReset[ins_GymEnvironmentObject] := Catch @ Module[
 ]
 
 (*************************)
-EnvActionSpaceInfo["
+SetUsage["
 EnvActionSpaceInfo[GymEnvironmentObject[id$]] returns an Association \
 containing information (name and dimensions/bounds) of the environment's action space.
 "]
@@ -192,8 +194,8 @@ EnvActionSpaceInfo[ins_GymEnvironmentObject] := Catch @ Module[
 ]
 
 (*************************)
-EnvActionSpaceSample["
-EnvActionSpaceSample[GymEnvironmentObject[id$]] returns a random sample of an \
+SetUsage["
+EnvActionSpaceSample[GymEnvironmentObject[id$]] randomly samples an \
 action from the action space.
 "]
 
@@ -205,22 +207,22 @@ EnvActionSpaceSample[ins_GymEnvironmentObject] := Catch @ Module[
 ]
 
 (*************************)
-EnvActionSpaceContains["
+SetUsage["
 EnvActionSpaceContains[GymEnvironmentObject[id$], act$] returns True if act$ is \
 an element of the action space, otherwise False.
 "]
 
 EnvActionSpaceContains[ins_GymEnvironmentObject, act_] := Catch @ Module[
 	{route, res},
-	route = StringJoin["/v1/envs/", ins["ID"], "/action_space/contains/", act];
+	route = StringJoin["/v1/envs/", ins["ID"], "/action_space/contains/", ToString[act]];
 	res = gymGETRequest[ins["URL"], route];
 	res["member"]
 ]
 
 (*************************)
-EnvObservationSpaceInfo["
-EnvObservationSpaceInfo[GymEnvironmentObject[id$], act$] returns True if act$ is \
-an element of the action space, otherwise False.
+SetUsage["
+EnvObservationSpaceInfo[GymEnvironmentObject[id$]] gets information \
+(name and dimensions/bounds) of the environments observation space.
 "]
 
 EnvObservationSpaceInfo[ins_GymEnvironmentObject] := Catch @ Module[
@@ -231,25 +233,14 @@ EnvObservationSpaceInfo[ins_GymEnvironmentObject] := Catch @ Module[
 ]
 
 (*************************)
-EnvObservationSpaceInfo["
-EnvObservationSpaceInfo[GymEnvironmentObject[id$], act$] returns True if act$ is \
-an element of the action space, otherwise False.
-"]
-
-EnvObservationSpaceInfo[ins_GymEnvironmentObject] := Catch @ Module[
-	{route, res},
-	route = StringJoin["/v1/envs/", ins["ID"], "/observation_space/"];
-	res = gymGETRequest[ins["URL"], route];
-	res["info"]
-]
-
-(*************************)
-EnvStep["
-EnvMonitorStart[GymEnvironmentObject[id$], act$] steps through an environment using \
-an action act$. EnvReset[GymEnvironmentObject[id$]] must be called before the first \
-call to EnvStep. 
-EnvStep[GymEnvironmentObject[id$], act$, render$] displays the current state \
-of the environment in a separate windows when render$ is True.
+SetUsage["
+EnvMonitorStart[GymEnvironmentObject[id$], dir$] starts logging actions and \
+environment states to a file stored in dir$. The following options are available: 
+| 'Force' | False | Clear out existing training data from this directory \
+(by deleting every file prefixed with 'openaigym.') |
+| 'Resume' | False | Retain the training data already in this directory, \
+which will be merged with our new data. |
+| 'VideoCallable' | False | Not yet implemented. |
 "]
 
 Options[EnvMonitorStart] =
@@ -259,20 +250,20 @@ Options[EnvMonitorStart] =
 	"VideoCallable" -> False
 };
 
-EnvMonitorStart[ins_GymEnvironmentObject, directory_, opts:OptionsPattern[]] := Catch @ Module[
+EnvMonitorStart[ins_GymEnvironmentObject, dir_, opts:OptionsPattern[]] := Catch @ Module[
 	{route, data},
 	data = <|
-		"directory" -> directory, 
+		"directory" -> If[Head[dir] === File, First[dir], dir],
 		"force" -> OptionValue["Force"],
 		"resume" -> OptionValue["Resume"],
 		"video_callable" -> OptionValue["VideoCallable"]
 	|>;
 	route = StringJoin["/v1/envs/", ins["ID"], "/monitor/start/"];	
-	gymPOSTRequest[ins["URL"], route, data]
+	gymPOSTRequest[ins["URL"], route, data]; (* don't return *)
 ]
 
 (*************************)
-EnvStep["
+SetUsage["
 EnvMonitorClose[GymEnvironmentObject[id$]] flushes all monitor data to disk.
 "]
 
@@ -281,10 +272,45 @@ EnvMonitorClose[ins_GymEnvironmentObject] := Catch @ Module[{},
 ]
 
 (*************************)
+SetUsage["
+GymUpload[dir$] uploads results stored in dir$ to OpenAI Gym Server. Uses default \
+server URL.
+GymUpload[dir$, url$] uploads given a user-defined server url$.
+| 'AlgorithmID' | '' | Name of algorithm |
+| 'APIKey' | Automatic | When Automatic, tries to obtain key using GetEnvironment. \
+otherwise, need to specify the key. |
+"]
 
-ShutdownGymServer["
+Options[GymUpload] =
+{
+	"AlgorithmID" -> "",
+	"APIKey" -> Automatic
+};
+
+GymUpload[dir_String, url_String, opts:OptionsPattern[]] := Catch @ Module[
+	{data, apiKey = OptionValue["APIKey"]},
+	apiKey = If[apiKey === Automatic, 
+		Values @ GetEnvironment["OPENAI_GYM_API_KEY"]
+	];
+	If[apiKey === None, 
+		Throw @ Failure["GymAPIKey", <|"MessageTemplate" :> "No Gym API key defined."|>]
+	];
+	data = <|
+		"training_dir" -> If[Head[dir] === File, First[dir], dir], 
+		"algorithm_id" -> OptionValue["AlgorithmID"],
+		"api_key" -> apiKey
+	|>;
+	gymPOSTRequest[url, "/v1/upload/", data]; (* don't return *)
+]
+
+GymUpload[dir_String, URL[url_], opts:OptionsPattern[]] := GymUpload[dir, url, opts]
+GymUpload[dir_String, opts:OptionsPattern[]] := GymUpload[dir, $DefaultServer, opts]
+
+(*************************)
+SetUsage["
 ShutdownGymServer[] requests a server shutdown at the default server URL.
-ShutdownGymServer[url$] requests a shutdown of a server at the address url$.
+ShutdownGymServer[url$] requests a shutdown of a server at the address url$, \
+where url$ is either a string or URL object.
 "]
 
 ShutdownGymServer[url_String] := Catch @ Module[{},
