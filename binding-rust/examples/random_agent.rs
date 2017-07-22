@@ -1,20 +1,20 @@
 extern crate gym;
 
-use gym::*;
+use gym::GymClient;
 
 fn main() {
 	println!("**********************************");
 
-	let mut client = GymClient::new("http://localhost:5000".to_string());
-	//println!("already running environments:\n{:?}\n", client.get_envs().unwrap());
+	let client = GymClient::new("http://localhost:5000".to_string()).unwrap();
+	println!("already running environments:\n{:?}\n", client.get_envs().unwrap());
 
-	let mut env = match client.make("CartPole-v0") {
+	let env = match client.make("CartPole-v0") {
 		Ok(env) => env,
 		Err(msg) => panic!("Could not make environment because of error:\n{}", msg)
 	};
 
-	//println!("observation space:\n{:?}\n", env.observation_space());
-	//println!("action space:\n{:?}\n", env.action_space());
+	println!("observation space:\n{:?}\n", env.observation_space());
+	println!("action space:\n{:?}\n", env.action_space());
 
 	let _ = env.monitor_start("/tmp/random-agent-results".to_string(), true, false);
 	for ep in 0..10 {
