@@ -66,6 +66,9 @@ binding-rust/target
 # Haskell binding
 binding-hs/.stack-work/*
 binding-hs/*.tags
+binding-hs/.cabal-sandbox
+binding-hs/cabal.sandbox.config
+binding-hs/dist
 
 # Clojure binding
 .nrepl-port

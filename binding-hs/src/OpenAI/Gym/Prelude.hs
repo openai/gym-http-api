@@ -14,7 +14,6 @@ module OpenAI.Gym.Prelude
   ) where
 
 import Control.Monad              as P
-import Control.Monad.Loops        as P
 import Control.Monad.Trans.Except as P (runExceptT)
 import Control.Monad.Trans.Reader as P
 import Control.Monad.Trans.Class  as P

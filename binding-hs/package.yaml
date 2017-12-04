@@ -1,12 +1,14 @@
 name: gym-http-api
 version: '0.1.0.0'
 description: Haskell binding for the OpenAi gym API
-category: Web
+category: Web, Learning Environments
 author: Daniel Lucsanszky, Sam Stites
 maintainer: dl3913@ic.ac.uk, sam@stites.io
 license: MIT
-license-file: ../LICENSE
-github: openai/gym-http-api/binding-hs
+license-file: LICENSE
+github: stites/gym-http-api/binding-hs
+synopsis: REST client to the gym-http-api project
+description: This library provides a REST client to the gym open-source library. gym-http-api itself provides a local REST API to the gym open-source library, allowing development in languages other than python.
 extra-source-files:
 - README.md
 
@@ -14,9 +16,10 @@ default-extensions:
   - OverloadedStrings
 
 dependencies:
-  - exceptions
-  - http-client
-  - servant-client
+  - base           >= 4.7 && < 5
+  - exceptions     >= 0.8
+  - http-client    >= 0.5
+  - servant-client >= 0.9
 
 library:
   source-dirs: src
@@ -24,21 +27,18 @@ library:
   - OpenAI.Gym.Prelude
 
   dependencies:
-  - base >=4.7 && <5
-  - aeson
-  - monad-loops
-  - unordered-containers
-  - servant
-  - servant-lucid
-  - text
-  - transformers
+  - aeson                >= 1.0
+  - unordered-containers >= 0.2
+  - servant              >= 0.9
+  - servant-lucid        >= 0.7
+  - text                 >= 1.2
+  - transformers         >= 0.5
 
 executables:
   example:
     main: Agent.hs
     source-dirs: examples
     dependencies:
-    - base >=4.7 && <5
     - gym-http-api
 
 # tests:
