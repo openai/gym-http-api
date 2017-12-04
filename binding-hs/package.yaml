@@ -20,6 +20,7 @@ description:
 extra-source-files:
   - README.md
   - TODO.md
+  - CHANGELOG.md
 
 default-extensions:
   - OverloadedStrings
