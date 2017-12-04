@@ -12,6 +12,7 @@ module OpenAI.Gym.API where
 import OpenAI.Gym.Prelude
 import OpenAI.Gym.Data
 
+-- | Servant-client representation of the full gym http api.
 type GymAPI
   = "v1" :> ( "envs" :> ( ReqBody '[JSON] GymEnv :> Post '[JSON] InstID
                      :<|> Get '[JSON] Environment
@@ -28,23 +29,49 @@ type GymAPI
          :<|> "shutdown" :> Post '[HTML] ())
 
 
+-- | Proxy type for servant
 gymAPI :: Proxy GymAPI
 gymAPI = Proxy
 
 
-envCreate               :: GymEnv  -> ClientM InstID
-envListAll              :: ClientM Environment
-envReset                :: InstID  -> ClientM Observation
-envStep                 :: InstID  -> Step    -> ClientM Outcome
-envActionSpaceInfo      :: InstID  -> ClientM Info
-envActionSpaceSample    :: InstID  -> ClientM Action
-envActionSpaceContains  :: InstID  -> Int     -> ClientM Object
-envObservationSpaceInfo :: InstID  -> ClientM Info
-envMonitorStart         :: InstID  -> Monitor -> ClientM ()
-envMonitorClose         :: InstID  -> ClientM ()
-envClose                :: InstID  -> ClientM ()
-upload                  :: Config  -> ClientM ()
-shutdownServer          :: ClientM ()
+-- | Create an instance of the specified environment (@POST /v1/envs/@)
+envCreate :: GymEnv -> ClientM InstID
+
+-- | List all environments running on the server (@GET /v1/envs/@)
+envListAll :: ClientM Environment
+
+-- | Reset the state of the environment and return an initial observation. (@POST /v1/envs/<instance_id>/reset/@)
+envReset :: InstID -> ClientM Observation
+
+-- | Step though an environment using an action. (@POST /v1/envs/<instance_id>/step/@)
+envStep :: InstID -> Step -> ClientM Outcome
+
+-- | Get information (name and dimensions/bounds) of the env's action_space (@GET /v1/envs/<instance_id>/action_space/@)
+envActionSpaceInfo :: InstID -> ClientM Info
+
+-- | Sample randomly from the env's action_space (@GET /v1/envs/<instance_id>/action_space/sample@)
+envActionSpaceSample :: InstID -> ClientM Action
+
+-- | Check to see if a value is valid in the env's action_space (@GET /v1/envs/<instance_id>/action_space/contains/<x>@)
+envActionSpaceContains :: InstID -> Int -> ClientM Object
+
+-- | Get information (name and dimensions/bounds) of the env's observation_space (@GET /v1/envs/<instance_id>/observation_space/@)
+envObservationSpaceInfo :: InstID -> ClientM Info
+
+-- | Start monitoring (@POST /v1/envs/<instance_id>/monitor/start/@)
+envMonitorStart :: InstID -> Monitor -> ClientM ()
+
+-- | Flush all monitor data to disk (@POST /v1/envs/<instance_id>/monitor/close/@)
+envMonitorClose :: InstID -> ClientM ()
+
+-- | Stop the environment (@POST /v1/envs/<instance_id>/close/@)
+envClose :: InstID -> ClientM ()
+
+-- | Upload results to OpenAI's servers (@POST /v1/upload/@)
+upload :: Config -> ClientM ()
+
+-- | Request a server shutdown (@POST /v1/shutdown/@)
+shutdownServer :: ClientM ()
 
 
 (envCreate

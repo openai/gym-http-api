@@ -33,10 +33,12 @@ import Data.Aeson.Types (Parser)
 instance MimeUnrender HTML () where
     mimeUnrender _ _ = return ()
 
+-- | helper to parse a singleton object from aeson
 parseSingleton :: FromJSON a => (a -> b) -> Text -> Value -> Parser b
 parseSingleton fn f (Object v) = fn <$> v .: f
 parseSingleton fn f _          = mempty
 
+-- | convert a value into a singleton object
 toSingleton :: ToJSON a => Text -> a -> Value
 toSingleton f a = object [ f .= toJSON a ]
 

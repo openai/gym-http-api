@@ -23,8 +23,8 @@ import OpenAI.Gym.Prelude
 import qualified Data.Text  as T
 import qualified Data.Aeson as A
 
+-- | Classic Control Environments
 data GymEnv
-  -- | Classic Control Environments
   = CartPoleV0               -- ^ Balance a pole on a cart (for a short time).
   | CartPoleV1               -- ^ Balance a pole on a cart.
   | AcrobotV1                -- ^ Swing up a two-link robot.
@@ -55,8 +55,9 @@ instance Show GymEnv where
 instance ToJSON GymEnv where
   toJSON env = object [ "env_id" .= show env ]
 
-
-data InstID = InstID !Text
+-- | a short identifier (such as '3c657dbc') for the created environment instance.
+-- The instance_id is used in future API calls to identify the environment to be manipulated.
+newtype InstID = InstID { getInstID :: Text }
   deriving (Eq, Show, Generic)
 
 instance ToHttpApiData InstID where
@@ -68,15 +69,15 @@ instance ToJSON InstID where
 instance FromJSON InstID where
   parseJSON = parseSingleton InstID "instance_id"
 
-
+-- | a mapping of instance_id to env_id (e.g. {'3c657dbc': 'CartPole-v0'}) for every env on the server
 newtype Environment = Environment { all_envs :: HashMap Text Text }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Environment
 instance FromJSON Environment
 
-
-data Observation = Observation !Value
+-- | The agent's observation of the current environment
+newtype Observation = Observation { getObservation :: Value }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Observation where
@@ -85,7 +86,7 @@ instance ToJSON Observation where
 instance FromJSON Observation where
   parseJSON = parseSingleton Observation "observation"
 
-
+-- | An action to take in the environment and whether or not to render that change
 data Step = Step
   { action :: !Value
   , render :: !Bool
@@ -93,19 +94,19 @@ data Step = Step
 
 instance ToJSON Step
 
-
+-- | The result of taking a step in an environment
 data Outcome = Outcome
-  { observation :: !Value
-  , reward      :: !Double
-  , done        :: !Bool
-  , info        :: !Object
+  { observation :: !Value  -- ^ agent's observation of the current environment
+  , reward      :: !Double -- ^ amount of reward returned after previous action
+  , done        :: !Bool   -- ^ whether the episode has ended
+  , info        :: !Object -- ^ a dict containing auxiliary diagnostic information
   } deriving (Eq, Show, Generic)
 
 instance ToJSON Outcome
 instance FromJSON Outcome
 
-
-data Info = Info !Object
+-- | A dict containing auxiliary diagnostic information
+newtype Info = Info { getInfo :: Object }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Info where
@@ -114,8 +115,8 @@ instance ToJSON Info where
 instance FromJSON Info where
   parseJSON = parseSingleton Info "info"
 
-
-data Action = Action !Value
+-- | An action to take in the environment
+newtype Action = Action { getAction :: Value }
   deriving (Eq, Show, Generic)
 
 instance ToJSON Action where
@@ -124,21 +125,25 @@ instance ToJSON Action where
 instance FromJSON Action where
   parseJSON = parseSingleton Action "action"
 
-
+-- | Parameters used to start a monitoring session.
 data Monitor = Monitor
-  { directory      :: !Text
-  , force          :: !Bool
-  , resume         :: !Bool
-  , video_callable :: !Bool
+  { directory      :: !Text -- ^ directory to use for monitoring
+  , force          :: !Bool -- ^ Clear out existing training data from this directory (by deleting
+                            --   every file prefixed with "openaigym.") (default=False)
+  , resume         :: !Bool -- ^ Retain the training data already in this directory, which will be
+                            --   merged with our new data. (default=False)
+  , video_callable :: !Bool -- ^ video_callable parameter from the native env.monitor.start function
   } deriving (Generic, Eq, Show)
 
 instance ToJSON Monitor
 
-
+-- | Parameters used to upload a monitored session to OpenAI's servers
 data Config = Config
-  { training_dir :: !Text
-  , algorithm_id :: !Text
-  , api_key      :: !Text
+  { training_dir :: !Text -- ^ A directory containing the results of a training run.
+  , algorithm_id :: !Text -- ^ An arbitrary string indicating the paricular version of the
+                          --   algorithm (including choices of parameters) you are running.
+                          --   (default=None)
+  , api_key      :: !Text -- ^ Your OpenAI API key
   } deriving (Generic, Eq, Show)
 
 instance ToJSON Config
