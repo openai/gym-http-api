@@ -5,7 +5,9 @@
 name:           gym-http-api
 version:        0.1.0.0
 synopsis:       REST client to the gym-http-api project
-description:    This library provides a REST client to the gym open-source library. gym-http-api itself provides a local REST API to the gym open-source library, allowing development in languages other than python.
+description:    This library provides a REST client to the gym open-source library. gym-http-api itself provides a <https://github.com/openai/gym-http-api/blob/master/gym_http_server.py python-based REST> server to the gym open-source library, allowing development in languages other than python.
+                .
+                Note that the <https://github.com/openai/gym-http-api/ openai/gym-http-api> is a monorepo of all language-clients. This hackage library tracks <https://github.com/stites/gym-http-api/ stites/gym-http-api> which is the actively-maintained haskell fork.
 category:       Web, Learning Environments
 homepage:       https://github.com/stites/gym-http-api#readme
 bug-reports:    https://github.com/stites/gym-http-api/issues
@@ -18,6 +20,7 @@ cabal-version:  >= 1.10
 
 extra-source-files:
     README.md
+    TODO.md
 
 source-repository head
   type: git

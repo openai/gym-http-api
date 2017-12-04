@@ -4,6 +4,8 @@
 -- License   :  MIT
 -- Stability :  experimental
 -- Portability: non-portable
+--
+-- Aeson-based data types to be returned by "OpenAI.Gym.API"
 -------------------------------------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 module OpenAI.Gym.Data

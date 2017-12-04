@@ -1,6 +1,6 @@
 name: gym-http-api
 version: '0.1.0.0'
-description: Haskell binding for the OpenAi gym API
+description: Haskell bindings for the OpenAI gym API
 category: Web, Learning Environments
 author: Daniel Lucsanszky, Sam Stites
 maintainer: dl3913@ic.ac.uk, sam@stites.io
@@ -8,9 +8,18 @@ license: MIT
 license-file: LICENSE
 github: stites/gym-http-api/binding-hs
 synopsis: REST client to the gym-http-api project
-description: This library provides a REST client to the gym open-source library. gym-http-api itself provides a local REST API to the gym open-source library, allowing development in languages other than python.
+description:
+  This library provides a REST client to the gym open-source library. gym-http-api itself provides a
+  <https://github.com/openai/gym-http-api/blob/master/gym_http_server.py python-based REST> server
+  to the gym open-source library, allowing development in languages other than python.
+
+
+  Note that the <https://github.com/openai/gym-http-api/ openai/gym-http-api> is a monorepo of all
+  language-clients. This hackage library tracks <https://github.com/stites/gym-http-api/ stites/gym-http-api>
+  which is the actively-maintained haskell fork.
 extra-source-files:
-- README.md
+  - README.md
+  - TODO.md
 
 default-extensions:
   - OverloadedStrings
@@ -37,14 +46,3 @@ executables:
     - http-client    >= 0.5
     - exceptions     >= 0.8
 
-# tests:
-  # binding-hs-test:
-    # main: Spec.hs
-    # source-dirs: test
-    # ghc-options:
-    # - -threaded
-    # - -rtsopts
-    # - -with-rtsopts=-K1K
-    # dependencies:
-    # - base
-    # - binding-hs
