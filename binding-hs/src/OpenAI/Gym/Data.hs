@@ -19,7 +19,12 @@ module OpenAI.Gym.Data
   , Config (..)
   ) where
 
-import OpenAI.Gym.Prelude
+import Data.Aeson (ToJSON(..), FromJSON(..), Value(..), Object, (.=), (.:), object)
+import Data.Aeson.Types (Parser)
+import Data.HashMap.Strict (HashMap)
+import Data.Text (Text)
+import GHC.Generics (Generic)
+import Servant.API (ToHttpApiData(..))
 import qualified Data.Text  as T
 import qualified Data.Aeson as A
 
@@ -148,4 +153,13 @@ data Config = Config
 
 instance ToJSON Config
 
+
+-- | helper to parse a singleton object from aeson
+parseSingleton :: FromJSON a => (a -> b) -> Text -> Value -> Parser b
+parseSingleton fn f (Object v) = fn <$> v .: f
+parseSingleton fn f _          = mempty
+
+-- | convert a value into a singleton object
+toSingleton :: ToJSON a => Text -> a -> Value
+toSingleton f a = object [ f .= toJSON a ]
 

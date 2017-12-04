@@ -6,10 +6,17 @@
 -- Portability: non-portable
 -------------------------------------------------------------------------------
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Wno-orphans #-} --for MimeUnrender HTML ()
 module OpenAI.Gym.API where
 
-import OpenAI.Gym.Prelude
+import Data.Aeson (Object)
+import Data.Proxy (Proxy(..))
+import Servant.API
+import Servant.HTML.Lucid (HTML)
+import Servant.Client (ClientM, client)
+
 import OpenAI.Gym.Data
 
 -- | Servant-client representation of the full gym http api.
@@ -89,4 +96,5 @@ shutdownServer :: ClientM ()
   :<|> shutdownServer
   = client gymAPI
 
-
+instance MimeUnrender HTML () where
+    mimeUnrender _ _ = return ()

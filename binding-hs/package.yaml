@@ -17,22 +17,16 @@ default-extensions:
 
 dependencies:
   - base           >= 4.7 && < 5
-  - exceptions     >= 0.8
-  - http-client    >= 0.5
   - servant-client >= 0.9
 
 library:
   source-dirs: src
-  other-modules:
-  - OpenAI.Gym.Prelude
-
   dependencies:
   - aeson                >= 1.0
   - unordered-containers >= 0.2
   - servant              >= 0.9
   - servant-lucid        >= 0.7
   - text                 >= 1.2
-  - transformers         >= 0.5
 
 executables:
   example:
@@ -40,6 +34,8 @@ executables:
     source-dirs: examples
     dependencies:
     - gym-http-api
+    - http-client    >= 0.5
+    - exceptions     >= 0.8
 
 # tests:
   # binding-hs-test:
