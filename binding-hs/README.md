@@ -5,6 +5,7 @@
 stack setup
 stack build
 stack exec example
+stack haddock
 ```
 
 ## Checklist
