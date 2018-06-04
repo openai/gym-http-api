@@ -23,7 +23,7 @@ import Network.HTTP.Client
 main :: IO ()
 main = do
   manager <- newManager defaultManagerSettings
-  out <- runClientM example (ClientEnv manager url)
+  out <- runClientM example (ClientEnv manager url Nothing)
   case out of
     Left err -> print err
     Right ok -> print ok
