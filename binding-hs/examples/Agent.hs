@@ -11,14 +11,14 @@
 {-# LANGUAGE CPP #-}
 module Main where
 
-import Prelude
-import Control.Monad (replicateM_, when)
-import Control.Monad.Catch
-import Control.Exception.Base
+import           Control.Exception.Base
+import           Control.Monad          (replicateM_, when)
+import           Control.Monad.Catch
+import           Prelude
 
-import OpenAI.Gym
-import Servant.Client
-import Network.HTTP.Client
+import           Network.HTTP.Client
+import           OpenAI.Gym
+import           Servant.Client
 
 
 main :: IO ()
