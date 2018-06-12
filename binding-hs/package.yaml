@@ -1,5 +1,5 @@
 name: gym-http-api
-version: '0.1.0.0'
+version: '0.1.0.1'
 description: Haskell bindings for the OpenAI gym API
 category: Web, Learning Environments
 author: Daniel Lucsanszky, Sam Stites
