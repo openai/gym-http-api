@@ -1,3 +1,5 @@
+**Status:** Archive (code is provided as-is, no updates expected)
+
 <img align="left" src="http://i.imgur.com/568Luwb.png">gym-http-api
 ============
 
