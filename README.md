@@ -142,4 +142,4 @@ API specification
 Contributors
 ============
 
-See the [contributors page] (https://github.com/openai/gym-http-api/graphs/contributors)
+See the [contributors page](https://github.com/openai/gym-http-api/graphs/contributors)
