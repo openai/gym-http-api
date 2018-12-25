@@ -59,6 +59,8 @@ class Envs(object):
     def reset(self, instance_id):
         env = self._lookup_env(instance_id)
         obs = env.reset()
+        if (isinstance(obs, tuple)):
+            obs = [obs]
         return env.observation_space.to_jsonable(obs)
 
     def step(self, instance_id, action, render):
@@ -70,6 +72,9 @@ class Envs(object):
         if render:
             env.render()
         [observation, reward, done, info] = env.step(nice_action)
+
+        if isinstance(observation, tuple):
+                observation = [observation]
         obs_jsonable = env.observation_space.to_jsonable(observation)
         return [obs_jsonable, reward, done, info]
 
