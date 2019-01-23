@@ -8,22 +8,27 @@
 -- Example of how to build an agent using OpenAI.Gym.Client
 -------------------------------------------------------------------------------
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE CPP #-}
 module Main where
 
-import Prelude
-import Control.Monad (replicateM_, when)
-import Control.Monad.Catch
-import Control.Exception.Base
+import           Control.Exception.Base
+import           Control.Monad          (replicateM_, when)
+import           Control.Monad.Catch
+import           Prelude
 
-import OpenAI.Gym
-import Servant.Client
-import Network.HTTP.Client
+import           Network.HTTP.Client
+import           OpenAI.Gym
+import           Servant.Client
 
 
 main :: IO ()
 main = do
   manager <- newManager defaultManagerSettings
+#if MIN_VERSION_servant_client(0,13,0)
+  out <- runClientM example (ClientEnv manager url Nothing)
+#else
   out <- runClientM example (ClientEnv manager url)
+#endif
   case out of
     Left err -> print err
     Right ok -> print ok

@@ -1,26 +1,33 @@
--- This file has been generated from package.yaml by hpack version 0.15.0.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 085a2053bc4ebb1d1451b833911deb047b05b2a99658d37c37af73e0bda7d26f
 
 name:           gym-http-api
-version:        0.1.0.0
-description:    Haskell binding for the OpenAi gym API
-category:       Web
-homepage:       https://github.com/openai/gym-http-api#readme
-bug-reports:    https://github.com/openai/gym-http-api/issues
+version:        0.1.0.1
+synopsis:       REST client to the gym-http-api project
+description:    This library provides a REST client to the gym open-source library. gym-http-api itself provides a <https://github.com/openai/gym-http-api/blob/master/gym_http_server.py python-based REST> server to the gym open-source library, allowing development in languages other than python.
+                .
+                Note that the <https://github.com/openai/gym-http-api/ openai/gym-http-api> is a monorepo of all language-clients. This hackage library tracks <https://github.com/stites/gym-http-api/ stites/gym-http-api> which is the actively-maintained haskell fork.
+category:       Web, Learning Environments
+homepage:       https://github.com/stites/gym-http-api#readme
+bug-reports:    https://github.com/stites/gym-http-api/issues
 author:         Daniel Lucsanszky, Sam Stites
 maintainer:     dl3913@ic.ac.uk, sam@stites.io
 license:        MIT
-license-file:   ../LICENSE
+license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
 
 extra-source-files:
+    CHANGELOG.md
     README.md
+    TODO.md
 
 source-repository head
   type: git
-  location: https://github.com/openai/gym-http-api
+  location: https://github.com/stites/gym-http-api
   subdir: binding-hs
 
 library
@@ -28,23 +35,19 @@ library
       src
   default-extensions: OverloadedStrings
   build-depends:
-      exceptions
-    , http-client
-    , servant-client
+      aeson >=1.0
     , base >=4.7 && <5
-    , aeson
-    , monad-loops
-    , unordered-containers
-    , servant
-    , servant-lucid
-    , text
-    , transformers
+    , servant >=0.9
+    , servant-client >=0.9
+    , servant-lucid >=0.7
+    , text >=1.2
+    , unordered-containers >=0.2
   exposed-modules:
       OpenAI.Gym
       OpenAI.Gym.API
       OpenAI.Gym.Data
   other-modules:
-      OpenAI.Gym.Prelude
+      Paths_gym_http_api
   default-language: Haskell2010
 
 executable example
@@ -53,9 +56,11 @@ executable example
       examples
   default-extensions: OverloadedStrings
   build-depends:
-      exceptions
-    , http-client
-    , servant-client
-    , base >=4.7 && <5
+      base >=4.7 && <5
+    , exceptions >=0.8
     , gym-http-api
+    , http-client >=0.5
+    , servant-client >=0.9
+  other-modules:
+      Paths_gym_http_api
   default-language: Haskell2010
