@@ -109,6 +109,7 @@ env = gym.make('CartPole-v0')
 env.seed(1)
 env = env.unwrapped
 
+
 agent = DQN(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
             lr_q_value=0.02, gamma=0.999, epsilon=0.2)
 
@@ -125,6 +126,7 @@ for i_episode in range(nepisode):
     ep_rwd = 0
 
     while True:
+        env.render()
         act = agent.step(obs0)
 
         obs1, rwd, done, _ = env.step(act)
