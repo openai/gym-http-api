@@ -126,7 +126,8 @@ for i_episode in range(nepisode):
     ep_rwd = 0
 
     while True:
-        env.render()
+
+        if i_episode % 10 == 0: env.render()
         act = agent.step(obs0)
 
         obs1, rwd, done, _ = env.step(act)
