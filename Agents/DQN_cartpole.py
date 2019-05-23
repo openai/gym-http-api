@@ -119,7 +119,7 @@ class DQN(object):
         self.sess.run(self.target_updates)
 
 
-env = gym.make('CartPole-v0') # environment is initialized according to CartPole specifications
+env = gym.make('CartPole-v1') # environment is initialized according to CartPole specifications
 env.seed(1) # seed for environment's random number generator set to 1
 env = env.unwrapped # env retains its characteristics b/c of the declaration but is unwrapped at the same time.
 
