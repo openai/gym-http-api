@@ -1,6 +1,6 @@
 import gym
 
-env = gym.make('CarRacing-v0')
+env = gym.make('BipedalWalker-v2')
 env.reset()
 
 for _ in range(1000):

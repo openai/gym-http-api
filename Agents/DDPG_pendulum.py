@@ -166,6 +166,7 @@ for i_episode in range(nepisode):
     ep_rwd = 0
 
     for t in range(nstep):
+        print(agent.step(obs0))
         if i_episode % 10 == 0: env.render()
         act = agent.step(obs0)
 
@@ -176,6 +177,7 @@ for i_episode in range(nepisode):
         obs0 = obs1
         ep_rwd += rwd
 
+        print(ep_rwd)
         if iteration >= 128 * 3:
             agent.learn()
 

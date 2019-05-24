@@ -30,7 +30,7 @@ class ReplayBuffer(object):
         batch = random.sample(self.buffer, batch_size) # a batch becomes any *batch_size* episodes in the buffer
         # The batch puts out its observation spaces, action space, reward, and "done" values
         obs0, act, rwd, obs1, done = map(np.stack, zip(*batch))
-        return obs0, act, rwd, obs1, done
+        return obs0, act, rwd[:, np.newaxis], obs1, done[:, np.newaxis]
 
 # The next class will represent the network's architecture.
 class QValueNetwork(object):
@@ -101,11 +101,13 @@ class DQN(object):
         action = self.sess.run(self.q_value0, feed_dict={self.OBS0: obs})
         # if our random value is less than epsilon, take the "exploration" approach - next action will be random.
         if np.random.rand(1) < self.epsilon:
-            action = np.random.randint(0, 2)
+            action = np.random.normal(0, 1)
+            action = np.clip(action, -2, 2)
         # otherwise, we take the "exploitation" approach and apply the best action at the next step.
         else:
             action = np.argmax(action, axis=1)[0]
-        return action
+        action_arr = [action]
+        return action_arr
 
     def learn(self): # will learn according to a given batch.
         obs0, act, rwd, obs1, done = self.memory.sample(batch_size=128)
@@ -119,12 +121,12 @@ class DQN(object):
         self.sess.run(self.target_updates)
 
 
-env = gym.make('CartPole-v1') # environment is initialized according to CartPole specifications
+env = gym.make('Pendulum-v0') # environment is initialized according to CartPole specifications
 env.seed(1) # seed for environment's random number generator set to 1
 env = env.unwrapped # env retains its characteristics b/c of the declaration but is unwrapped at the same time.
 
 # DQN is initialized such that it takes on specific values for its Q, gamma, and epsilon.
-agent = DQN(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
+agent = DQN(act_dim=env.action_space.shape[0], obs_dim=env.observation_space.shape[0],
             lr_q_value=0.02, gamma=0.999, epsilon=0.2)
 
 nepisode = 1000 # maximum number of episodes = 1000
@@ -148,11 +150,12 @@ for i_episode in range(nepisode):
 
         obs1, rwd, done, _ = env.step(act) # execute this action and observe the resulting reward and image
 
-        agent.memory.store_transition(obs0, act, rwd, obs1, done) # store transition in memory
+        agent.memory.store_transition(obs0, act, rwd/10, obs1, done) # store transition in memory
 
         obs0 = obs1 # obs0, which will be used in later iterations, becomes the recently manipulated obs1
         ep_rwd += rwd # reward will be gradually compounded on until the loop breaks and a new episode starts
 
+        print(ep_rwd)
         if iteration >= 128 * 3: # does not occur until three batches have been passed through
             agent.learn() 
             # Epsilon begins to decay every next ten iterations, decreasing the importance of future rewards.
