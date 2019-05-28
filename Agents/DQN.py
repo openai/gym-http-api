@@ -105,8 +105,8 @@ class DQN(object):
         # otherwise, we take the "exploitation" approach and apply the best action at the next step.
         else:
             action = np.argmax(action, axis=1)[0]
-        #print(action)
-        return action
+        #The 0 is ignored: Should it be something else?
+        return action, 0
 
     def learn(self): # will learn according to a given batch.
         obs0, act, rwd, obs1, done = self.memory.sample(batch_size=128)
