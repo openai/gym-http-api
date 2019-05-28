@@ -86,9 +86,8 @@ class DQN(object):
     def step(self, obs):
         if obs.ndim < 2: obs = obs[np.newaxis, :]
         action = self.sess.run(self.q_value0, feed_dict={self.OBS0: obs})
-        print(action)
         if np.random.rand(1) < self.epsilon:
-            action = action + np.random.normal(0, 1)
+            action[0] = np.random.normal(0, 1)
             action = np.clip(action, -2, 2).squeeze(axis=1)
         else:
             action = np.argmax(action, axis=1)
@@ -125,7 +124,7 @@ for i_episode in range(nepisode):
     obs0 = env.reset()
     ep_rwd = 0
 
-    while True:
+    for t in range(200):
 
         if i_episode % 10 == 0: env.render()
         act = agent.step(obs0)
@@ -143,8 +142,6 @@ for i_episode in range(nepisode):
             if iteration % epsilon_step == 0:
                 agent.epsilon = max([agent.epsilon * 0.99, 0.001]) # gradient
 
-        if done: # once episode is "done," it will print out its ID and reward and break the while loop.
-            print('Ep: %i' % i_episode, "|Ep_r: %i" % ep_rwd)
-            break
+            iteration += 1
 
-        iteration += 1
+    print('Ep: %i' % i_episode, "|Ep_r: %i" % ep_rwd)

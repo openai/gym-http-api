@@ -159,7 +159,6 @@ class SAC(object):
     def step(self, obs):
         action = self.sess.run(self.pi, feed_dict={self.OBS0: obs.reshape(1, -1)})
         action = np.squeeze(action, axis=1)
-        print(action)
         return action
 
     def learn(self):
