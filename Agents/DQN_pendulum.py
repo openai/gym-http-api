@@ -86,6 +86,7 @@ class DQN(object):
     def step(self, obs):
         if obs.ndim < 2: obs = obs[np.newaxis, :]
         action = self.sess.run(self.q_value0, feed_dict={self.OBS0: obs})
+        print(action)
         if np.random.rand(1) < self.epsilon:
             action = action + np.random.normal(0, 1)
             action = np.clip(action, -2, 2).squeeze(axis=1)
@@ -124,14 +125,14 @@ for i_episode in range(nepisode):
     obs0 = env.reset()
     ep_rwd = 0
 
-    for t in range(200):
+    while True:
 
         if i_episode % 10 == 0: env.render()
         act = agent.step(obs0)
 
         obs1, rwd, done, _ = env.step(act)
 
-        agent.memory.store_transition(obs0, act, rwd/10, obs1, done)
+        agent.memory.store_transition(obs0, act, rwd, obs1, done)
 
         obs0 = obs1
         ep_rwd += rwd
@@ -147,5 +148,3 @@ for i_episode in range(nepisode):
             break
 
         iteration += 1
-
-    print('Ep: %i' % i_episode, "|Ep_r: %i" % ep_rwd)
