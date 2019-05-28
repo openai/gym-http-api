@@ -105,6 +105,7 @@ class DQN(object):
         # otherwise, we take the "exploitation" approach and apply the best action at the next step.
         else:
             action = np.argmax(action, axis=1)[0]
+        print(action)
         return action
 
     def learn(self): # will learn according to a given batch.
@@ -142,7 +143,6 @@ for i_episode in range(nepisode):
 
     while True:
 
-        print(agent.step(obs0))
         if i_episode % 10 == 0: env.render()
         act = agent.step(obs0) # the first action will be determined according to obs0.ndim.
 

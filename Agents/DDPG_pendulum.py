@@ -126,6 +126,7 @@ class DDPG(object):
     def step(self, obs):
         if obs.ndim < 2: obs = obs[np.newaxis, :]
         action = self.sess.run(self.action, feed_dict={self.OBS0: obs})
+        print(action)
         action = action + np.random.normal(0, self.action_noise_std)
         action = np.clip(action, -2, 2).squeeze(axis=1)
         return action
