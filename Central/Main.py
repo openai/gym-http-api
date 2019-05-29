@@ -9,41 +9,41 @@ import DQN
 import PG
 
 import gym_cmd
-parser = build_parser()
+parser = gym_cmd.build_parser()
 options = parser.parse_args()
 
 if __name__ == '__main__':
 
 	# Assume command line param will be 'CartPole-v1' or 'MountainCar-v1', etc.
+	algorithm = options.algorithm
 	domain = options.domain
 
 	env = gym.make(domain)
 	env.seed(1)
 	env = env.unwrapped
-ys.argv[
-	if(s2] == "DQN"):
+
+	if(algorithm == "DQN"):
 		agent = DQN.DQN(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
-					lr_q_value=options.q_val, gamma=options.gamma, epsilon=options.epsilon)
-	elif(sys.argv[2] == "A2C"):
+					lr_q_value=0.02, gamma=options.gamma, epsilon=options.epsilon)
+	elif(algorithm == "A2C"):
 		agent = A2C.ActorCritic(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
-					lr_actor=0.01, lr_value=0.02, gamma=0.99)
-	elif(sys.argv[2] == "PG"):
+					lr_actor=0.01, lr_value=0.02, gamma=options.gamma)
+	elif(algorithm == "PG"):
 		agent = PG.PolicyGradient(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0], 
-					lr=0.02, gamma=0.99)
+					lr=0.02, gamma=options.gamma)
 
 	else:
 		print("Invalid algorithm specified. Only A2C, DQN, and PG currently supported")
 		quit()
 				
-	nepisode = 1000
+	nepisode = options.nepisode
 	batch_size = 128
 	iteration = 0
-	nstep = 200
 	
 	# Necessary for DQN
-	epsilon_step = 10
-	epsilon_decay = 0.99
-	epsilon_min = 0.001
+	epsilon_step = options.epsilon_step
+	epsilon_decay = options.epsilon_decay
+	epsilon_min = options.epsilon_min
 	
 	for i_episode in range(nepisode):
 		obs0 = env.reset()
@@ -64,10 +64,10 @@ ys.argv[
 
 			# The following code can probably be cleaned up in a more general way
 			if isinstance(agent, DQN.DQN):
-				if iteration >= 128 * 3:
+				if iteration >= batch_size * 3:
 					agent.learn() 
 					if iteration % epsilon_step == 0:
-						agent.epsilon = max([agent.epsilon * 0.99, 0.001])
+						agent.epsilon = max([agent.epsilon * epsilon_decay, epsilon_min])
 	
 			if done:
 				# Try to find a cleaner way of doing this
