@@ -88,7 +88,7 @@ class DDPG(object):
         target_actor = ActorNetwork(self.act_dim, 'target_actor')
         target_q_value = QValueNetwork('target_q_value')
 
-        self.memory = ReplayBuffer(capacity=int(1e6))
+        self.replay_buffer = ReplayBuffer(capacity=int(1e6))
 
         self.action = actor.choose_action(self.OBS0)
         self.q_value0_with_actor = q_value.get_q_value(self.OBS0, self.action)
@@ -126,13 +126,12 @@ class DDPG(object):
     def step(self, obs):
         if obs.ndim < 2: obs = obs[np.newaxis, :]
         action = self.sess.run(self.action, feed_dict={self.OBS0: obs})
-        print(action)
         action = action + np.random.normal(0, self.action_noise_std)
         action = np.clip(action, -2, 2).squeeze(axis=1)
         return action
 
     def learn(self):
-        obs0, act, rwd, obs1, done = self.memory.sample(batch_size=128)
+        obs0, act, rwd, obs1, done = self.replay_buffer.sample(batch_size=128)
 
         target_q_value1 = self.sess.run(self.target_q_value1, feed_dict={self.OBS1: obs1, self.RWD: rwd,
                                                                self.DONE: np.float32(done)})
@@ -172,7 +171,7 @@ for i_episode in range(nepisode):
 
         obs1, rwd, done, _ = env.step(act)
 
-        agent.memory.store_transition(obs0, act, rwd/10, obs1, done)
+        agent.replay_buffer.store_transition(obs0, act, rwd/10, obs1, done)
 
         obs0 = obs1
         ep_rwd += rwd

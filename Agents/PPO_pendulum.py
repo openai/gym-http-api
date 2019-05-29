@@ -32,21 +32,24 @@ class ActorNetwork(object):
     def step(self, obs, reuse):
         with tf.variable_scope(self.name, reuse=reuse):
             h1 = tf.layers.dense(obs, 100, activation=tf.nn.relu)
-            mu = 2 * tf.layers.dense(h1, self.act_dim, activation=tf.nn.tanh)
-            sigma = tf.layers.dense(h1, self.act_dim, activation=tf.nn.softplus)
-            pd = tf.distributions.Normal(loc=mu, scale=sigma)
+            #mu = 2 * tf.layers.dense(h1, self.act_dim, activation=tf.nn.tanh)
+            #sigma = tf.layers.dense(h1, self.act_dim, activation=tf.nn.softplus)
+            #pd = tf.distributions.Normal(loc=mu, scale=sigma)
+            pd = tf.layers.dense(h1, self.act_dim, None,
+                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=0.3))
+            print(pd)
         return pd
 
     def choose_action(self, obs, reuse=False):
         pd = self.step(obs, reuse)
-        action = tf.squeeze(pd.sample(1), axis=0)
+        action = tf.nn.softmax(pd, name='pd')
         action = tf.clip_by_value(action, -2, 2)
         return action
 
     def get_neglogp(self, obs, act, reuse=False):
         pd = self.step(obs, reuse)
-        logp = pd.log_prob(act)
-        return logp
+        neglogp = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pd, labels=act)
+        return neglogp
 
 
 class ValueNetwork(object):

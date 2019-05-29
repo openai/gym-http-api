@@ -8,22 +8,22 @@ import A2C
 import DQN
 import PG
 
+import gym_cmd
+parser = build_parser()
+options = parser.parse_args()
+
 if __name__ == '__main__':
 
-	if(len(sys.argv) <= 1):
-		print("Need to specify a domain")
-		quit()
-		
 	# Assume command line param will be 'CartPole-v1' or 'MountainCar-v1', etc.
-	domain = sys.argv[1]
+	domain = options.domain
 
 	env = gym.make(domain)
 	env.seed(1)
 	env = env.unwrapped
-
-	if(sys.argv[2] == "DQN"):
+ys.argv[
+	if(s2] == "DQN"):
 		agent = DQN.DQN(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
-					lr_q_value=0.02, gamma=0.999, epsilon=0.2)
+					lr_q_value=options.q_val, gamma=options.gamma, epsilon=options.epsilon)
 	elif(sys.argv[2] == "A2C"):
 		agent = A2C.ActorCritic(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
 					lr_actor=0.01, lr_value=0.02, gamma=0.99)
@@ -36,8 +36,10 @@ if __name__ == '__main__':
 		quit()
 				
 	nepisode = 1000
+	batch_size = 128
 	iteration = 0
-
+	nstep = 200
+	
 	# Necessary for DQN
 	epsilon_step = 10
 	epsilon_decay = 0.99
@@ -47,6 +49,7 @@ if __name__ == '__main__':
 		obs0 = env.reset()
 		ep_rwd = 0
 
+		# Discrete domains
 		while True:
 
 			if i_episode % 10 == 0: env.render()
