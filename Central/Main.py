@@ -2,7 +2,7 @@ import gym
 import numpy as np
 import tensorflow as tf
 import random
-import sys
+import retro
 
 import A2C
 import DQN
