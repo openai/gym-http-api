@@ -18,9 +18,8 @@ if __name__ == '__main__':
 	algorithm = options.algorithm
 	domain = options.domain
 
-	env = gym.make(domain)
-	env.seed(1)
-	env = env.unwrapped
+	env = retro.make(domain)
+
 
 	if(algorithm == "DQN"):
 		agent = DQN.DQN(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
