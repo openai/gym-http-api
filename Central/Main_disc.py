@@ -2,9 +2,8 @@ import gym
 import numpy as np
 import tensorflow as tf
 import random
-import retro
 
-import A2C
+import A3C
 import DQN
 import PG
 
@@ -18,21 +17,22 @@ if __name__ == '__main__':
 	algorithm = options.algorithm
 	domain = options.domain
 
-	env = retro.make(domain)
-
+	env = gym.make(domain)
+	env.seed(1)
+	env = env.unwrapped
 
 	if(algorithm == "DQN"):
 		agent = DQN.DQN(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
 					lr_q_value=0.02, gamma=options.gamma, epsilon=options.epsilon)
-	elif(algorithm == "A2C"):
-		agent = A2C.ActorCritic(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
+	elif(algorithm == "A3C"):
+		agent = A3C.ActorCritic(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0],
 					lr_actor=0.01, lr_value=0.02, gamma=options.gamma)
 	elif(algorithm == "PG"):
 		agent = PG.PolicyGradient(act_dim=env.action_space.n, obs_dim=env.observation_space.shape[0], 
 					lr=0.02, gamma=options.gamma)
 
 	else:
-		print("Invalid algorithm specified. Only A2C, DQN, and PG currently supported")
+		print("Invalid algorithm specified. Only A3C, DQN, and PG currently supported")
 		quit()
 				
 	nepisode = options.nepisode
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 			ep_rwd += rwd
 
 			# The following code can probably be cleaned up in a more general way
-			if isinstance(agent, DQN.DQN):
+			if(algorithm == "DQN"):
 				if iteration >= batch_size * 3:
 					agent.learn() 
 					if iteration % epsilon_step == 0:
@@ -70,10 +70,10 @@ if __name__ == '__main__':
 	
 			if done:
 				# Try to find a cleaner way of doing this
-				if isinstance(agent, A2C.ActorCritic):
+				if(algorithm == "A3C"):
 					_, last_value = agent.step(obs1)
 					agent.learn(last_value, done)
-				if isinstance(agent, PG.PolicyGradient):
+				elif(algorithm == "PG"):
 					agent.learn()
 
 				print('Ep: %i' % i_episode, "|Ep_r: %i" % ep_rwd)

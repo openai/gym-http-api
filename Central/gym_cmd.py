@@ -6,14 +6,15 @@ EPSILON_STEP = 10
 EPSILON_DECAY = 0.99
 EPSILON_MIN = 0.001
 GAMMA = 0.999
+TAU = 0.995
 NEPISODE = 1000
 
 def build_parser():
     parser = ArgumentParser()
-    parser.add_argument('-a', dest='algorithm', help='The algorithm you wish to work '  + \
-                'with (currently only A2C, DQN, and PG).', metavar='ALG', required=True)
-    parser.add_argument('-d', dest='domain', help='The OpenAI Gym domain you wish to '  + \
-                'work in (currently only discrete).', metavar='DOMAIN', required=True)
+    parser.add_argument('-a', dest='algorithm', help='The algorithm you wish to work with.', 
+						metavar='ALG', required=True)
+    parser.add_argument('-d', dest='domain', help='The OpenAI Gym domain you wish to work in.',
+						metavar='DOMAIN', required=True)
     parser.add_argument('-e', type=float,
             dest='epsilon', help='DQN: epsilon parameter (default %(default)s)',
             metavar='EPSILON', default=EPSILON)
@@ -29,6 +30,9 @@ def build_parser():
     parser.add_argument('-g', type=float,
             dest='gamma', help='Gamma parameter (default %(default)s)',
             metavar='GAMMA', default=GAMMA)
+    parser.add_argument('-t', type=float,
+            dest='gamma', help='Tau parameter (default %(default)s)',
+            metavar='TAU', default=TAU)
     parser.add_argument('--nepisode', type=int,
             dest='nepisode', help='Number of episodes (default %(default)s)',
             choices=range(1000), metavar='NEPISODE', default=NEPISODE)

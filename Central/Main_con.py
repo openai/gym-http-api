@@ -2,30 +2,30 @@ import gym
 import numpy as np
 import tensorflow as tf
 import random
-import sys
 
 import DDPG
 import SAC
 
+import gym_cmd
+parser = gym_cmd.build_parser()
+options = parser.parse_args()
+
 if __name__ == '__main__':
 
-	if(len(sys.argv) <= 1):
-		print("Need to specify a domain")
-		quit()
-		
 	# Assume command line param will be 'CartPole-v1' or 'MountainCar-v1', etc.
-	domain = sys.argv[1]
+	algorithm = options.algorithm
+	domain = options.domain
 
 	env = gym.make(domain)
 	env.seed(1)
 	env = env.unwrapped
 
-	if(sys.argv[2] == "DDPG"):
+	if(algorithm == "DDPG"):
 		agent = DDPG.DDPG(act_dim=env.action_space.shape[0], obs_dim=env.observation_space.shape[0],
-					lr_actor=0.0001, lr_q_value=0.001, gamma=0.99, tau=0.01, action_noise_std=1)
-	elif(sys.argv[2] == "SAC"):
+					lr_actor=0.0001, lr_q_value=0.001, gamma=options.gamma, tau=options.tau, action_noise_std=1)
+	elif(algorithm == "SAC"):
 		agent = SAC.SAC(act_dim=env.action_space.shape[0], obs_dim=env.observation_space.shape[0],
-					lr_actor=0.001, lr_value=0.001, gamma=0.99, tau=0.995)
+					lr_actor=0.001, lr_value=0.001, gamma=options.gamma, tau=options.tau)
 	else:
 		print("Invalid algorithm specified. Only DDPG and SAC currently supported")
 		quit()

@@ -1,145 +1,63 @@
-**Status:** Archive (code is provided as-is, no updates expected)
-
-<img align="left" src="http://i.imgur.com/568Luwb.png">gym-http-api
+Gym domains with the command line
 ============
 
-This project provides a local REST API to the [gym](https://github.com/openai/gym) open-source library, allowing development in languages other than python.
+This experimental repository utilizes Parsers to execute various reinforcement learning algorithms in appropriate Gym domains. For the time being, five algorithms are supported (deep Q-learning network, 
+asynchronous advantage actor-critic, policy gradient, deep deterministic policy gradient, and soft-actor critic), and one may run two separate Main files according to whether or not the domains that certain 
+algorithms use are discrete or continuous (Main_disc.py and Main_con.py, respectively).
 
-A python client is included, to demonstrate how to interact with the server.
+This repository imports Gym domains that are not within the general repository, such as Atari and Retro, for our eventual testing with said domains.
 
-Contributions of clients in other languages are welcomed!
 
 Installation
 ============
 
-To download the code and install the requirements, you can run the following shell commands:
+To download the code and install the requirements, run the following prompt commands:
 
-    git clone https://github.com/openai/gym-http-api
+    git clone https://github.com/nazaruka/gym-http-api
     cd gym-http-api
+	conda install -c conda-forge swig (in Anaconda Prompt!)
     pip install -r requirements.txt
 
 
-Getting started
+Implementation
 ============
 
-This code is intended to be run locally by a single user. The server runs in python. You can implement your own HTTP clients using any language; a demo client written in python is provided to demonstrate the idea.
+Algorithms are shortened according to the following acronymic forms:
 
-To start the server from the command line, run this:
+- Deep Q-learning network: DQN
+- Asynchronous advantage actor-critic: A3C
+- Policy gradient: PG
+- Deep deterministic policy gradient: DDPG
+- Soft actor-critic: SAC
 
-    python gym_http_server.py
+Firstly, decide between Main_disc.py or Main_con.py, depending on which algorithms and environments you would like to test.
+NB: Main_disc.py will take A3C, DQN, and PG; Main_con.py will take DDPG and SAC.
 
-In a separate terminal, you can then try running the example python agent and see what happens:
+Next, open your chosen file according to the following call format:
 
-    python example_agent.py
+python Main_disc.py/Main_con.py [-h] -a ALG -d DOMAIN [-e EPSILON] [--estep EPSILON_STEP] [--edecay EPSILON_DECAY] [--emin EPSILON_MIN] [-g GAMMA] [-t TAU] [--nepisode NEPISODE]
 
-The example lua agent behaves very similarly:
+  -h, --help            				Show help message and exit
+  -a ALG                				The algorithm you wish to work with.
+  -d DOMAIN          				The OpenAI Gym domain you wish to work in.
+  -e EPSILON          		 		DQN: epsilon parameter (default 0.2)
+  --estep EPSILON_STEP			DQN: epsilon step (default 10)
+  --edecay EPSILON_DECAY		DQN: epsilon decay (default 0.99)
+  --emin EPSILON_MIN    		DQN: minimum epsilon (default 0.001)
+  -g GAMMA              				Gamma parameter (default 0.999)
+  -t TAU                					Tau parameter (default 0.995)
+  --nepisode NEPISODE   		Number of episodes (default 1000)
+  
+Several of these arguments are limited to specific algorithms; all save for ALG and DOMAIN are optional.
 
-    cd binding-lua
-    lua example_agent.lua
+Here is a list of appropriate Gym domains to run based on the domains' distributions:
 
-You can also write code like this to create your own client, and test it out by creating a new environment. For example, in python:
+- Main_disc (for DQN, A3C, PG): Acrobot-v1, CartPole-v1, MountainCar-v0, LunarLander-v2
+- Main_con (for DDPG, SAC): Pendulum-v1
 
-    remote_base = 'http://127.0.0.1:5000'
-    client = Client(remote_base)
-
-    env_id = 'CartPole-v0'
-    instance_id = client.env_create(env_id)
-    client.env_step(instance_id, 0)
-
-
-Testing
-============
-
-This repository contains integration tests, using the python client implementation to send requests to the local server. They can be run using the `nose2` framework. From a shell (such as bash) you can run nose2 directly:
-
-    cd gym-http-api
-    nose2
-
-
-API specification
-============
-
-  * POST `/v1/envs/`
-      * Create an instance of the specified environment
-      * param: `env_id` -- gym environment ID string, such as 'CartPole-v0'
-      * returns: `instance_id` -- a short identifier (such as '3c657dbc')
-	    for the created environment instance. The instance_id is
-        used in future API calls to identify the environment to be
-        manipulated
-
-  * GET `/v1/envs/`
-      * List all environments running on the server
-	  * returns: `envs` -- dict mapping `instance_id` to `env_id`
-	    (e.g. `{'3c657dbc': 'CartPole-v0'}`) for every env on the server
-
-  * POST `/v1/envs/<instance_id>/reset/`
-      * Reset the state of the environment and return an initial
-        observation.
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-      * returns: `observation` -- the initial observation of the space
-
-  * POST `/v1/envs/<instance_id>/step/`
-      *  Step though an environment using an action.
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-	  * param: `action` -- an action to take in the environment
-      * returns: `observation` -- agent's observation of the current
-        environment
-      * returns: `reward` -- amount of reward returned after previous action
-      * returns: `done` -- whether the episode has ended
-      * returns: `info` -- a dict containing auxiliary diagnostic information
-
-  * GET `/v1/envs/<instance_id>/action_space/`
-      * Get information (name and dimensions/bounds) of the env's
-        `action_space`
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-      * returns: `info` -- a dict containing 'name' (such as 'Discrete'), and
-    additional dimensional info (such as 'n') which varies from
-    space to space
-
-  * GET `/v1/envs/<instance_id>/observation_space/`
-      * Get information (name and dimensions/bounds) of the env's
-        `observation_space`
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-      * returns: `info` -- a dict containing 'name' (such as 'Discrete'), and
-    additional dimensional info (such as 'n') which varies from
-    space to space
-
-  * POST `/v1/envs/<instance_id>/monitor/start/`
-      * Start monitoring
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-      * param: `force` (default=False) -- Clear out existing training
-        data from this directory (by deleting every file
-        prefixed with "openaigym.")
-      * param: `resume` (default=False) -- Retain the training data
-        already in this directory, which will be merged with
-        our new data
-      * (NOTE: the `video_callable` parameter from the native
-    `env.monitor.start` function is NOT implemented)
-
-  * POST `/v1/envs/<instance_id>/monitor/close/`
-      * Flush all monitor data to disk
-      * param: `instance_id` -- a short identifier (such as '3c657dbc')
-        for the environment instance
-
-  * POST `/v1/upload/`
-      * Flush all monitor data to disk
-      * param: `training_dir` -- A directory containing the results of a
-        training run.
-      * param: `api_key` -- Your OpenAI API key
-      * param: `algorithm_id` (default=None) -- An arbitrary string
-        indicating the paricular version of the algorithm
-        (including choices of parameters) you are running.
-
-  * POST `/v1/shutdown/`
-      * Request a server shutdown
-      * Currently used by the integration tests to repeatedly create and destroy fresh copies of the server running in a separate thread
 
 Contributors
 ============
 
-See the [contributors page] (https://github.com/openai/gym-http-api/graphs/contributors)
+Assembled by Aleksandr "Alex" Nazaruk '22 and Dr. Jacob Schrum of Southwestern University. 
+We give credit to the original Uber AI repository, as well as to the following repository for providing much of the basis for our code: https://github.com/sarcturus00/Tidy-Reinforcement-learning
