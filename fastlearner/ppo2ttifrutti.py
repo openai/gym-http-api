@@ -96,7 +96,6 @@ class Runner(AbstractEnvRunner):
         epinfos = []
 
         for s in range(self.nsteps):
-            self.env.render() # Added
             actions, values, self.states, neglogpacs = self.model.step(self.obs, self.states, self.dones)
             mb_obs.append(self.obs.copy())
             mb_actions.append(actions)
@@ -104,6 +103,7 @@ class Runner(AbstractEnvRunner):
             mb_neglogpacs.append(neglogpacs)
             mb_dones.append(self.dones)
             self.obs[:], rewards, self.dones, infos = self.env.step(actions)
+            self.env.render() # Added
             for info in infos:
                 maybeepinfo = info.get('episode')
                 if maybeepinfo: epinfos.append(maybeepinfo)
