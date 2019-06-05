@@ -1,0 +1,21 @@
+FROM openai/retro-agent:tensorflow
+
+# Needed for OpenCV.
+RUN apt-get update && \
+    apt-get install -y libgtk2.0-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Baselines has some unneeded and cumbersome dependencies,
+# so we manually fetch the deps we need.
+RUN . ~/venv/bin/activate && \
+    pip install scipy tqdm joblib zmq dill progressbar2 cloudpickle opencv-python && \
+    pip install --no-deps git+https://github.com/openai/baselines.git
+
+ADD ppo2ttifrutti_sonic_env.py .
+ADD ppo2ttifrutti.py .
+ADD ppo2ttifrutti_policies.py .
+ADD ppo2ttifrutti_agent.py .
+ADD model_tf.data-00000-of-00001 .
+ADD model_tf.index .
+ADD model_tf.meta  .
+CMD ["python", "-u", "/root/compo/ppo2ttifrutti_agent.py"]

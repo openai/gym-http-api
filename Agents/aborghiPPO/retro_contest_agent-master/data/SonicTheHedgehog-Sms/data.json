@@ -1,0 +1,28 @@
+{
+  "info": {
+    "level": {
+      "address": 53822,
+      "type": "|u1"
+    },
+    "lives": {
+      "address": 53830,
+      "type": "|u1"
+    },
+    "rings": {
+      "address": 53930,
+      "type": "|d1"
+    },
+    "score": {
+      "address": 53947,
+      "type": ">d2"
+    },
+    "x": {
+      "address": 54270,
+      "type": "<u2"
+    },
+    "y": {
+      "address": 54273,
+      "type": "<u2"
+    }
+  }
+}

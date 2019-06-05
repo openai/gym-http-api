@@ -1,0 +1,28 @@
+{
+  "info": {
+    "level": {
+      "address": 50352460,
+      "type": "|u1"
+    },
+    "lives_plus_one": {
+      "address": 50352164,
+      "type": "|u1"
+    },
+    "rings": {
+      "address": 50341688,
+      "type": "<u2"
+    },
+    "score": {
+      "address": 50352176,
+      "type": "<u2"
+    },
+    "x": {
+      "address": 50332680,
+      "type": "<u2"
+    },
+    "y": {
+      "address": 50332696,
+      "type": "<u2"
+    }
+  }
+}

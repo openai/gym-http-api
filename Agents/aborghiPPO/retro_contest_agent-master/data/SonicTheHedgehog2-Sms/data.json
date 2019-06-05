@@ -1,0 +1,44 @@
+{
+  "info": {
+    "act": {
+      "address": 53910,
+      "type": ">u1"
+    },
+    "lives": {
+      "address": 53912,
+      "type": "|u1"
+    },
+    "rings": {
+      "address": 53913,
+      "type": "<u2"
+    },
+    "score": {
+      "address": 53919,
+      "type": "<d3"
+    },
+    "screen_x": {
+      "address": 53891,
+      "type": ">u2"
+    },
+    "screen_y": {
+      "address": 53893,
+      "type": ">u2"
+    },
+    "time": {
+      "address": 53945,
+      "type": "<d2"
+    },
+    "x": {
+      "address": 54545,
+      "type": "<i2"
+    },
+    "y": {
+      "address": 54548,
+      "type": "<i2"
+    },
+    "zone": {
+      "address": 53909,
+      "type": ">u1"
+    }
+  }
+}
