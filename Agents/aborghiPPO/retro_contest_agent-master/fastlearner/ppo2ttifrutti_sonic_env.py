@@ -3,6 +3,7 @@
 import numpy as np
 import gym
 import gym_remote.client as grc
+from retro_contest.local import make
 from baselines.common.atari_wrappers import FrameStack
 
 import cv2
@@ -81,7 +82,8 @@ def make_custom(stack=True, scale_rew=True):
     """
     Create an environment with some standard wrappers.
     """
-    env = grc.RemoteEnv('tmp/sock')
+	#env = grc.RemoteEnv('tmp/sock')
+    env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
     env = SonicDiscretizer(env)
     if scale_rew:
         env = RewardScaler(env)

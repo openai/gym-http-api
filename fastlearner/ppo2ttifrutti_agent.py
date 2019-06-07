@@ -38,9 +38,8 @@ def main():
                             ent_coef=0.01,
                             lr=lambda _: 7.5e-5,
                             cliprange=lambda _: 0.1,
-                            total_timesteps=int(1e7))
-                            # Removed
-                            #load_path='model')
+                            save_interval=10,
+                            load_path=None)
 
 if __name__ == '__main__':
     try:

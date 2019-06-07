@@ -1,7 +1,7 @@
 import retro
 
 def main():
-    env = retro.make(game='MsPacman-Atari2600', state='Start')
+    env = retro.make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
     obs = env.reset()
     while True:
         obs, rew, done, info = env.step(env.action_space.sample())
