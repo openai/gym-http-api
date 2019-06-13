@@ -40,7 +40,7 @@ def main():
                             cliprange=lambda _: 0.1,
                             total_timesteps=int(1e7),
                             save_interval=10,
-                            load_path=None)
+                            load_path='C:/Users/Admin/AppData/Local/Temp/openai-2019-06-10-22-23-28-358932/checkpoints/00060')
 
 if __name__ == '__main__':
     try:

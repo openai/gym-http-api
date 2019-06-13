@@ -4,6 +4,7 @@ import random
 import numpy as np
 import os.path as osp
 import tensorflow as tf
+import ppo2plotter as plot
 from baselines import logger
 from collections import deque
 from baselines.common import explained_variance
@@ -213,6 +214,10 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
         lossvals = np.mean(mblossvals, axis=0)
         tnow = time.time()
         fps = int(nbatch / (tnow - tstart))
+        if logger.get_dir():
+            plotdir = osp.join(logger.get_dir(), 'plots')
+            os.makedirs(plotdir, exist_ok=True)
+            csvWrite = createCSV(update)
         if update % log_interval == 0 or update == 1:
             ev = explained_variance(values, returns)
             logger.logkv("serial_timesteps", update*nsteps)
