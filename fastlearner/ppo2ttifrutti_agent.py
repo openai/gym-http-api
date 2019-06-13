@@ -29,7 +29,7 @@ def main():
         # we stop due to an exception.
         ppo2ttifrutti.learn(policy=policies.CnnPolicy,
                             env=DummyVecEnv([env.make_custom]),
-                            nsteps=4096,
+                            nsteps=4500,
                             nminibatches=4,
                             lam=0.95,
                             gamma=0.99,

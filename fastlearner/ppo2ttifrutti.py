@@ -91,7 +91,7 @@ class Runner(AbstractEnvRunner):
         self.gamma = gamma
         self.total_timesteps = total_timesteps
 
-    def run(self, update):
+    def run(self, update, plotdir):
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[],[]
         mb_states = self.states
         epinfos = []
@@ -104,6 +104,8 @@ class Runner(AbstractEnvRunner):
             mb_neglogpacs.append(neglogpacs)
             mb_dones.append(self.dones)
             self.obs[:], rewards, self.dones, infos = self.env.step(actions)
+            info = infos[0]
+            plot.newRow(plotdir, update, s, info['x'], info['y'])
             self.env.render() # Added
             for info in infos:
                 maybeepinfo = info.get('episode')
@@ -176,13 +178,17 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
     epinfobuf = deque(maxlen=100)
     tfirststart = time.time()
 
+    if logger.get_dir():
+        plotdir = plot.createPlotPath()
+    
     nupdates = total_timesteps//nbatch
     for update in range(1, nupdates+1):
+        plot.createCSV(plotdir, update)
         tstart = time.time()
         frac = 1.0 - (update - 1.0) / nupdates
         lrnow = lr(frac)
         cliprangenow = cliprange(frac)
-        obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run(update) #pylint: disable=E0632
+        obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run(update, plotdir) #pylint: disable=E0632
 
         epinfobuf.extend(epinfos)
         mblossvals = []
@@ -214,10 +220,6 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
         lossvals = np.mean(mblossvals, axis=0)
         tnow = time.time()
         fps = int(nbatch / (tnow - tstart))
-        if logger.get_dir():
-            plotdir = osp.join(logger.get_dir(), 'plots')
-            os.makedirs(plotdir, exist_ok=True)
-            csvWrite = createCSV(update)
         if update % log_interval == 0 or update == 1:
             ev = explained_variance(values, returns)
             logger.logkv("serial_timesteps", update*nsteps)
