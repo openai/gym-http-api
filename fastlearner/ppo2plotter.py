@@ -33,3 +33,9 @@ def genPlot(plotdir, num):
     plt.ylabel('Value')
     plt.legend()
     plt.show()
+#
+# def main():
+#    genPlot('C:/Users/Admin/AppData/Local/Temp/openai-2019-06-13-15-48-45-318250/plots', 1)
+#
+#if __name__ == '__main__':
+#    main()
