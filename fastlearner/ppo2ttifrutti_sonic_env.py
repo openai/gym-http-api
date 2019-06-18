@@ -88,7 +88,7 @@ def make_custom(stack=True, scale_rew=True):
     """
 
     # Simplified, not remote
-    env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act2')
+    env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
     #env = grc.RemoteEnv('tmp/sock')
 
     env = SonicDiscretizer(env)

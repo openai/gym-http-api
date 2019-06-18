@@ -91,10 +91,23 @@ class Runner(AbstractEnvRunner):
         self.gamma = gamma
         self.total_timesteps = total_timesteps
 
-    def run(self, update, plotdir):
+    def run(self, update, plotdir, plotter):
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_neglogpacs = [],[],[],[],[],[]
         mb_states = self.states
         epinfos = []
+        if(plotter.getEpTime() == 0):
+            actions, values, self.states, neglogpacs = self.model.step(self.obs, self.states, self.dones)
+            self.obs[:], rewards, self.dones, infos = self.env.step(actions)
+            info = infos[0]
+            x_start = last_x = info['x']
+            y_start = last_y = info['y']
+            plotter.passOnStart(x_start, y_start)
+            plotter.passOnLast(last_x, last_y)
+        elif(update > 1):
+            x_start = plotter.getStartX()
+            y_start = plotter.getStartY()
+            last_x = plotter.getLastX()
+            last_y = plotter.getLastY()
 
         for s in range(self.nsteps):
             actions, values, self.states, neglogpacs = self.model.step(self.obs, self.states, self.dones)
@@ -105,7 +118,27 @@ class Runner(AbstractEnvRunner):
             mb_dones.append(self.dones)
             self.obs[:], rewards, self.dones, infos = self.env.step(actions)
             info = infos[0]
-            plot.newRow(plotdir, update, s, info['x'], info['y'])
+            epnum = plotter.getEpNum()
+            eptime = plotter.getEpTime()
+            if(info['x'] == last_x and info['y'] < last_y): plotter.setDeath(1)
+            if(info['x'] == x_start and info['y'] == y_start and eptime == 0):
+                plot.createCSV(plotdir, epnum)
+            elif(info['x'] == x_start and info['y'] == y_start and plotter.isDead()):
+                plot.genPlot(plotdir, epnum, info['screen_x_end'])
+                eptime = plotter.resetEpTime()
+                epnum = plotter.updateEpNum()
+                plotter.setDeath(0)
+                plot.createCSV(plotdir, epnum)
+            elif(eptime == 4500):
+                plot.genPlot(plotdir, epnum, info['screen_x_end'])
+                eptime = plotter.resetEpTime()
+                epnum = plotter.updateEpNum()
+                plot.createCSV(plotdir, epnum)
+            plot.newRow(plotdir, epnum, eptime, info['x'], info['y'])
+            last_x = info['x']
+            last_y = info['y']
+            plotter.passOnLast(last_x, last_y)
+            eptime = plotter.updateEpTime()
             self.env.render() # Added
             for info in infos:
                 maybeepinfo = info.get('episode')
@@ -183,12 +216,16 @@ def learn(*, policy, env, nsteps, total_timesteps, ent_coef, lr,
     
     nupdates = total_timesteps//nbatch
     for update in range(1, nupdates+1):
-        plot.createCSV(plotdir, update)
         tstart = time.time()
         frac = 1.0 - (update - 1.0) / nupdates
         lrnow = lr(frac)
         cliprangenow = cliprange(frac)
-        obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run(update, plotdir) #pylint: disable=E0632
+        if(update == 1):
+            initPlot = plot.Plotter(1,0,0,0,0,0,0)
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run(update, plotdir, initPlot) #pylint: disable=E0632
+        else:
+            plotter = initPlot
+            obs, returns, masks, actions, values, neglogpacs, states, epinfos = runner.run(update, plotdir, plotter) #pylint: disable=E0632
 
         epinfobuf.extend(epinfos)
         mblossvals = []

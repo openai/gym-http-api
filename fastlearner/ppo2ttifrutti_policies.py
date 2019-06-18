@@ -55,6 +55,7 @@ class CnnPolicy(object):
 
         def step(ob, *_args, **_kwargs):
             a, v, neglogp = sess.run([a0, vf, neglogp0], {X:ob})
+            # The a value returned here defines the action that Sonic takes. It is a vector of one element (action index)
             return a, v, self.initial_state, neglogp
 
         def value(ob, *_args, **_kwargs):
