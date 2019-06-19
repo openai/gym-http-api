@@ -101,17 +101,28 @@ def mutation(solution):
 
 if __name__ == '__main__':
     #Main program starts here
-    pop_size = 20
-    max_gen = 921
+    
+    # Schrum: Makes these small to test at first
+    pop_size = 5
+    max_gen = 5
 
     #Initialization
+    # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
     min_x=-55
     max_x=55
     solution=[min_x+(max_x-min_x)*random.random() for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
-        function1_values = [function1(solution[i])for i in range(0,pop_size)]
-        function2_values = [function2(solution[i])for i in range(0,pop_size)]
+    
+        #Schrum: Add a call to a method you make that evaluates sonic and returns both the score (RL Return) and behavior characterization
+    
+        function1_values = [function1(solution[i])for i in range(0,pop_size)] # Schrum: Repalce with the RL returns for each individual
+        
+        # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
+        
+        function2_values = [function2(solution[i])for i in range(0,pop_size)] # Schrum: Replace with the diversity/novelty scores for each individual
+
+
         non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
         print("The best front for Generation number ",gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
