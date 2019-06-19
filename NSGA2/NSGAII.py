@@ -7,6 +7,7 @@
 import math
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 
 #First function to optimize
 def function1(x):
@@ -99,6 +100,10 @@ def mutation(solution):
         solution = min_x+(max_x-min_x)*random.random()
     return solution
 
+def random_genome(n):
+    # n is the number of weights
+    return np.random.rand(1,n)
+    
 if __name__ == '__main__':
     #Main program starts here
     
@@ -108,9 +113,8 @@ if __name__ == '__main__':
 
     #Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
-    min_x=-55
-    max_x=55
-    solution=[min_x+(max_x-min_x)*random.random() for i in range(0,pop_size)]
+    num_weights = 10 # What should this actually be?
+    solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
     
