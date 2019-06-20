@@ -9,6 +9,14 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Copied from Training.py in the sonicNEAT repo
+import retro
+import numpy as np
+import cv2
+import neat
+import pickle
+
+
 #First function to optimize
 def function1(x):
     value = -x**2
@@ -100,6 +108,56 @@ def mutation(solution):
         solution = min_x+(max_x-min_x)*random.random()
     return solution
 
+# Copied from Training.py in the sonicNEAT repo
+def evaluate(env,net):
+    ob = env.reset()
+    ac = env.action_space.sample()
+    inx, iny, inc = env.observation_space.shape
+    inx = int(inx/8)
+    iny = int(iny/8)
+    current_max_fitness = 0
+    fitness_current = 0
+    frame = 0
+    counter = 0
+    xpos = 0
+    done = False
+            
+    while not done:
+        
+        env.render()
+        frame += 1
+        ob = cv2.resize(ob, (inx, iny))
+        ob = cv2.cvtColor(ob, cv2.COLOR_BGR2GRAY)
+        ob = np.reshape(ob, (inx,iny))
+
+        imgarray = np.ndarray.flatten(ob)
+
+        nnOutput = net.activate(imgarray)
+            
+        ob, rew, done, info = env.step(nnOutput)
+            
+            
+        xpos = info['x']
+            
+        if xpos >= 65664:
+                fitness_current += 10000000
+                done = True
+            
+        fitness_current += rew
+            
+        if fitness_current > current_max_fitness:
+            current_max_fitness = fitness_current
+            counter = 0
+        else:
+            counter += 1
+                
+        if done or counter == 250:
+            done = True
+            print(fitness_current)
+    
+    # Add code to return the behavior characterization as well.
+    return fitness_current
+
 def random_genome(n):
     # n is the number of weights
     return np.random.rand(1,n)
@@ -107,9 +165,19 @@ def random_genome(n):
 if __name__ == '__main__':
     #Main program starts here
     
+    # Copied from Training.py in the sonicNEAT repo
+    env = retro.make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
+    imgarray = []
+    xpos_end = 0
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                     'config-feedforward')
+    p = neat.Population(config)
+    example_genome = p.population[1]
+    
     # Schrum: Makes these small to test at first
-    pop_size = 5
-    max_gen = 5
+    pop_size = 3
+    max_gen = 3
 
     #Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
@@ -117,9 +185,17 @@ if __name__ == '__main__':
     solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
-    
-        #Schrum: Add a call to a method you make that evaluates sonic and returns both the score (RL Return) and behavior characterization
-    
+        # Copied/Adapted from Training.py in the sonicNEAT repo
+        for genome in solution:
+            # Replace example_genome with genome once the types are worked out.
+            # Of course, eventually we won't be using NEAT at all ... so maybe skip that step.
+            net = neat.nn.recurrent.RecurrentNetwork.create(example_genome, config)
+            fitness = evaluate(env,net)
+            # Schrum: Need to get the behavior characterization as well, and then actually do something with 
+            #         both that and the fitness
+
+        # Schrum: This code will crash because the solution variable has nothing to do with the type of fitness that is supposed to be calculated here.
+        
         function1_values = [function1(solution[i])for i in range(0,pop_size)] # Schrum: Repalce with the RL returns for each individual
         
         # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
