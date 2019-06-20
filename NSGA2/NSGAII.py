@@ -206,25 +206,22 @@ if __name__ == '__main__':
                      neat.DefaultSpeciesSet, neat.DefaultStagnation,
                      'config-feedforward')
     p = neat.Population(config)
-    example_genome = p.population[1]
     
     # Schrum: Makes these small to test at first
-    pop_size = 3
     max_gen = 3
 
     #Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
     num_weights = 10 # What should this actually be?
-    solution=[random_genome(num_weights) for i in range(0,pop_size)]
+    #solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
         fitness_scores = []
         behavior_characterizations = []
         # Copied/Adapted from Training.py in the sonicNEAT repo
-        for genome in solution:
-            # Replace example_genome with genome once the types are worked out.
-            # Of course, eventually we won't be using NEAT at all ... so maybe skip that step.
-            net = neat.nn.recurrent.RecurrentNetwork.create(example_genome, config)
+        for genome_id in p.population:
+            genome = p.population[genome_id]
+            net = neat.nn.recurrent.RecurrentNetwork.create(genome, config)
             fitness, behavior_char = evaluate(env,net)
             fitness_scores.append(fitness)
             behavior_characterizations.append(behavior_char)
@@ -233,12 +230,8 @@ if __name__ == '__main__':
         novelty_scores = calculate_novelty(behavior_characterizations)
         print(novelty_scores)
         
-        # Schrum: This code will crash because the solution variable has nothing to do with the type of fitness that is supposed to be calculated here.
-        
-        function1_values = [function1(solution[i])for i in range(0,pop_size)] # Schrum: Repalce with the RL returns for each individual
-        
-        
-        function2_values = [function2(solution[i])for i in range(0,pop_size)] # Schrum: Replace with the diversity/novelty scores for each individual
+        function1_values = fitness_scores
+        function2_values = novelty_scores
 
 
         non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
