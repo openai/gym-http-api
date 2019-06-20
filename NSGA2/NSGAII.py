@@ -1,13 +1,11 @@
-# Program Name: NSGA-II.py
-# Description: This is a python implementation of Prof. Kalyanmoy Deb's popular NSGA-II algorithm
-# Author: Haris Ali Khan 
-# Supervisor: Prof. Manoj Kumar Tiwari
-
 #Importing required modules
 import math
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+
+#Importing Sonic stuff
+import ppo2ttifrutti_sonic_env as env
 
 #First function to optimize
 def function1(x):
@@ -116,6 +114,7 @@ if __name__ == '__main__':
     num_weights = 10 # What should this actually be?
     solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
+    env.make_custom()
     while(gen_no<max_gen):
     
         #Schrum: Add a call to a method you make that evaluates sonic and returns both the score (RL Return) and behavior characterization
