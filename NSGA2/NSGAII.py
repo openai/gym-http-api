@@ -15,6 +15,7 @@ import numpy as np
 import cv2
 import neat
 import pickle
+from platform import dist
 
 
 #First function to optimize
@@ -80,6 +81,35 @@ def fast_non_dominated_sort(values1, values2):
     del front[len(front)-1]
     return front
 
+def calculate_novelty(behavior_characterizations):
+    ns = []
+    for i in range(0, len(behavior_characterizations)):
+        total_dist = 0
+        for j in range(0, len(behavior_characterizations)):
+            if(i != j):
+                i_behavior = behavior_characterizations[i]
+                j_behavior = behavior_characterizations[j]
+                dist = euclidean_dist(i_behavior, j_behavior)
+                total_dist += dist
+        avg_dist = total_dist / (len(solution) - 1)
+        ns.append(avg_dist)
+    return ns
+
+def euclidean_dist(i_behavior, j_behavior):
+    index = total = 0
+    minimum = min(len(i_behavior), len(j_behavior))
+    while index < minimum: 
+        total += (i_behavior[index] - j_behavior[index]) ** 2
+        index += 1
+    while index < len(i_behavior):
+        total += i_behavior[index] ** 2
+        index += 1
+    while index < len(j_behavior):
+        total += j_behavior[index] ** 2
+        index += 1
+    total = math.sqrt(total)
+    return total
+    
 #Function to calculate crowding distance
 def crowding_distance(values1, values2, front):
     distance = [0 for i in range(0,len(front))]
@@ -121,6 +151,7 @@ def evaluate(env,net):
     counter = 0
     xpos = 0
     done = False
+    behaviors = []
             
     while not done:
         
@@ -136,8 +167,10 @@ def evaluate(env,net):
             
         ob, rew, done, info = env.step(nnOutput)
             
-            
         xpos = info['x']
+        ypos = info['y']
+        behaviors.append(xpos)
+        behaviors.append(ypos)
             
         if xpos >= 65664:
                 fitness_current += 10000000
@@ -153,10 +186,10 @@ def evaluate(env,net):
                 
         if done or counter == 250:
             done = True
-            print(fitness_current)
+            #print(fitness_current)
     
     # Add code to return the behavior characterization as well.
-    return fitness_current
+    return fitness_current, behaviors
 
 def random_genome(n):
     # n is the number of weights
@@ -185,20 +218,25 @@ if __name__ == '__main__':
     solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
+        fitness_scores = []
+        behavior_characterizations = []
         # Copied/Adapted from Training.py in the sonicNEAT repo
         for genome in solution:
             # Replace example_genome with genome once the types are worked out.
             # Of course, eventually we won't be using NEAT at all ... so maybe skip that step.
             net = neat.nn.recurrent.RecurrentNetwork.create(example_genome, config)
-            fitness = evaluate(env,net)
-            # Schrum: Need to get the behavior characterization as well, and then actually do something with 
-            #         both that and the fitness
-
+            fitness, behavior_char = evaluate(env,net)
+            fitness_scores.append(fitness)
+            behavior_characterizations.append(behavior_char)
+            
+        # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
+        novelty_scores = calculate_novelty(behavior_characterizations)
+        print(novelty_scores)
+        
         # Schrum: This code will crash because the solution variable has nothing to do with the type of fitness that is supposed to be calculated here.
         
         function1_values = [function1(solution[i])for i in range(0,pop_size)] # Schrum: Repalce with the RL returns for each individual
         
-        # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
         
         function2_values = [function2(solution[i])for i in range(0,pop_size)] # Schrum: Replace with the diversity/novelty scores for each individual
 
