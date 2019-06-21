@@ -20,16 +20,6 @@ from platform import dist
 # Use the Sonic contest environment instead
 from retro_contest.local import make
 
-#First function to optimize
-def function1(x):
-    value = -x**2
-    return value
-
-#Second function to optimize
-def function2(x):
-    value = -(x-2)**2
-    return value
-
 #Function to find index of list
 def index_of(a,list):
     for i in range(0,len(list)):
@@ -238,6 +228,14 @@ if __name__ == '__main__':
         function1_values = fitness_scores
         function2_values = novelty_scores
 
+        # Display the fitness scores and novelty scores for debugging
+        for i in range(0,len(function1_values)):
+            print("Fitness:",fitness_scores[i])
+            print("Novelty:",novelty_scores[i])
+            print("------------------")
+            
+        print("+++++++++++++++++++++++++++++++++++++++++")
+        
         non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
         print("The best front for Generation number ",gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
