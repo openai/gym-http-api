@@ -17,6 +17,8 @@ import neat
 import pickle
 from platform import dist
 
+# Use the Sonic contest environment instead
+from retro_contest.local import make
 
 #First function to optimize
 def function1(x):
@@ -197,9 +199,12 @@ def random_genome(n):
     
 if __name__ == '__main__':
     #Main program starts here
-    
+
+    # Competition version of environment make:
+    # Mus pip install gym==0.12.1 in order for this to work
+    env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
+
     # Copied from Training.py in the sonicNEAT repo
-    env = retro.make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
     imgarray = []
     xpos_end = 0
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
