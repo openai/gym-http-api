@@ -229,12 +229,11 @@ if __name__ == '__main__':
         function2_values = novelty_scores
 
         # Display the fitness scores and novelty scores for debugging
-        for i in range(0,len(function1_values)):
-            print("Fitness:",fitness_scores[i])
-            print("Novelty:",novelty_scores[i])
-            print("------------------")
-            
-        print("+++++++++++++++++++++++++++++++++++++++++")
+        #for i in range(0,len(function1_values)):
+        #    print("Fitness:",fitness_scores[i])
+        #    print("Novelty:",novelty_scores[i])
+        #    print("------------------") 
+        #print("+++++++++++++++++++++++++++++++++++++++++")
         
         non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
         print("The best front for Generation number ",gen_no, " is")
