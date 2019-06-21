@@ -91,7 +91,7 @@ def calculate_novelty(behavior_characterizations):
                 j_behavior = behavior_characterizations[j]
                 dist = euclidean_dist(i_behavior, j_behavior)
                 total_dist += dist
-        avg_dist = total_dist / (len(solution) - 1)
+        avg_dist = total_dist / (len(behavior_characterizations) - 1)
         ns.append(avg_dist)
     return ns
 
@@ -228,20 +228,28 @@ if __name__ == '__main__':
             
         # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
         novelty_scores = calculate_novelty(behavior_characterizations)
-        print(novelty_scores)
+        #print(novelty_scores)
         
         function1_values = fitness_scores
         function2_values = novelty_scores
 
-
         non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
         print("The best front for Generation number ",gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
-            print(round(solution[valuez],3),end=" ")
-        print("\n")
+            print("Fitness:",fitness_scores[valuez])
+            print("Novelty:",novelty_scores[valuez])
+            print("------------------")
+         
+         
         crowding_distance_values=[]
         for i in range(0,len(non_dominated_sorted_solution)):
             crowding_distance_values.append(crowding_distance(function1_values[:],function2_values[:],non_dominated_sorted_solution[i][:]))
+            
+            
+        # Schrum: The code below this point mutates a real-vector in the standard NSGA-II fashion, 
+        #         which won't work with the NEAT networks we are currently playing with. However, when
+        #         we switch to using CNNs, we will probably want this code (and have to change the code above).
+            
         solution2 = solution[:]
         #Generating offsprings
         while(len(solution2)!=2*pop_size):
