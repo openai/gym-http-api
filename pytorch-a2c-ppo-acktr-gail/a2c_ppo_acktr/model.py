@@ -174,8 +174,11 @@ class CNNBase(NNBase):
                                constant_(x, 0), nn.init.calculate_gain('relu'))
 
         if(is_genesis):
-            print("Fail!")
-            quit()
+            self.main = nn.Sequential(
+                init_(nn.Conv2d(num_inputs, 32, 8, stride=4)), nn.ReLU(),
+                init_(nn.Conv2d(32, 64, 4, stride=2)), nn.ReLU(),
+                init_(nn.Conv2d(64, 48, 3, stride=1)), nn.ReLU(), Flatten(),
+                init_(nn.Linear(48 * 12 * 12, hidden_size)), nn.ReLU()) # something is definitely wrong - maybe incorrect number?
         else:
             self.main = nn.Sequential(
                 init_(nn.Conv2d(num_inputs, 32, 8, stride=4)), nn.ReLU(),
