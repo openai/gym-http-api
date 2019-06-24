@@ -44,7 +44,7 @@ def main():
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,
-        base_kwargs={'recurrent': args.recurrent_policy})
+        base_kwargs={'recurrent': args.recurrent_policy, 'is_genesis':args.env_name.endswith("Genesis")})
     actor_critic.to(device)
 
     if args.algo == 'a2c':

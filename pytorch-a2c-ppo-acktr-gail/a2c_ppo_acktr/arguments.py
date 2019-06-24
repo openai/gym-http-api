@@ -149,6 +149,11 @@ def get_args():
         action='store_true',
         default=False,
         help='use a linear schedule on the learning rate')
+    parser.add_argument(
+        '--is-genesis',
+        action='store_true',
+        default=False,
+        help='is this a SEGA Genesis game?')
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
