@@ -79,6 +79,8 @@ if args.env_name.find('Bullet') > -1:
             torsoId = i
 
 episodeReturn = 0
+gamma = 0.99 # Make command line param?
+step = 0
 while True:
     with torch.no_grad():
         value, action, _, recurrent_hidden_states = actor_critic.act(
@@ -86,9 +88,11 @@ while True:
 
     # Obser reward and next obs
     obs, reward, done, _ = env.step(action)
-    episodeReturn += reward # Should I discount this?
+    episodeReturn += reward * (gamma**step)
+    step += 1
     if done:
-        print("Episode Return:", episodeReturn[0][0])
+        print("Final Episode Return on step {}: {}".format(step, episodeReturn[0][0].item()))
+        step = 0
     
     masks.fill_(0.0 if done else 1.0)
 
