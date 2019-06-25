@@ -25,6 +25,10 @@ class Policy(nn.Module):
             else:
                 raise NotImplementedError
 
+        # This key is needed to configure the CNN correctly for Genesis, but causes problems with other domains
+        if(not base_kwargs['is_genesis']):
+            del base_kwargs['is_genesis']
+            
         self.base = base(obs_shape[0], **base_kwargs)
 
         if action_space.__class__.__name__ == "Discrete":
