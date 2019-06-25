@@ -161,34 +161,51 @@ def evaluate(env,net):
     rollouts.obs[0].copy_(ob)
     rollouts.to(device)
     
-    while not done:
-        
-        
-        env.render()
-        frame += 1
-        #ob = cv2.resize(ob, (inx, iny))
-        #ob = cv2.cvtColor(ob, cv2.COLOR_BGR2GRAY)
-        #ob = np.reshape(ob, (inx,iny))
-        #imgarray = np.ndarray.flatten(ob)
-        #nnOutput = net.activate(imgarray)
-        
-        with torch.no_grad():
-            value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
-                    rollouts.obs[frame - 1], rollouts.recurrent_hidden_states[frame - 1],
-                    rollouts.masks[frame - 1])
-        ob, rew, done, infos = env.step(action)
+    num_updates = 50
+    for j in range(num_updates):
 
-        for info in infos:
+        if args.use_linear_lr_decay:
+            # decrease learning rate linearly
+            utils.update_linear_schedule(
+                agent.optimizer, j, num_updates,
+                agent.optimizer.lr if args.algo == "acktr" else args.lr)
+
+        for step in range(num_steps):
+            # Sample actions
+            with torch.no_grad():
+                value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
+                    rollouts.obs[step], rollouts.recurrent_hidden_states[step],
+                    rollouts.masks[step])
+
+            # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
+            #envs.render()
+            # Obser reward and next obs
+            obs, reward, done, infos = envs.step(action)
+
+            for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])
-        masks = torch.FloatTensor(
+
+            # If done then clean the history of observations.
+            masks = torch.FloatTensor(
                 [[0.0] if done_ else [1.0] for done_ in done])
-        bad_masks = torch.FloatTensor(
+            bad_masks = torch.FloatTensor(
                 [[0.0] if 'bad_transition' in info.keys() else [1.0]
                  for info in infos])
+            rollouts.insert(obs, recurrent_hidden_states, action,
+                            action_log_prob, value, reward, masks, bad_masks)
 
-        rollouts.insert(ob, recurrent_hidden_states, action,
-                            action_log_prob, value, rew, masks, bad_masks)
+        with torch.no_grad():
+            next_value = actor_critic.get_value(
+                rollouts.obs[-1], rollouts.recurrent_hidden_states[-1],
+                rollouts.masks[-1]).detach()
+
+        rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
+                                 args.gae_lambda, args.use_proper_time_limits)
+
+        value_loss, action_loss, dist_entropy = agent.update(rollouts)
+
+        rollouts.after_update()
 
         xpos = info['x']
         ypos = info['y']
