@@ -42,16 +42,20 @@ env = make_vec_envs(
     1,
     None,
     None,
-    device='cuda:0', # 'cpu', # Schrum: Will need to change this if you don't have a GPU
+    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
     allow_early_resets=False)
 
 # Get a render function
 render_func = get_render_func(env)
 
 # We need to use the same statistics for normalization as used in training
-actor_critic, ob_rms = \
-            torch.load(os.path.join(args.load_dir, args.env_name + ".pt"))
-
+if torch.cuda.is_available() :
+    actor_critic, ob_rms = \
+                torch.load(os.path.join(args.load_dir, args.env_name + ".pt"))
+else :
+    actor_critic, ob_rms = \
+                torch.load(os.path.join(args.load_dir, args.env_name + ".pt"), map_location='cpu')
+    
 vec_norm = get_vec_normalize(env)
 if vec_norm is not None:
     vec_norm.eval()
