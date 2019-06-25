@@ -42,7 +42,7 @@ env = make_vec_envs(
     1,
     None,
     None,
-    device='cuda:0', # 'cpu',
+    device='cuda:0', # 'cpu', # Schrum: Will need to change this if you don't have a GPU
     allow_early_resets=False)
 
 # Get a render function
