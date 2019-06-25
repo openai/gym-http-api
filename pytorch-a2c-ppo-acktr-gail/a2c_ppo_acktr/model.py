@@ -173,7 +173,7 @@ class NNBase(nn.Module):
 class CNNBase(NNBase):
     def __init__(self, num_inputs, is_genesis=False, recurrent=False, hidden_size=512):
         super(CNNBase, self).__init__(recurrent, hidden_size, hidden_size)
-        print(num_inputs)
+        #print("CNNBase", num_inputs)
         init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
                                constant_(x, 0), nn.init.calculate_gain('relu'))
 
@@ -182,7 +182,7 @@ class CNNBase(NNBase):
                 init_(nn.Conv2d(num_inputs, 32, 8, stride=4)), nn.ReLU(),
                 init_(nn.Conv2d(32, 64, 4, stride=2)), nn.ReLU(),
                 init_(nn.Conv2d(64, 48, 3, stride=1)), nn.ReLU(), Flatten(),
-                init_(nn.Linear(48 * 12 * 12, hidden_size)), nn.ReLU()) # something is definitely wrong - maybe incorrect number?
+                init_(nn.Linear(48 * 24 * 36, hidden_size)), nn.ReLU()) 
         else:
             self.main = nn.Sequential(
                 init_(nn.Conv2d(num_inputs, 32, 8, stride=4)), nn.ReLU(),
@@ -198,6 +198,7 @@ class CNNBase(NNBase):
         self.train()
 
     def forward(self, inputs, rnn_hxs, masks):
+        #print("forward", inputs.shape)
         x = self.main(inputs / 255.0)
 
         if self.is_recurrent:
