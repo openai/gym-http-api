@@ -11,11 +11,20 @@ import numpy as np
 
 # Copied from Training.py in the sonicNEAT repo
 import retro
-import numpy as np
 import cv2
 import neat
 import pickle
 from platform import dist
+
+# Importing necessary PyTorch stuff
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import helpers.ppo, helpers.utils
+from helpers.envs import make_vec_envs
+from helpers.model import Policy
+from helpers.storage import RolloutStorage
 
 # Use the Sonic contest environment instead
 from retro_contest.local import make
@@ -132,9 +141,9 @@ def mutation(solution):
 
 # Copied from Training.py in the sonicNEAT repo
 def evaluate(env,net):
-    ob = env.reset()
-    ac = env.action_space.sample()
-    inx, iny, inc = env.observation_space.shape
+    ob = envs.reset()
+    ac = envs.action_space.sample()
+    inx, iny, inc = envs.observation_space.shape
     inx = int(inx/8)
     iny = int(iny/8)
     current_max_fitness = 0
@@ -144,21 +153,43 @@ def evaluate(env,net):
     xpos = 0
     done = False
     behaviors = []
-            
+
+    num_steps = 128
+    num_processes = 1
+    rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
+                              envs.action_space, actor_critic.recurrent_hidden_state_size)
+    rollouts.obs[0].copy_(ob)
+    rollouts.to(device)
+    
     while not done:
+        
         
         env.render()
         frame += 1
-        ob = cv2.resize(ob, (inx, iny))
-        ob = cv2.cvtColor(ob, cv2.COLOR_BGR2GRAY)
-        ob = np.reshape(ob, (inx,iny))
+        #ob = cv2.resize(ob, (inx, iny))
+        #ob = cv2.cvtColor(ob, cv2.COLOR_BGR2GRAY)
+        #ob = np.reshape(ob, (inx,iny))
+        #imgarray = np.ndarray.flatten(ob)
+        #nnOutput = net.activate(imgarray)
+        
+        with torch.no_grad():
+            value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
+                    rollouts.obs[frame - 1], rollouts.recurrent_hidden_states[frame - 1],
+                    rollouts.masks[frame - 1])
+        ob, rew, done, infos = env.step(action)
 
-        imgarray = np.ndarray.flatten(ob)
+        for info in infos:
+                if 'episode' in info.keys():
+                    episode_rewards.append(info['episode']['r'])
+        masks = torch.FloatTensor(
+                [[0.0] if done_ else [1.0] for done_ in done])
+        bad_masks = torch.FloatTensor(
+                [[0.0] if 'bad_transition' in info.keys() else [1.0]
+                 for info in infos])
 
-        nnOutput = net.activate(imgarray)
-            
-        ob, rew, done, info = env.step(nnOutput)
-            
+        rollouts.insert(ob, recurrent_hidden_states, action,
+                            action_log_prob, value, rew, masks, bad_masks)
+
         xpos = info['x']
         ypos = info['y']
         behaviors.append(xpos)
@@ -186,13 +217,13 @@ def evaluate(env,net):
 def random_genome(n):
     # n is the number of weights
     return np.random.rand(1,n)
-    
+
 if __name__ == '__main__':
     #Main program starts here
 
     # Competition version of environment make:
     # Mus pip install gym==0.12.1 in order for this to work
-    env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
+    #env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
 
     # Copied from Training.py in the sonicNEAT repo
     imgarray = []
@@ -201,7 +232,19 @@ if __name__ == '__main__':
                      neat.DefaultSpeciesSet, neat.DefaultStagnation,
                      'config-feedforward')
     p = neat.Population(config)
+    init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
+                               constant_(x, 0), nn.init.calculate_gain('relu'))
     
+    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
+                         gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=False)
+    
+    actor_critic = Policy(
+        envs.observation_space.shape,
+        envs.action_space,
+        base_kwargs={'recurrent': True, 'is_genesis':True})
+    actor_critic.to("cpu")
+
     # Schrum: Makes these small to test at first
     max_gen = 3
 
@@ -216,8 +259,8 @@ if __name__ == '__main__':
         # Copied/Adapted from Training.py in the sonicNEAT repo
         for genome_id in p.population:
             genome = p.population[genome_id]
-            net = neat.nn.recurrent.RecurrentNetwork.create(genome, config)
-            fitness, behavior_char = evaluate(env,net)
+            net = actor_critic
+            fitness, behavior_char = evaluate(envs,net)
             fitness_scores.append(fitness)
             behavior_characterizations.append(behavior_char)
             
