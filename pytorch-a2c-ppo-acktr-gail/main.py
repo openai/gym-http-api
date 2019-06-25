@@ -115,6 +115,8 @@ def main():
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
+            # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
+            #envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
 
