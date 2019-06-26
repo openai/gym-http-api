@@ -12,7 +12,6 @@ import numpy as np
 # Copied from Training.py in the sonicNEAT repo
 import retro
 import cv2
-import neat
 import pickle
 from platform import dist
 
@@ -36,7 +35,7 @@ def index_of(a,list):
         if list[i] == a:
             return i
     return -1
-
+    
 #Function to sort by values
 def sort_by_values(list1, values):
     sorted_list = []
@@ -93,7 +92,7 @@ def calculate_novelty(behavior_characterizations):
                 j_behavior = behavior_characterizations[j]
                 dist = euclidean_dist(i_behavior, j_behavior)
                 total_dist += dist
-        avg_dist = total_dist / (len(behavior_characterizations) - 1)
+        avg_dist = total_dist / len(behavior_characterizations)
         ns.append(avg_dist)
     return ns
 
@@ -142,11 +141,6 @@ def mutation(solution):
 
 # Copied from Training.py in the sonicNEAT repo
 def evaluate(env,net,actor_critic):
-    ob = envs.reset()
-    ac = envs.action_space.sample()
-    inx, iny, inc = envs.observation_space.shape
-    inx = int(inx/8)
-    iny = int(iny/8)
     current_max_fitness = 0
     fitness_current = 0
     frame = 0
@@ -173,7 +167,8 @@ def evaluate(env,net,actor_critic):
     num_processes = 1
     rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
                               envs.action_space, actor_critic.recurrent_hidden_state_size)
-    rollouts.obs[0].copy_(ob)
+    obs = envs.reset()
+    rollouts.obs[0].copy_(obs)
     rollouts.to(device)
     
     done = False
@@ -197,13 +192,14 @@ def evaluate(env,net,actor_critic):
             envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
-
             fitness_current += reward
+            info = infos[0]
+            xpos = info['x']
+            ypos = info['y']
+            behaviors.append(xpos)
+            behaviors.append(ypos)
+            #print(fitness_current)
             
-            for info in infos:
-                if 'episode' in info.keys():
-                    episode_rewards.append(info['episode']['r'])
-                    
             if done: break
 
             # If done then clean the history of observations.
@@ -228,11 +224,6 @@ def evaluate(env,net,actor_critic):
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
-
-        xpos = info['x']
-        ypos = info['y']
-        behaviors.append(xpos)
-        behaviors.append(ypos)
             
         if xpos >= 65664:
                 fitness_current += 10000000
@@ -243,7 +234,7 @@ def evaluate(env,net,actor_critic):
             counter = 0
         else:
             counter += 1
-                
+
         if done or counter == 250:
             done = True
             #print(fitness_current)
@@ -265,17 +256,13 @@ if __name__ == '__main__':
     # Copied from Training.py in the sonicNEAT repo
     imgarray = []
     xpos_end = 0
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                     'config-feedforward')
-    p = neat.Population(config)
     init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
                                constant_(x, 0), nn.init.calculate_gain('relu'))
     
     device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
                          gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=False)
-    
+
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,
@@ -283,21 +270,21 @@ if __name__ == '__main__':
     actor_critic.to("cpu")
 
     # Schrum: Makes these small to test at first
-    max_gen = 3
+    max_gen = 1
 
     #Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
     num_weights = 10 # What should this actually be?
-    #solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
         fitness_scores = []
         behavior_characterizations = []
         # Copied/Adapted from Training.py in the sonicNEAT repo
-        for genome_id in p.population:
-            genome = p.population[genome_id]
+        for i in range(1):
             net = actor_critic
             fitness, behavior_char = evaluate(envs,net,actor_critic)
+            print(fitness)
+            print(behavior_char)
             fitness_scores.append(fitness)
             behavior_characterizations.append(behavior_char)
             
