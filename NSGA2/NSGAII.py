@@ -9,15 +9,25 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-#First function to optimize
-def function1(x):
-    value = -x**2
-    return value
+# Copied from Training.py in the sonicNEAT repo
+import retro
+import cv2
+import neat
+import pickle
+from platform import dist
 
-#Second function to optimize
-def function2(x):
-    value = -(x-2)**2
-    return value
+# Importing necessary PyTorch stuff
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import helpers.ppo, helpers.utils
+from helpers.envs import make_vec_envs
+from helpers.model import Policy
+from helpers.storage import RolloutStorage
+
+# Use the Sonic contest environment instead
+from retro_contest.local import make
 
 #Function to find index of list
 def index_of(a,list):
@@ -72,6 +82,35 @@ def fast_non_dominated_sort(values1, values2):
     del front[len(front)-1]
     return front
 
+def calculate_novelty(behavior_characterizations):
+    ns = []
+    for i in range(0, len(behavior_characterizations)):
+        total_dist = 0
+        for j in range(0, len(behavior_characterizations)):
+            if(i != j):
+                i_behavior = behavior_characterizations[i]
+                j_behavior = behavior_characterizations[j]
+                dist = euclidean_dist(i_behavior, j_behavior)
+                total_dist += dist
+        avg_dist = total_dist / (len(behavior_characterizations) - 1)
+        ns.append(avg_dist)
+    return ns
+
+def euclidean_dist(i_behavior, j_behavior):
+    index = total = 0
+    minimum = min(len(i_behavior), len(j_behavior))
+    while index < minimum: 
+        total += (i_behavior[index] - j_behavior[index]) ** 2
+        index += 1
+    while index < len(i_behavior):
+        total += i_behavior[index] ** 2
+        index += 1
+    while index < len(j_behavior):
+        total += j_behavior[index] ** 2
+        index += 1
+    total = math.sqrt(total)
+    return total
+    
 #Function to calculate crowding distance
 def crowding_distance(values1, values2, front):
     distance = [0 for i in range(0,len(front))]
@@ -100,41 +139,179 @@ def mutation(solution):
         solution = min_x+(max_x-min_x)*random.random()
     return solution
 
+# Copied from Training.py in the sonicNEAT repo
+def evaluate(env,net):
+    ob = envs.reset()
+    ac = envs.action_space.sample()
+    inx, iny, inc = envs.observation_space.shape
+    inx = int(inx/8)
+    iny = int(iny/8)
+    current_max_fitness = 0
+    fitness_current = 0
+    frame = 0
+    counter = 0
+    xpos = 0
+    done = False
+    behaviors = []
+
+    num_steps = 128
+    num_processes = 1
+    rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
+                              envs.action_space, actor_critic.recurrent_hidden_state_size)
+    rollouts.obs[0].copy_(ob)
+    rollouts.to(device)
+    
+    num_updates = 50
+    for j in range(num_updates):
+
+        if args.use_linear_lr_decay:
+            # decrease learning rate linearly
+            utils.update_linear_schedule(
+                agent.optimizer, j, num_updates,
+                agent.optimizer.lr if args.algo == "acktr" else args.lr)
+
+        for step in range(num_steps):
+            # Sample actions
+            with torch.no_grad():
+                value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
+                    rollouts.obs[step], rollouts.recurrent_hidden_states[step],
+                    rollouts.masks[step])
+
+            # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
+            #envs.render()
+            # Obser reward and next obs
+            obs, reward, done, infos = envs.step(action)
+
+            for info in infos:
+                if 'episode' in info.keys():
+                    episode_rewards.append(info['episode']['r'])
+
+            # If done then clean the history of observations.
+            masks = torch.FloatTensor(
+                [[0.0] if done_ else [1.0] for done_ in done])
+            bad_masks = torch.FloatTensor(
+                [[0.0] if 'bad_transition' in info.keys() else [1.0]
+                 for info in infos])
+            rollouts.insert(obs, recurrent_hidden_states, action,
+                            action_log_prob, value, reward, masks, bad_masks)
+
+        with torch.no_grad():
+            next_value = actor_critic.get_value(
+                rollouts.obs[-1], rollouts.recurrent_hidden_states[-1],
+                rollouts.masks[-1]).detach()
+
+        rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
+                                 args.gae_lambda, args.use_proper_time_limits)
+
+        value_loss, action_loss, dist_entropy = agent.update(rollouts)
+
+        rollouts.after_update()
+
+        xpos = info['x']
+        ypos = info['y']
+        behaviors.append(xpos)
+        behaviors.append(ypos)
+            
+        if xpos >= 65664:
+                fitness_current += 10000000
+                done = True
+            
+        fitness_current += rew
+            
+        if fitness_current > current_max_fitness:
+            current_max_fitness = fitness_current
+            counter = 0
+        else:
+            counter += 1
+                
+        if done or counter == 250:
+            done = True
+            #print(fitness_current)
+    
+    # Add code to return the behavior characterization as well.
+    return fitness_current, behaviors
+
 def random_genome(n):
     # n is the number of weights
     return np.random.rand(1,n)
-    
+
 if __name__ == '__main__':
     #Main program starts here
+
+    # Competition version of environment make:
+    # Mus pip install gym==0.12.1 in order for this to work
+    #env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
+
+    # Copied from Training.py in the sonicNEAT repo
+    imgarray = []
+    xpos_end = 0
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                     'config-feedforward')
+    p = neat.Population(config)
+    init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
+                               constant_(x, 0), nn.init.calculate_gain('relu'))
     
+    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
+                         gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=False)
+    
+    actor_critic = Policy(
+        envs.observation_space.shape,
+        envs.action_space,
+        base_kwargs={'recurrent': True, 'is_genesis':True})
+    actor_critic.to("cpu")
+
     # Schrum: Makes these small to test at first
-    pop_size = 5
-    max_gen = 5
+    max_gen = 3
 
     #Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
     num_weights = 10 # What should this actually be?
-    solution=[random_genome(num_weights) for i in range(0,pop_size)]
+    #solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no=0
     while(gen_no<max_gen):
-    
-        #Schrum: Add a call to a method you make that evaluates sonic and returns both the score (RL Return) and behavior characterization
-    
-        function1_values = [function1(solution[i])for i in range(0,pop_size)] # Schrum: Repalce with the RL returns for each individual
-        
+        fitness_scores = []
+        behavior_characterizations = []
+        # Copied/Adapted from Training.py in the sonicNEAT repo
+        for genome_id in p.population:
+            genome = p.population[genome_id]
+            net = actor_critic
+            fitness, behavior_char = evaluate(envs,net)
+            fitness_scores.append(fitness)
+            behavior_characterizations.append(behavior_char)
+            
         # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
+        novelty_scores = calculate_novelty(behavior_characterizations)
+        #print(novelty_scores)
         
-        function2_values = [function2(solution[i])for i in range(0,pop_size)] # Schrum: Replace with the diversity/novelty scores for each individual
+        function1_values = fitness_scores
+        function2_values = novelty_scores
 
-
+        # Display the fitness scores and novelty scores for debugging
+        #for i in range(0,len(function1_values)):
+        #    print("Fitness:",fitness_scores[i])
+        #    print("Novelty:",novelty_scores[i])
+        #    print("------------------") 
+        #print("+++++++++++++++++++++++++++++++++++++++++")
+        
         non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
         print("The best front for Generation number ",gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
-            print(round(solution[valuez],3),end=" ")
-        print("\n")
+            print("Fitness:",fitness_scores[valuez])
+            print("Novelty:",novelty_scores[valuez])
+            print("------------------")
+         
+         
         crowding_distance_values=[]
         for i in range(0,len(non_dominated_sorted_solution)):
             crowding_distance_values.append(crowding_distance(function1_values[:],function2_values[:],non_dominated_sorted_solution[i][:]))
+            
+            
+        # Schrum: The code below this point mutates a real-vector in the standard NSGA-II fashion, 
+        #         which won't work with the NEAT networks we are currently playing with. However, when
+        #         we switch to using CNNs, we will probably want this code (and have to change the code above).
+            
         solution2 = solution[:]
         #Generating offsprings
         while(len(solution2)!=2*pop_size):
