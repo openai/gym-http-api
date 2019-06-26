@@ -21,7 +21,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import helpers.ppo, helpers.utils
+import helpers.ppo as ppo
+import helpers.utils as utils
 from helpers.envs import make_vec_envs
 from helpers.model import Policy
 from helpers.storage import RolloutStorage
@@ -140,7 +141,7 @@ def mutation(solution):
     return solution
 
 # Copied from Training.py in the sonicNEAT repo
-def evaluate(env,net):
+def evaluate(env,net,actor_critic):
     ob = envs.reset()
     ac = envs.action_space.sample()
     inx, iny, inc = envs.observation_space.shape
@@ -154,6 +155,20 @@ def evaluate(env,net):
     done = False
     behaviors = []
 
+    learning_rate = 2.5e-4
+    epsilon = 1e-5
+    
+    agent = ppo.PPO(
+            actor_critic,
+            clip_param=0.1,
+            ppo_epoch=4,
+            num_mini_batch=1,
+            value_loss_coef=0.5,
+            entropy_coef=0.01,
+            lr=learning_rate,
+            eps=epsilon,
+            max_grad_norm=0.5)
+
     num_steps = 128
     num_processes = 1
     rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
@@ -161,14 +176,15 @@ def evaluate(env,net):
     rollouts.obs[0].copy_(ob)
     rollouts.to(device)
     
+    done = False
     num_updates = 50
     for j in range(num_updates):
 
-        if args.use_linear_lr_decay:
-            # decrease learning rate linearly
-            utils.update_linear_schedule(
-                agent.optimizer, j, num_updates,
-                agent.optimizer.lr if args.algo == "acktr" else args.lr)
+        #if use_linear_lr_decay:
+        # decrease learning rate linearly
+        utils.update_linear_schedule(
+            agent.optimizer, j, num_updates,
+            learning_rate)
 
         for step in range(num_steps):
             # Sample actions
@@ -178,13 +194,17 @@ def evaluate(env,net):
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            #envs.render()
+            envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
 
+            fitness_current += reward
+            
             for info in infos:
                 if 'episode' in info.keys():
                     episode_rewards.append(info['episode']['r'])
+                    
+            if done: break
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
@@ -195,13 +215,15 @@ def evaluate(env,net):
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
+        if done: break
+
         with torch.no_grad():
             next_value = actor_critic.get_value(
                 rollouts.obs[-1], rollouts.recurrent_hidden_states[-1],
                 rollouts.masks[-1]).detach()
 
-        rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
-                                 args.gae_lambda, args.use_proper_time_limits)
+        rollouts.compute_returns(next_value, use_gae=False, gamma=0.99,
+                                 gae_lambda=None, use_proper_time_limits=True)
 
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
@@ -215,8 +237,6 @@ def evaluate(env,net):
         if xpos >= 65664:
                 fitness_current += 10000000
                 done = True
-            
-        fitness_current += rew
             
         if fitness_current > current_max_fitness:
             current_max_fitness = fitness_current
@@ -277,7 +297,7 @@ if __name__ == '__main__':
         for genome_id in p.population:
             genome = p.population[genome_id]
             net = actor_critic
-            fitness, behavior_char = evaluate(envs,net)
+            fitness, behavior_char = evaluate(envs,net,actor_critic)
             fitness_scores.append(fitness)
             behavior_characterizations.append(behavior_char)
             
