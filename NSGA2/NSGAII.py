@@ -196,9 +196,9 @@ def evaluate(env, net):
     rollouts.to(device)
     
     done = False
-    # num_updates = 50
-    # for j in range(num_updates):
-    while True:  # Until the episode is over
+    num_updates = 50
+    for j in range(num_updates):
+    #while True:  # Until the episode is over
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
@@ -259,7 +259,6 @@ def evaluate(env, net):
     
         if done: 
             print("DONE WITH EVAL!")
-            # Put this back once correct PPO confirmed
             break
 
     # Add code to return the behavior characterization as well.
@@ -282,6 +281,7 @@ if __name__ == '__main__':
     eval_log_dir = log_dir + "_eval"
     utils.cleanup_log_dir(log_dir)
     utils.cleanup_log_dir(eval_log_dir)
+    
     global device
     device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
