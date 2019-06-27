@@ -27,8 +27,8 @@ from helpers.storage import RolloutStorage
 from retro_contest.local import make
 
 # Function to find index of list
-def index_of(a,list):
-    for i in range(0,len(list)):
+def index_of(a, list):
+    for i in range(0, len(list)):
         if list[i] == a:
             return i
     return -1
@@ -51,7 +51,7 @@ def fast_non_dominated_sort(values1, values2):
     n = [0 for i in range(0, len(values1))]
     rank = [0 for i in range(0, len(values1))]
 
-    for p in range(0,len(values1)):
+    for p in range(0, len(values1)):
         S[p] = []
         n[p] = 0
         for q in range(0, len(values1)):
@@ -124,15 +124,15 @@ def euclidean_dist(i_behavior, j_behavior):
 
 # Function to calculate crowding distance
 def crowding_distance(values1, values2, front):
-    distance = [0 for i in range(0,len(front))]
+    distance = [0 for i in range(0, len(front))]
     sorted1 = sort_by_values(front, values1[:])
     sorted2 = sort_by_values(front, values2[:])
     distance[0] = 4444444444444444
     distance[len(front) - 1] = 4444444444444444
-    for k in range(1,len(front)-1):
-        distance[k] = distance[k]+ (values1[sorted1[k+1]] - values2[sorted1[k-1]])/(max(values1)-min(values1))
-    for k in range(1,len(front)-1):
-        distance[k] = distance[k]+ (values1[sorted2[k+1]] - values2[sorted2[k-1]])/(max(values2)-min(values2))
+    for k in range(1, len(front)-1):
+        distance[k] = distance[k] + (values1[sorted1[k+1]] - values2[sorted1[k-1]])/(max(values1)-min(values1))
+    for k in range(1, len(front)-1):
+        distance[k] = distance[k] + (values1[sorted2[k+1]] - values2[sorted2[k-1]])/(max(values2)-min(values2))
     return distance
 
 
@@ -148,8 +148,8 @@ def crossover(a, b):
 # Function to carry out the mutation operator
 def mutation(solution):
     # Schrum: Just added these ranges. Appropriate?
-    min_x=-3
-    max_x=3
+    min_x = -3
+    max_x = 3
     mutation_prob = random.random()
     if mutation_prob < 1:
         solution = min_x+(max_x-min_x)*random.random()
@@ -157,7 +157,7 @@ def mutation(solution):
 
 
 # Copied from Training.py in the sonicNEAT repo
-def evaluate(env, net, actor_critic):
+def evaluate(env, net):
     global useCuda
     fitness_current = 0
     behaviors = []
@@ -166,7 +166,7 @@ def evaluate(env, net, actor_critic):
     epsilon = 1e-5
 
     agent = ppo.PPO(
-            actor_critic,
+            net,
             clip_param=0.1,
             ppo_epoch=4,
             num_mini_batch=1,
@@ -179,42 +179,42 @@ def evaluate(env, net, actor_critic):
     # Send model to CUDA GPU if available
     # Not sure why this is needed here but not in the original PPO PyTorch code
     if useCuda:
-        agent.actor_critic.base.main.cuda()
-        agent.actor_critic.base.gru.cuda()
-        agent.actor_critic.base.critic_linear.cuda()
-        agent.actor_critic.dist.cuda()
+        agent.net.base.main.cuda()
+        agent.net.base.gru.cuda()
+        agent.net.base.critic_linear.cuda()
+        agent.net.dist.cuda()
 
-    for i in range(len(agent.actor_critic.base.main)):
-        print(agent.actor_critic.base.main[i])
-    for p in agent.actor_critic.base.main.parameters():
-        print(p.size())
+    # for i in range(len(agent.net.base.main)):
+    #    print(agent.net.base.main[i])
+    # for p in agent.net.base.main.parameters():
+    #    print(p.size())
 
     num_steps = 128
     num_processes = 1
     rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
-                              envs.action_space, actor_critic.recurrent_hidden_state_size)
+                              envs.action_space, net.recurrent_hidden_state_size)
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
     rollouts.to(device)
     
     done = False
-    #num_updates = 50
-    #for j in range(num_updates):
-    while True: # Until the episode is over
+    # num_updates = 50
+    # for j in range(num_updates):
+    while True:  # Until the episode is over
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
         # simply changes learning rate of optimizer
         
-        # Disable this for now ... may want to repalce j with the current generation or some other value
-        #utils.update_linear_schedule(
+        # Disable this for now ... may want to replace j with the current generation or some other value
+        # utils.update_linear_schedule(
         #    agent.optimizer, j, num_updates,
         #    learning_rate)
 
         for step in range(num_steps):
             # Sample actions
             with torch.no_grad():
-                value, action, action_log_prob, recurrent_hidden_states = actor_critic.act(
+                value, action, action_log_prob, recurrent_hidden_states = net.act(
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
@@ -247,12 +247,12 @@ def evaluate(env, net, actor_critic):
             break
 
         with torch.no_grad():
-            next_value = actor_critic.get_value(
+            next_value = net.get_value(
                 rollouts.obs[-1], rollouts.recurrent_hidden_states[-1],
                 rollouts.masks[-1]).detach()
 
-        rollouts.compute_returns(next_value, use_gae=False, gamma=0.99,
-                                 gae_lambda=None, use_proper_time_limits=True)
+        rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
+                                 gae_lambda=0.95, use_proper_time_limits=True)
 
         # Why are these variables not used?
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
@@ -265,7 +265,7 @@ def evaluate(env, net, actor_critic):
 
 def random_genome(n):
     # n is the number of weights
-    return np.random.rand(1,n)
+    return np.random.rand(1, n)
 
 
 if __name__ == '__main__':
@@ -282,14 +282,14 @@ if __name__ == '__main__':
 
     global useCuda
     useCuda = torch.cuda.is_available()
-    device=torch.device("cuda:0" if useCuda else "cpu")
+    device = torch.device("cuda:0" if useCuda else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
                          gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=True)
 
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,
-        base_kwargs={'recurrent': True, 'is_genesis':True})
+        base_kwargs={'recurrent': True, 'is_genesis': True})
     if not useCuda: 
         actor_critic.to("cpu")
 
@@ -299,8 +299,8 @@ if __name__ == '__main__':
 
     # Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
-    num_weights = 10 # What should this actually be?
-    solution=[random_genome(num_weights) for i in range(0,pop_size)]
+    num_weights = 10  # What should this actually be?
+    solution = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
     while gen_no < max_gen:
         fitness_scores = []
@@ -310,9 +310,9 @@ if __name__ == '__main__':
             print("Evaluating genome #{}".format(i))
             # Schrum: Need to set net weights based on a genome from population
             net = actor_critic
-            fitness, behavior_char = evaluate(envs,net,actor_critic)
-            print(fitness)
-            print(behavior_char)
+            fitness, behavior_char = evaluate(envs, net)
+            # print(fitness)
+            # print(behavior_char)
             fitness_scores.append(fitness)
             behavior_characterizations.append(behavior_char)
             
@@ -330,17 +330,17 @@ if __name__ == '__main__':
         #     print("------------------")
         # print("+++++++++++++++++++++++++++++++++++++++++")
         
-        non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:],function2_values[:])
-        print("The best front for Generation number ",gen_no, " is")
+        non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:], function2_values[:])
+        print("The best front for Generation number ", gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
-            print("Fitness:",fitness_scores[valuez])
-            print("Novelty:",novelty_scores[valuez])
+            print("Fitness:", fitness_scores[valuez])
+            print("Novelty:", novelty_scores[valuez])
             print("------------------")
          
          
         crowding_distance_values = []
-        for i in range(0,len(non_dominated_sorted_solution)):
-            crowding_distance_values.append(crowding_distance(function1_values[:],function2_values[:],non_dominated_sorted_solution[i][:]))
+        for i in range(0, len(non_dominated_sorted_solution)):
+            crowding_distance_values.append(crowding_distance(function1_values[:], function2_values[:], non_dominated_sorted_solution[i][:]))
             
             
         # Schrum: The code below this point mutates a real-vector in the standard NSGA-II fashion, 
@@ -352,7 +352,7 @@ if __name__ == '__main__':
         while len(solution2) != 2*pop_size:
             a1 = random.randint(0, pop_size-1)
             b1 = random.randint(0, pop_size-1)
-            solution2.append(crossover(solution[a1],solution[b1]))
+            solution2.append(crossover(solution[a1], solution[b1]))
         function1_values2 = [function1(solution2[i])for i in range(0, 2*pop_size)]
         function2_values2 = [function2(solution2[i])for i in range(0, 2*pop_size)]
         non_dominated_sorted_solution2 = fast_non_dominated_sort(function1_values2[:], function2_values2[:])
@@ -361,7 +361,7 @@ if __name__ == '__main__':
             crowding_distance_values2.append(crowding_distance(function1_values2[:], function2_values2[:], non_dominated_sorted_solution2[i][:]))
         new_solution = []
         for i in range(0, len(non_dominated_sorted_solution2)):
-            non_dominated_sorted_solution2_1 = [index_of(non_dominated_sorted_solution2[i][j], non_dominated_sorted_solution2[i] ) for j in range(0,len(non_dominated_sorted_solution2[i]))]
+            non_dominated_sorted_solution2_1 = [index_of(non_dominated_sorted_solution2[i][j], non_dominated_sorted_solution2[i]) for j in range(0, len(non_dominated_sorted_solution2[i]))]
             front22 = sort_by_values(non_dominated_sorted_solution2_1[:], crowding_distance_values2[i][:])
             front = [non_dominated_sorted_solution2[i][front22[j]] for j in range(0,len(non_dominated_sorted_solution2[i]))]
             front.reverse()
