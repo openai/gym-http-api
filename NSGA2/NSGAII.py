@@ -232,6 +232,7 @@ def evaluate(env, net, actor_critic):
             if done:
                 # This fitness amount is currently misleading because it accumulates across episodes
                 print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
+                fitness_current = 0 # Don't do this during evolution, since we want to return this value
                 # Put this back once correct PPO confirmed
                 #break
 
