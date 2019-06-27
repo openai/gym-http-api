@@ -143,6 +143,9 @@ def crossover(a, b):
 
 # Function to carry out the mutation operator
 def mutation(solution):
+    # Schrum: Just added these ranges. Appropriate?
+    min_x=-3
+    max_x=3
     mutation_prob = random.random()
     if mutation_prob < 1:
         solution = min_x+(max_x-min_x)*random.random()
@@ -198,13 +201,16 @@ def evaluate(env, net, actor_critic):
     done = False
     num_updates = 50
     for j in range(num_updates):
+    #while not done:
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
         # simply changes learning rate of optimizer
-        utils.update_linear_schedule(
-            agent.optimizer, j, num_updates,
-            learning_rate)
+        
+        # Disable this for now ... may want to repalce j with the current generation or some other value
+        #utils.update_linear_schedule(
+        #    agent.optimizer, j, num_updates,
+        #    learning_rate)
 
         for step in range(num_steps):
             # Sample actions
@@ -214,6 +220,7 @@ def evaluate(env, net, actor_critic):
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
+            #envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
             fitness_current += reward
@@ -245,23 +252,10 @@ def evaluate(env, net, actor_critic):
         rollouts.compute_returns(next_value, use_gae=False, gamma=0.99,
                                  gae_lambda=None, use_proper_time_limits=True)
 
+        # Why are these variables not used?
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
-            
-        if xpos >= 65664:
-                fitness_current += 10000000
-                done = True
-            
-        if fitness_current > current_max_fitness:
-            current_max_fitness = fitness_current
-            counter = 0
-        else:
-            counter += 1
-
-        if done or counter == 250:
-            done = True
-            # print(fitness_current)
     
     # Add code to return the behavior characterization as well.
     return fitness_current, behaviors
@@ -299,7 +293,7 @@ if __name__ == '__main__':
     # Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
     num_weights = 10 # What should this actually be?
-    # solution=[random_genome(num_weights) for i in range(0,pop_size)]
+    solution=[random_genome(num_weights) for i in range(0,pop_size)]
     gen_no = 0
     while gen_no < max_gen:
         fitness_scores = []
