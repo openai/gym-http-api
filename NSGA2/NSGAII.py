@@ -158,7 +158,7 @@ def mutation(solution):
 
 # Copied from Training.py in the sonicNEAT repo
 def evaluate(env, net):
-    global useCuda
+    global device
     fitness_current = 0
     behaviors = []
 
@@ -175,14 +175,6 @@ def evaluate(env, net):
             lr=learning_rate,
             eps=epsilon,
             max_grad_norm=0.5)
-
-    # Send model to CUDA GPU if available
-    # Not sure why this is needed here but not in the original PPO PyTorch code
-    if useCuda:
-        agent.net.base.main.cuda()
-        agent.net.base.gru.cuda()
-        agent.net.base.critic_linear.cuda()
-        agent.net.dist.cuda()
 
     # for i in range(len(agent.net.base.main)):
     #    print(agent.net.base.main[i])
@@ -228,29 +220,29 @@ def evaluate(env, net):
             # envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
+
+            # Schrum: This block is our code for fitness and behavior tracking
             fitness_current += reward
             info = infos[0]
             xpos = info['x']
             ypos = info['y']
             behaviors.append(xpos)
             behaviors.append(ypos)
-            
-            if done:
-                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
-                break
 
             # If done then clean the history of observations.
-            masks = (torch.cuda if useCuda else torch).FloatTensor(
+            masks = torch.FloatTensor(
                 [[0.0] if done_ else [1.0] for done_ in done])
-            bad_masks = (torch.cuda if useCuda else torch).FloatTensor(
+            bad_masks = torch.FloatTensor(
                 [[0.0] if 'bad_transition' in info.keys() else [1.0]
                  for info in infos])
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
-        if done: 
-            print("DONE WITH EVAL!")
-            break
+            # Moved after the learning update above because we need to learn also (especially!) when Sonic dies  
+            if done:
+                # This fitness amount is currently misleading because it accumulates across episodes
+                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
+                break
 
         with torch.no_grad():
             next_value = net.get_value(
@@ -260,11 +252,16 @@ def evaluate(env, net):
         rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
                                  gae_lambda=0.95, use_proper_time_limits=True)
 
-        # Why are these variables not used?
+        # These variables were only used for logging in the original PPO code
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
     
+        if done: 
+            print("DONE WITH EVAL!")
+            # Put this back once correct PPO confirmed
+            break
+
     # Add code to return the behavior characterization as well.
     return fitness_current, behaviors
 
@@ -285,19 +282,16 @@ if __name__ == '__main__':
     eval_log_dir = log_dir + "_eval"
     utils.cleanup_log_dir(log_dir)
     utils.cleanup_log_dir(eval_log_dir)
-
-    global useCuda
-    useCuda = torch.cuda.is_available()
-    device = torch.device("cuda:0" if useCuda else "cpu")
+    global device
+    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
                          gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=True)
 
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,
-        base_kwargs={'recurrent': True, 'is_genesis': True})
-    if not useCuda: 
-        actor_critic.to("cpu")
+        base_kwargs={'recurrent': True, 'is_genesis':True})
+    actor_critic.to(device)
 
     # Schrum: Makes these small to test at first
     max_gen = 1
