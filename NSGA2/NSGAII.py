@@ -210,18 +210,14 @@ def evaluate(env, net, actor_critic):
             envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
+
+            # Schrum: This block is our code for fitness and behavior tracking
             fitness_current += reward
             info = infos[0]
             xpos = info['x']
             ypos = info['y']
             behaviors.append(xpos)
             behaviors.append(ypos)
-            
-            if done:
-                # This fitness amount is currently misleading because it accumulates across episodes
-                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
-                # Put this back once correct PPO confirmed
-                #break
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
@@ -232,10 +228,12 @@ def evaluate(env, net, actor_critic):
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
-        if done: 
-            print("DONE WITH EVAL!")
-            # Put this back once correct PPO confirmed
-            #break
+            # Moved after the learning update above because we need to learn also (especially!) when Sonic dies  
+            if done:
+                # This fitness amount is currently misleading because it accumulates across episodes
+                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
+                # Put this back once correct PPO confirmed
+                #break
 
         with torch.no_grad():
             next_value = actor_critic.get_value(
@@ -245,11 +243,16 @@ def evaluate(env, net, actor_critic):
         rollouts.compute_returns(next_value, use_gae=False, gamma=0.99,
                                  gae_lambda=None, use_proper_time_limits=True)
 
-        # Why are these variables not used?
+        # These variables were only used for logging in the original PPO code
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
     
+        if done: 
+            print("DONE WITH EVAL!")
+            # Put this back once correct PPO confirmed
+            #break
+
     # Add code to return the behavior characterization as well.
     return fitness_current, behaviors
 
