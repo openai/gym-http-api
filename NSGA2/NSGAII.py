@@ -155,12 +155,7 @@ def mutation(solution):
 # Copied from Training.py in the sonicNEAT repo
 def evaluate(env, net, actor_critic):
     global useCuda
-    current_max_fitness = 0
     fitness_current = 0
-    frame = 0
-    counter = 0
-    xpos = 0
-    done = False
     behaviors = []
 
     learning_rate = 2.5e-4
@@ -199,9 +194,9 @@ def evaluate(env, net, actor_critic):
     rollouts.to(device)
     
     done = False
-    num_updates = 50
-    for j in range(num_updates):
-    #while not done:
+    #num_updates = 50
+    #for j in range(num_updates):
+    while not done:
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
@@ -220,7 +215,7 @@ def evaluate(env, net, actor_critic):
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            #envs.render()
+            envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
             fitness_current += reward
@@ -231,7 +226,9 @@ def evaluate(env, net, actor_critic):
             behaviors.append(ypos)
             # print(fitness_current)
             
-            if done: break
+            if done:
+                print("DONE WITH EPISODE!") 
+                break
 
             # If done then clean the history of observations.
             masks = (torch.cuda if useCuda else torch).FloatTensor(
@@ -242,7 +239,9 @@ def evaluate(env, net, actor_critic):
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
-        if done: break
+        if done: 
+            print("DONE WITH EVAL!")
+            break
 
         with torch.no_grad():
             next_value = actor_critic.get_value(
@@ -300,6 +299,8 @@ if __name__ == '__main__':
         behavior_characterizations = []
         # Copied/Adapted from Training.py in the sonicNEAT repo
         for i in range(pop_size):
+            print("Evaluating genome #{}".format(i))
+            # Schrum: Need to set net weights based on a genome from population
             net = actor_critic
             fitness, behavior_char = evaluate(envs,net,actor_critic)
             print(fitness)
