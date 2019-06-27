@@ -219,7 +219,7 @@ def evaluate(env, net, actor_critic):
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            envs.render()
+            # envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
             fitness_current += reward
@@ -284,7 +284,7 @@ if __name__ == '__main__':
     useCuda = torch.cuda.is_available()
     device=torch.device("cuda:0" if useCuda else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
-                         gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=False)
+                         gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=True)
 
     actor_critic = Policy(
         envs.observation_space.shape,
