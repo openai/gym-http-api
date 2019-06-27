@@ -4,6 +4,7 @@
 # Supervisor: Prof. Manoj Kumar Tiwari
 
 # Importing required modules
+import os
 import math
 import random
 import matplotlib.pyplot as plt
@@ -80,6 +81,7 @@ def fast_non_dominated_sort(values1, values2):
     del front[len(front)-1]
     return front
 
+
 # Given all behavior characterizations, compute all novelty scores
 def calculate_novelty(behavior_characterizations):
     ns = []
@@ -95,6 +97,7 @@ def calculate_novelty(behavior_characterizations):
         avg_dist = total_dist / len(behavior_characterizations)
         ns.append(avg_dist)
     return ns
+
 
 # Distance between two behavior characterizations
 def euclidean_dist(i_behavior, j_behavior):
@@ -117,6 +120,7 @@ def euclidean_dist(i_behavior, j_behavior):
     #       vector in the whole population? What would be the consequences?
     total = math.sqrt(total)
     return total
+
 
 # Function to calculate crowding distance
 def crowding_distance(values1, values2, front):
@@ -270,6 +274,11 @@ if __name__ == '__main__':
     # Competition version of environment make:
     # Mus pip install gym==0.12.1 in order for this to work
     # env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
+
+    log_dir = os.path.expanduser('/tmp/gym/')
+    eval_log_dir = log_dir + "_eval"
+    utils.cleanup_log_dir(log_dir)
+    utils.cleanup_log_dir(eval_log_dir)
 
     global useCuda
     useCuda = torch.cuda.is_available()
