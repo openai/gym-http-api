@@ -278,11 +278,6 @@ if __name__ == '__main__':
     # Mus pip install gym==0.12.1 in order for this to work
     # env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
 
-    # Copied from Training.py in the sonicNEAT repo
-    imgarray = []
-    xpos_end = 0
-    init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
-                               constant_(x, 0), nn.init.calculate_gain('relu'))
     global useCuda
     useCuda = torch.cuda.is_available()
     device=torch.device("cuda:0" if useCuda else "cpu")
@@ -293,10 +288,12 @@ if __name__ == '__main__':
         envs.observation_space.shape,
         envs.action_space,
         base_kwargs={'recurrent': True, 'is_genesis':True})
-    actor_critic.to("cpu")
+    if not useCuda: 
+        actor_critic.to("cpu")
 
     # Schrum: Makes these small to test at first
     max_gen = 1
+    pop_size = 10
 
     # Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
@@ -307,7 +304,7 @@ if __name__ == '__main__':
         fitness_scores = []
         behavior_characterizations = []
         # Copied/Adapted from Training.py in the sonicNEAT repo
-        for i in range(1):
+        for i in range(pop_size):
             net = actor_critic
             fitness, behavior_char = evaluate(envs,net,actor_critic)
             print(fitness)
