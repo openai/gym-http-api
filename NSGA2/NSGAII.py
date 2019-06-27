@@ -9,26 +9,21 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Copied from Training.py in the sonicNEAT repo
-import retro
-import cv2
-import pickle
-from platform import dist
-
 # Importing necessary PyTorch stuff
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
+# Import PPO code
 import helpers.ppo as ppo
 import helpers.utils as utils
 from helpers.envs import make_vec_envs
 from helpers.model import Policy
 from helpers.storage import RolloutStorage
 
-# Use the Sonic contest environment instead
+# Use the Sonic contest environment
 from retro_contest.local import make
-
 
 # Function to find index of list
 def index_of(a,list):
