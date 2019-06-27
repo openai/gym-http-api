@@ -189,6 +189,12 @@ def evaluate(env, net):
     # for p in agent.net.base.main.parameters():
     #    print(p.size())
 
+    for param in agent.actor_critic.base.main.parameters():
+        print(param.data[0][0][0])
+        param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
+        print(param.data[0][0][0])
+        quit()
+
     num_steps = 128
     num_processes = 1
     rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
