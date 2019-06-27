@@ -196,7 +196,7 @@ def evaluate(env, net, actor_critic):
     done = False
     #num_updates = 50
     #for j in range(num_updates):
-    while True:
+    while True: # Until the episode is over
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
@@ -226,10 +226,8 @@ def evaluate(env, net, actor_critic):
             behaviors.append(ypos)
             
             if done:
-                # This fitness amount is currently misleading because it accumulates across episodes
                 print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
-                # Put this back once correct PPO confirmed
-                #break
+                break
 
             # If done then clean the history of observations.
             masks = (torch.cuda if useCuda else torch).FloatTensor(
@@ -242,8 +240,7 @@ def evaluate(env, net, actor_critic):
 
         if done: 
             print("DONE WITH EVAL!")
-            # Put this back once correct PPO confirmed
-            #break
+            break
 
         with torch.no_grad():
             next_value = actor_critic.get_value(
