@@ -150,6 +150,7 @@ def mutation(solution):
 
 # Copied from Training.py in the sonicNEAT repo
 def evaluate(env, net, actor_critic):
+    global useCuda
     current_max_fitness = 0
     fitness_current = 0
     frame = 0
@@ -171,6 +172,14 @@ def evaluate(env, net, actor_critic):
             lr=learning_rate,
             eps=epsilon,
             max_grad_norm=0.5)
+
+    # Send model to CUDA GPU if available
+    # Not sure why this is needed here but not in the original PPO PyTorch code
+    if useCuda:
+        agent.actor_critic.base.main.cuda()
+        agent.actor_critic.base.gru.cuda()
+        agent.actor_critic.base.critic_linear.cuda()
+        agent.actor_critic.dist.cuda()
 
     for i in range(len(agent.actor_critic.base.main)):
         print(agent.actor_critic.base.main[i])
@@ -217,9 +226,9 @@ def evaluate(env, net, actor_critic):
             if done: break
 
             # If done then clean the history of observations.
-            masks = torch.FloatTensor(
+            masks = (torch.cuda if useCuda else torch).FloatTensor(
                 [[0.0] if done_ else [1.0] for done_ in done])
-            bad_masks = torch.FloatTensor(
+            bad_masks = (torch.cuda if useCuda else torch).FloatTensor(
                 [[0.0] if 'bad_transition' in info.keys() else [1.0]
                  for info in infos])
             rollouts.insert(obs, recurrent_hidden_states, action,
@@ -274,8 +283,9 @@ if __name__ == '__main__':
     xpos_end = 0
     init_ = lambda m: init(m, nn.init.orthogonal_, lambda x: nn.init.
                                constant_(x, 0), nn.init.calculate_gain('relu'))
-    
-    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    global useCuda
+    useCuda = torch.cuda.is_available()
+    device=torch.device("cuda:0" if useCuda else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
                          gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=False)
 
