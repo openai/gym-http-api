@@ -80,12 +80,13 @@ def fast_non_dominated_sort(values1, values2):
     del front[len(front)-1]
     return front
 
-
+# Given all behavior characterizations, compute all novelty scores
 def calculate_novelty(behavior_characterizations):
     ns = []
     for i in range(0, len(behavior_characterizations)):
         total_dist = 0
         for j in range(0, len(behavior_characterizations)):
+            # Compare to all others except self
             if i != j:
                 i_behavior = behavior_characterizations[i]
                 j_behavior = behavior_characterizations[j]
@@ -95,22 +96,27 @@ def calculate_novelty(behavior_characterizations):
         ns.append(avg_dist)
     return ns
 
-
+# Distance between two behavior characterizations
 def euclidean_dist(i_behavior, j_behavior):
     index = total = 0
+    # Position lists could be different lengths
     minimum = min(len(i_behavior), len(j_behavior))
+    # Difference between common positions
     while index < minimum: 
         total += (i_behavior[index] - j_behavior[index]) ** 2
         index += 1
+    # If i_behavior is longer
     while index < len(i_behavior):
         total += i_behavior[index] ** 2
         index += 1
+    # If j_behavior is longer
     while index < len(j_behavior):
         total += j_behavior[index] ** 2
         index += 1
+    # NOTE: Could there be an issue where both vectors being compared are shorter than the longest
+    #       vector in the whole population? What would be the consequences?
     total = math.sqrt(total)
     return total
-
 
 # Function to calculate crowding distance
 def crowding_distance(values1, values2, front):
