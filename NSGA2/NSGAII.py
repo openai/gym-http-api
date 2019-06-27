@@ -176,16 +176,16 @@ def evaluate(env, net):
             eps=epsilon,
             max_grad_norm=0.5)
 
-    # for i in range(len(agent.net.base.main)):
-    #    print(agent.net.base.main[i])
-    # for p in agent.net.base.main.parameters():
-    #    print(p.size())
+    for i in range(len(agent.actor_critic.base.main)):
+        print(agent.actor_critic.base.main[i])
+    for p in agent.actor_critic.base.main.parameters():
+        print(torch.numel(p))
 
-    for param in agent.actor_critic.base.main.parameters():
-        print(param.data[0][0][0])
-        param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-        print(param.data[0][0][0])
-        quit()
+    # for param in agent.actor_critic.base.main.parameters():
+    #    print(param.data[0][0][0])
+    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
+    #    print(param.data[0][0][0])
+    quit()
 
     num_steps = 128
     num_processes = 1
