@@ -1,0 +1,1 @@
+python enjoy.py --load-dir save/ppo --env-name "SonicTheHedgehog-Genesis"
