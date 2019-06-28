@@ -155,8 +155,8 @@ def mutation(solution):
         solution = min_x+(max_x-min_x)*random.random()
     return solution
 
-
-# Copied from Training.py in the sonicNEAT repo
+# Evaluate one network. The network learns from evolved starting point.
+# At least, that is the plan.
 def evaluate(env, net):
     global device
     fitness_current = 0
@@ -261,7 +261,7 @@ def evaluate(env, net):
             break
 
     # For some reason, the individual fitness value is two layers deep in a tensor
-    return fitness_current[0][0], behaviors
+    return fitness_current[0][0].item(), behaviors
 
 
 def random_genome(n):
@@ -320,10 +320,11 @@ if __name__ == '__main__':
     # Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
     num_weights = 10  # What should this actually be?
-    solution = [random_genome(num_weights) for i in range(0, pop_size)]
+    solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
     while gen_no < max_gen:        
-        (fitness_scores,novelty_scores) = evaluate_population(solution,actor_critic)
+        # This still does not actually use the solutions
+        (fitness_scores,novelty_scores) = evaluate_population(solutions,actor_critic)
 
         # Display the fitness scores and novelty scores for debugging
         # for i in range(0,len(fitness_scores)):
@@ -343,20 +344,20 @@ if __name__ == '__main__':
         crowding_distance_values = []
         for i in range(0, len(non_dominated_sorted_solution)):
             crowding_distance_values.append(crowding_distance(fitness_scores[:], novelty_scores[:], non_dominated_sorted_solution[i][:]))
-            
-            
-        # Schrum: The code below this point mutates a real-vector in the standard NSGA-II fashion, 
-        #         which won't work with the NEAT networks we are currently playing with. However, when
-        #         we switch to using CNNs, we will probably want this code (and have to change the code above).
-            
-        solution2 = solution[:]
-        # Generating offsprings
+
+        # The lambda children            
+        solution2 = []
+        # Generating offspring
         while len(solution2) != 2*pop_size:
             a1 = random.randint(0, pop_size-1)
             b1 = random.randint(0, pop_size-1)
-            solution2.append(crossover(solution[a1], solution[b1]))
-        function1_values2 = [function1(solution2[i])for i in range(0, 2*pop_size)]
-        function2_values2 = [function2(solution2[i])for i in range(0, 2*pop_size)]
+            solution2.append(crossover(solutions[a1], solutions[b1]))
+
+        (fitness_scores2,novelty_scores2) = evaluate_population(solution2,actor_critic)
+        # Combine parent and child populations into one before elitist selection
+        function1_values2 = fitness_scores + fitness_scores2
+        function2_values2 = novelty_scores + novelty_scores2
+
         non_dominated_sorted_solution2 = fast_non_dominated_sort(function1_values2[:], function2_values2[:])
         crowding_distance_values2 = []
         for i in range(0, len(non_dominated_sorted_solution2)):
@@ -373,13 +374,15 @@ if __name__ == '__main__':
                     break
             if len(new_solution) == pop_size:
                 break
-        solution = [solution2[i] for i in new_solution]
+        # Combine the parent and child solutions so the best can be selected for the next parent population
+        solution2 = solutions + solution2
+        solutions = [solution2[i] for i in new_solution]
         gen_no = gen_no + 1
 
     # Let's plot the final front now
-    function1 = [i * -1 for i in function1_values]
-    function2 = [j * -1 for j in function2_values]
-    plt.xlabel('Function 1', fontsize=15)
-    plt.ylabel('Function 2', fontsize=15)
+    function1 = [i * -1 for i in fitness_scores]
+    function2 = [j * -1 for j in novelty_scores]
+    plt.xlabel('Fitness', fontsize=15)
+    plt.ylabel('Novelty', fontsize=15)
     plt.scatter(function1, function2)
     plt.show()
