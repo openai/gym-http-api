@@ -257,7 +257,7 @@ def evaluate(env, net):
         rollouts.after_update()
     
         if done: 
-            print("DONE WITH EVAL!")
+            #print("DONE WITH EVAL!")
             break
 
     # For some reason, the individual fitness value is two layers deep in a tensor
@@ -275,7 +275,8 @@ def evaluate_population(solutions,net):
     behavior_characterizations = []
 
     for i in range(pop_size):
-        print("Evaluating genome #{}".format(i))
+        print("Evaluating genome #{}:".format(i), end=" ") # No newline: Fitness will print here
+
         # Schrum: Need to set net weights based on a genome from population
         # Use solutions[i]
         fitness, behavior_char = evaluate(envs, net)
@@ -314,7 +315,7 @@ if __name__ == '__main__':
     actor_critic.to(device)
 
     # Schrum: Makes these small to test at first
-    max_gen = 1
+    max_gen = 5
     pop_size = 10
 
     # Initialization
@@ -323,6 +324,7 @@ if __name__ == '__main__':
     solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
     while gen_no < max_gen:        
+        print("Start generation {}".format(gen_no))
         # This still does not actually use the solutions
         (fitness_scores,novelty_scores) = evaluate_population(solutions,actor_critic)
 
@@ -353,6 +355,8 @@ if __name__ == '__main__':
             b1 = random.randint(0, pop_size-1)
             solution2.append(crossover(solutions[a1], solutions[b1]))
 
+        print("Evaluate children of generation {}".format(gen_no))
+        
         (fitness_scores2,novelty_scores2) = evaluate_population(solution2,actor_critic)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
@@ -380,8 +384,8 @@ if __name__ == '__main__':
         gen_no = gen_no + 1
 
     # Let's plot the final front now
-    function1 = [i * -1 for i in fitness_scores]
-    function2 = [j * -1 for j in novelty_scores]
+    function1 = fitness_scores
+    function2 = novelty_scores
     plt.xlabel('Fitness', fontsize=15)
     plt.ylabel('Novelty', fontsize=15)
     plt.scatter(function1, function2)
