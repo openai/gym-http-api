@@ -161,30 +161,22 @@ def evaluate(env, net):
     global device
     fitness_current = 0
     behaviors = []
+    counter = 0
 
-    learning_rate = 2.5e-4
-    epsilon = 1e-5
-
-    agent = ppo.PPO(
-            net,
-            clip_param=0.1,
-            ppo_epoch=4,
-            num_mini_batch=1,
-            value_loss_coef=0.5,
-            entropy_coef=0.01,
-            lr=learning_rate,
-            eps=epsilon,
-            max_grad_norm=0.5)
-
-    #for i in range(len(agent.actor_critic.base.main)):
-    #    print(agent.actor_critic.base.main[i])
-    #for p in agent.actor_critic.base.main.parameters():
+    # for i in range(len(net.base.main)):
+    #    print(net.base.main[i])
+    # print(net.base.main.parameters())
+    # for p in net.base.main.parameters():
+    #    print(p.shape)
     #    print(torch.numel(p))
+    #    print(p.data[0])
+    # quit()
 
-    # for param in agent.actor_critic.base.main.parameters():
-    #    print(param.data[0][0][0])
-    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-    #    print(param.data[0][0][0])
+    for param in net.base.main.parameters():
+        print(param.data[0][0][0])
+        param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
+        print(param.data[0][0][0])
+    quit()
 
     num_steps = 128
     num_processes = 1
@@ -197,7 +189,7 @@ def evaluate(env, net):
     done = False
     num_updates = 50
     for j in range(num_updates):
-    #while True:  # Until the episode is over
+    # while True:  # Until the episode is over
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
@@ -216,7 +208,7 @@ def evaluate(env, net):
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            #envs.render()
+            # envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
 
@@ -240,7 +232,7 @@ def evaluate(env, net):
             # Moved after the learning update above because we need to learn also (especially!) when Sonic dies  
             if done:
                 print("DONE WITH EPISODE! Fitness = {}".format(fitness_current[0][0])) 
-                #input("Press a key to continue") # Good for checking if fitness makes sense for the eval
+                # input("Press a key to continue") # Good for checking if fitness makes sense for the eval
                 break
 
         with torch.no_grad():
@@ -252,12 +244,12 @@ def evaluate(env, net):
                                  gae_lambda=0.95, use_proper_time_limits=True)
 
         # These variables were only used for logging in the original PPO code
-        value_loss, action_loss, dist_entropy = agent.update(rollouts)
+        # value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
     
         if done: 
-            #print("DONE WITH EVAL!")
+            # print("DONE WITH EVAL!")
             break
 
     # For some reason, the individual fitness value is two layers deep in a tensor
@@ -270,12 +262,12 @@ def random_genome(n):
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
-def evaluate_population(solutions,net):
+def evaluate_population(solutions, net):
     fitness_scores = []
     behavior_characterizations = []
 
     for i in range(pop_size):
-        print("Evaluating genome #{}:".format(i), end=" ") # No newline: Fitness will print here
+        print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
         # Schrum: Need to set net weights based on a genome from population
         # Use solutions[i]
@@ -289,7 +281,7 @@ def evaluate_population(solutions,net):
     novelty_scores = calculate_novelty(behavior_characterizations)
     # print(novelty_scores)
         
-    return (fitness_scores,novelty_scores)
+    return (fitness_scores, novelty_scores)
 
 if __name__ == '__main__':
     # Main program starts here
@@ -304,7 +296,7 @@ if __name__ == '__main__':
     utils.cleanup_log_dir(eval_log_dir)
     
     global device
-    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
                          gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=True)
 
@@ -313,6 +305,19 @@ if __name__ == '__main__':
         envs.action_space,
         base_kwargs={'recurrent': True, 'is_genesis':True})
     actor_critic.to(device)
+
+    learning_rate = 7.5e-5
+    epsilon = 1e-5
+    agent = ppo.PPO(
+        actor_critic,
+        clip_param=0.1,
+        ppo_epoch=4,
+        num_mini_batch=1,
+        value_loss_coef=0.5,
+        entropy_coef=0.01,
+        lr=learning_rate,
+        eps=epsilon,
+        max_grad_norm=0.5)
 
     # Schrum: Makes these small to test at first
     max_gen = 5
@@ -326,7 +331,7 @@ if __name__ == '__main__':
     while gen_no < max_gen:        
         print("Start generation {}".format(gen_no))
         # This still does not actually use the solutions
-        (fitness_scores,novelty_scores) = evaluate_population(solutions,actor_critic)
+        (fitness_scores, novelty_scores) = evaluate_population(solutions, actor_critic)
 
         # Display the fitness scores and novelty scores for debugging
         # for i in range(0,len(fitness_scores)):
@@ -357,7 +362,7 @@ if __name__ == '__main__':
 
         print("Evaluate children of generation {}".format(gen_no))
         
-        (fitness_scores2,novelty_scores2) = evaluate_population(solution2,actor_critic)
+        (fitness_scores2, novelty_scores2) = evaluate_population(solution2,actor_critic)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
         function2_values2 = novelty_scores + novelty_scores2
