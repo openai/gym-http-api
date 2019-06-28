@@ -176,16 +176,15 @@ def evaluate(env, net):
             eps=epsilon,
             max_grad_norm=0.5)
 
-    for i in range(len(agent.actor_critic.base.main)):
-        print(agent.actor_critic.base.main[i])
-    for p in agent.actor_critic.base.main.parameters():
-        print(torch.numel(p))
+    #for i in range(len(agent.actor_critic.base.main)):
+    #    print(agent.actor_critic.base.main[i])
+    #for p in agent.actor_critic.base.main.parameters():
+    #    print(torch.numel(p))
 
     # for param in agent.actor_critic.base.main.parameters():
     #    print(param.data[0][0][0])
     #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
     #    print(param.data[0][0][0])
-    quit()
 
     num_steps = 128
     num_processes = 1
@@ -217,7 +216,7 @@ def evaluate(env, net):
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            # envs.render()
+            #envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
 
@@ -240,8 +239,8 @@ def evaluate(env, net):
 
             # Moved after the learning update above because we need to learn also (especially!) when Sonic dies  
             if done:
-                # This fitness amount is currently misleading because it accumulates across episodes
-                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current)) 
+                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current[0][0])) 
+                #input("Press a key to continue") # Good for checking if fitness makes sense for the eval
                 break
 
         with torch.no_grad():
@@ -261,14 +260,35 @@ def evaluate(env, net):
             print("DONE WITH EVAL!")
             break
 
-    # Add code to return the behavior characterization as well.
-    return fitness_current, behaviors
+    # For some reason, the individual fitness value is two layers deep in a tensor
+    return fitness_current[0][0], behaviors
 
 
 def random_genome(n):
     # n is the number of weights
     return np.random.rand(1, n)
 
+# Evaluate every member of the included population, which is a collection
+# of weight vectors for the neural networks.
+def evaluate_population(solutions,net):
+    fitness_scores = []
+    behavior_characterizations = []
+
+    for i in range(pop_size):
+        print("Evaluating genome #{}".format(i))
+        # Schrum: Need to set net weights based on a genome from population
+        # Use solutions[i]
+        fitness, behavior_char = evaluate(envs, net)
+        # print(fitness)
+        # print(behavior_char)
+        fitness_scores.append(fitness)
+        behavior_characterizations.append(behavior_char)
+            
+    # Compare all of the behavior characterizations to get the diversity/novelty scores.
+    novelty_scores = calculate_novelty(behavior_characterizations)
+    # print(novelty_scores)
+        
+    return (fitness_scores,novelty_scores)
 
 if __name__ == '__main__':
     # Main program starts here
@@ -302,35 +322,17 @@ if __name__ == '__main__':
     num_weights = 10  # What should this actually be?
     solution = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
-    while gen_no < max_gen:
-        fitness_scores = []
-        behavior_characterizations = []
-        # Copied/Adapted from Training.py in the sonicNEAT repo
-        for i in range(pop_size):
-            print("Evaluating genome #{}".format(i))
-            # Schrum: Need to set net weights based on a genome from population
-            net = actor_critic
-            fitness, behavior_char = evaluate(envs, net)
-            # print(fitness)
-            # print(behavior_char)
-            fitness_scores.append(fitness)
-            behavior_characterizations.append(behavior_char)
-            
-        # Schrum: Here is where you have to compare all of the behavior characterizations to get the diversity/novelty scores.
-        novelty_scores = calculate_novelty(behavior_characterizations)
-        # print(novelty_scores)
-        
-        function1_values = fitness_scores
-        function2_values = novelty_scores
+    while gen_no < max_gen:        
+        (fitness_scores,novelty_scores) = evaluate_population(solution,actor_critic)
 
         # Display the fitness scores and novelty scores for debugging
-        # for i in range(0,len(function1_values)):
+        # for i in range(0,len(fitness_scores)):
         #     print("Fitness:",fitness_scores[i])
         #     print("Novelty:",novelty_scores[i])
         #     print("------------------")
         # print("+++++++++++++++++++++++++++++++++++++++++")
         
-        non_dominated_sorted_solution = fast_non_dominated_sort(function1_values[:], function2_values[:])
+        non_dominated_sorted_solution = fast_non_dominated_sort(fitness_scores[:], novelty_scores[:])
         print("The best front for Generation number ", gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
             print("Fitness:", fitness_scores[valuez])
@@ -340,7 +342,7 @@ if __name__ == '__main__':
          
         crowding_distance_values = []
         for i in range(0, len(non_dominated_sorted_solution)):
-            crowding_distance_values.append(crowding_distance(function1_values[:], function2_values[:], non_dominated_sorted_solution[i][:]))
+            crowding_distance_values.append(crowding_distance(fitness_scores[:], novelty_scores[:], non_dominated_sorted_solution[i][:]))
             
             
         # Schrum: The code below this point mutates a real-vector in the standard NSGA-II fashion, 
