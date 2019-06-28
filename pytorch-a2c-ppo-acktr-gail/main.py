@@ -116,6 +116,7 @@ def main():
                     rollouts.masks[step])
 
             # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
+            # Alex: Best for GPUs as the "pause" every num_steps is taken care of much faster than with a CPU
             #envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
