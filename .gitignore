@@ -76,3 +76,5 @@ binding-swift/ExampleAgent.playground/playground.xcworkspace/xcuserdata
 binding-swift/ExampleAgent.playground/xcuserdata
 fastlearner/retro_movie_trajectory.py
 Agents/FL_insurance_sample.csv
+NSGA2/helpers/sonic_wrappers.py
+pytorch-a2c-ppo-acktr-gail/a2c_ppo_acktr/sonic_wrappers.py
