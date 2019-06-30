@@ -35,7 +35,11 @@ def evaluate(actor_critic, eval_envs, device, num_processes):
     behaviors = []
 
     # Evaluates 10 times and gets the average
-    while len(eval_episode_rewards) < 10:
+    # TODO: Problem! The behavior characterization has 10 distinct episodes in it now.
+    #       This means characterizations from separate episodes won't line up, making the
+    #       comparison meaningless! Need to fix! For now, just make the number of episodes = 1
+    #while len(eval_episode_rewards) < 10:
+    while len(eval_episode_rewards) < 1: # TODO: Change this eventually
         with torch.no_grad():
             _, action, _, eval_recurrent_hidden_states = actor_critic.act(
                 obs,
@@ -43,6 +47,8 @@ def evaluate(actor_critic, eval_envs, device, num_processes):
                 eval_masks,
                 deterministic=True)
 
+        # For observing
+        eval_envs.render()
         # Obser reward and next obs
         obs, _, done, infos = eval_envs.step(action)
 
