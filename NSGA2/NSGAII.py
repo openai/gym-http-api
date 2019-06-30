@@ -157,11 +157,11 @@ def mutation(solution):
 
 # Evaluate one network. The network learns from evolved starting point.
 # At least, that is the plan.
-def evaluate(env, net):
+def evaluate(env, agent):
     global device
     fitness_current = 0
     behaviors = []
-    counter = 0
+    #counter = 0
 
     # for i in range(len(net.base.main)):
     #    print(net.base.main[i])
@@ -172,12 +172,14 @@ def evaluate(env, net):
     #    print(p.data[0])
     # quit()
 
-    for param in net.base.main.parameters():
-        print(param.data[0][0][0])
-        param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-        print(param.data[0][0][0])
-    quit()
+    # Re-assigns some values of the CNNs weight tensor
+    #for param in net.base.main.parameters():
+    #    print(param.data[0][0][0])
+    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
+    #    print(param.data[0][0][0])
+    #quit()
 
+    net = agent.actor_critic
     num_steps = 128
     num_processes = 1
     rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
@@ -243,8 +245,9 @@ def evaluate(env, net):
         rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
                                  gae_lambda=0.95, use_proper_time_limits=True)
 
-        # These variables were only used for logging in the original PPO code
-        # value_loss, action_loss, dist_entropy = agent.update(rollouts)
+        # These variables were only used for logging in the original PPO code.
+        # However, the agent.update command is important, and is doing the learning.
+        value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
     
@@ -262,7 +265,7 @@ def random_genome(n):
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
-def evaluate_population(solutions, net):
+def evaluate_population(solutions, agent):
     fitness_scores = []
     behavior_characterizations = []
 
@@ -271,7 +274,7 @@ def evaluate_population(solutions, net):
 
         # Schrum: Need to set net weights based on a genome from population
         # Use solutions[i]
-        fitness, behavior_char = evaluate(envs, net)
+        fitness, behavior_char = evaluate(envs, agent)
         # print(fitness)
         # print(behavior_char)
         fitness_scores.append(fitness)
@@ -331,7 +334,7 @@ if __name__ == '__main__':
     while gen_no < max_gen:        
         print("Start generation {}".format(gen_no))
         # This still does not actually use the solutions
-        (fitness_scores, novelty_scores) = evaluate_population(solutions, actor_critic)
+        (fitness_scores, novelty_scores) = evaluate_population(solutions, agent)
 
         # Display the fitness scores and novelty scores for debugging
         # for i in range(0,len(fitness_scores)):
@@ -362,7 +365,7 @@ if __name__ == '__main__':
 
         print("Evaluate children of generation {}".format(gen_no))
         
-        (fitness_scores2, novelty_scores2) = evaluate_population(solution2,actor_critic)
+        (fitness_scores2, novelty_scores2) = evaluate_population(solution2,agent)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
         function2_values2 = novelty_scores + novelty_scores2
