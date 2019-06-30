@@ -190,6 +190,8 @@ def learn(env, agent):
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
+            # To watch while learning
+            envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
 
