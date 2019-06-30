@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 
-from helpers import utils
-from helpers.envs import make_vec_envs
+#from helpers import utils
+#from helpers.envs import make_vec_envs
 
 # Will start using this method for evaluation. Every trail will involve some learning,
 # but the actual fitness and behavior characterizations will be based on this method,
@@ -10,15 +10,19 @@ from helpers.envs import make_vec_envs
 # from unfairly huring the agent's fitness
 
 # Evaluates the agent without any learning occurring
-def evaluate(actor_critic, ob_rms, env_name, seed, num_processes, eval_log_dir,
-             device):
-    eval_envs = make_vec_envs(env_name, seed + num_processes, num_processes,
-                              None, eval_log_dir, device, True)
+# This is the original header:
+#def evaluate(actor_critic, ob_rms, env_name, seed, num_processes, eval_log_dir, device):
+# Modified
+def evaluate(actor_critic, eval_envs, device, num_processes):
+    # Removed this. The only difference seems to be that they didn't use a discount factor/gamma, but they probably should.
+    #eval_envs = make_vec_envs(env_name, seed + num_processes, num_processes,
+    #                          None, eval_log_dir, device, True)
 
-    vec_norm = utils.get_vec_normalize(eval_envs)
-    if vec_norm is not None:
-        vec_norm.eval()
-        vec_norm.ob_rms = ob_rms
+    # Removed this too. Not sure what this does, but ob_rms was causing problems.
+    #vec_norm = utils.get_vec_normalize(eval_envs)
+    #if vec_norm is not None:
+    #    vec_norm.eval()
+    #    vec_norm.ob_rms = ob_rms
 
     eval_episode_rewards = []
 

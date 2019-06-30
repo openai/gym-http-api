@@ -22,6 +22,7 @@ import helpers.utils as utils
 from helpers.envs import make_vec_envs
 from helpers.model import Policy
 from helpers.storage import RolloutStorage
+from evaluation import evaluate
 
 # Use the Sonic contest environment
 from retro_contest.local import make
@@ -155,29 +156,9 @@ def mutation(solution):
         solution = min_x+(max_x-min_x)*random.random()
     return solution
 
-# Evaluate one network. The network learns from evolved starting point.
-# At least, that is the plan.
-def evaluate(env, agent):
+# One network learns from evolved starting point.
+def learn(env, agent):
     global device
-    fitness_current = 0
-    behaviors = []
-    #counter = 0
-
-    # for i in range(len(net.base.main)):
-    #    print(net.base.main[i])
-    # print(net.base.main.parameters())
-    # for p in net.base.main.parameters():
-    #    print(p.shape)
-    #    print(torch.numel(p))
-    #    print(p.data[0])
-    # quit()
-
-    # Re-assigns some values of the CNNs weight tensor
-    #for param in net.base.main.parameters():
-    #    print(param.data[0][0][0])
-    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-    #    print(param.data[0][0][0])
-    #quit()
 
     net = agent.actor_critic
     num_steps = 128
@@ -189,7 +170,7 @@ def evaluate(env, agent):
     rollouts.to(device)
     
     done = False
-    num_updates = 50
+    num_updates = 5 # Keep value small since we evaluate for multiple episodes
     for j in range(num_updates):
     # while True:  # Until the episode is over
 
@@ -209,18 +190,8 @@ def evaluate(env, agent):
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
-            # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            # envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
-
-            # Schrum: This block is our code for fitness and behavior tracking
-            fitness_current += reward
-            info = infos[0]
-            xpos = info['x']
-            ypos = info['y']
-            behaviors.append(xpos)
-            behaviors.append(ypos)
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
@@ -231,11 +202,7 @@ def evaluate(env, agent):
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
-            # Moved after the learning update above because we need to learn also (especially!) when Sonic dies  
-            if done:
-                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current[0][0])) 
-                # input("Press a key to continue") # Good for checking if fitness makes sense for the eval
-                break
+        #print("Finished {} steps".format(num_steps))
 
         with torch.no_grad():
             next_value = net.get_value(
@@ -250,14 +217,6 @@ def evaluate(env, agent):
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
-    
-        if done: 
-            # print("DONE WITH EVAL!")
-            break
-
-    # For some reason, the individual fitness value is two layers deep in a tensor
-    return fitness_current[0][0].item(), behaviors
-
 
 def random_genome(n):
     # n is the number of weights
@@ -266,15 +225,41 @@ def random_genome(n):
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
 def evaluate_population(solutions, agent):
+    global device
     fitness_scores = []
     behavior_characterizations = []
 
     for i in range(pop_size):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
-        # Schrum: Need to set net weights based on a genome from population
-        # Use solutions[i]
-        fitness, behavior_char = evaluate(envs, agent)
+        # TODO: Need to set net weights based on a genome from population. Use solutions[i]
+
+        # for i in range(len(net.base.main)):
+        #    print(net.base.main[i])
+        # print(net.base.main.parameters())
+        # for p in net.base.main.parameters():
+        #    print(p.shape)
+        #    print(torch.numel(p))
+        #    print(p.data[0])
+        # quit()
+
+        # Re-assigns some values of the CNNs weight tensor
+        #for param in net.base.main.parameters():
+        #    print(param.data[0][0][0])
+        #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
+        #    print(param.data[0][0][0])
+        #quit()
+
+        # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
+        print("Learning.", end=" ")
+        learn(envs, agent)
+        # Do evaluation of agent without learning to get fitness and behavior characterization
+        ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
+        seed = 0 # TODO: Probably what the random seed to be different each time
+        num_processes = 1 # TODO: Make command line param?
+        # May want to change/remove the log dir of '/tmp/gym/'
+        print("Evaluating.", end=" ")
+        fitness, behavior_char = evaluate(agent.actor_critic, envs, device, num_processes)
         # print(fitness)
         # print(behavior_char)
         fitness_scores.append(fitness)
