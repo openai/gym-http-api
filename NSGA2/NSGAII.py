@@ -9,6 +9,8 @@ import math
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+import functools
+from operator import mul
 
 # Importing necessary PyTorch stuff
 import torch
@@ -235,7 +237,8 @@ def evaluate_population(solutions, agent):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
         # TODO: Need to set net weights based on a genome from population. Use solutions[i]
-        weights = torch.from_numpy(solutions[i])
+        # weights = torch.from_numpy(solutions[i])
+        weights = torch.from_numpy(np.ones(num_weights)) # Alex: test, will it load all ones?
         set_weights(agent.actor_critic, weights)
 
         # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
@@ -260,20 +263,40 @@ def evaluate_population(solutions, agent):
     return (fitness_scores, novelty_scores)
 
 def set_weights(net, weights):
+    # Alex: this implementation initializes everything, including biases, to a random value.
+    # I'll put some more work into this and see how I may go further (i.e. leaving biases as zeroes).
     print(torch.numel(weights))
-    for key in net.state_dict():
-        value = net.state_dict().get(key)
-        print(key, value.size(), value)
-    print(net._modules)
-    # for i in range(len(agent.actor_critic.base.main)):
-    #    print(agent.actor_critic.base.main[i])
-    # print(agent.actor_critic.base.main.parameters())
-    #for p in net.base.main.parameters():
-        # print(p.data)
-        # print(torch.numel(p.data))
-        # print(torch.numel(p.data[0]))
-    #    print(p.data[0])
+    i = 0
+
+    # Get lengths of all the layers, then split
+    lengths = []
+    sizes = []
+    for layer in net.state_dict():
+        print(layer)
+        value = net.state_dict().get(layer)
+        length = torch.numel(value)
+        lengths.append(length)
+        size = tuple(value.size())
+        sizes.append(size)
+
+    split_vector = torch.split(weights, lengths, 0)
+
+    for layer in net.state_dict():
+        if i >= len(lengths) or i >= len(sizes):
+            print("Index out of bounds")
+            quit()
+        if functools.reduce(mul, sizes[i], 1) != lengths[i]:
+            print("Size error at Layer {}: {}".format(i + 1, layer))
+            quit()
+        # split_vector[0] = torch.reshape(split_vector[0], shape=sm)
+        print(i)
+        i += 1
+
+    if len(weights) != 0:
+        print("Too many weights! Terminating")
+        quit()
     quit()
+    print(split_vector[0])
 
     # Re-assigns some values of the CNNs weight tensor
     # for param in net.base.main.parameters():
