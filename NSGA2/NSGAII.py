@@ -168,7 +168,7 @@ def learn(env, agent):
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
     rollouts.to(device)
-    
+
     done = False
     num_updates = 5 # Keep value small since we evaluate for multiple episodes
     for j in range(num_updates):
@@ -222,12 +222,12 @@ def learn(env, agent):
 
 def random_genome(n):
     # n is the number of weights
-    return np.random.rand(1, n)
+    return np.random.uniform(-1, 1, n)
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
 def evaluate_population(solutions, agent):
-    global device
+    global device, num_weights
     fitness_scores = []
     behavior_characterizations = []
 
@@ -235,22 +235,8 @@ def evaluate_population(solutions, agent):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
         # TODO: Need to set net weights based on a genome from population. Use solutions[i]
-
-        # for i in range(len(net.base.main)):
-        #    print(net.base.main[i])
-        # print(net.base.main.parameters())
-        # for p in net.base.main.parameters():
-        #    print(p.shape)
-        #    print(torch.numel(p))
-        #    print(p.data[0])
-        # quit()
-
-        # Re-assigns some values of the CNNs weight tensor
-        #for param in net.base.main.parameters():
-        #    print(param.data[0][0][0])
-        #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-        #    print(param.data[0][0][0])
-        #quit()
+        weights = torch.from_numpy(solutions[i])
+        set_weights(agent.actor_critic, weights)
 
         # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
         print("Learning.", end=" ")
@@ -272,6 +258,30 @@ def evaluate_population(solutions, agent):
     # print(novelty_scores)
         
     return (fitness_scores, novelty_scores)
+
+def set_weights(net, weights):
+    print(torch.numel(weights))
+    for key in net.state_dict():
+        value = net.state_dict().get(key)
+        print(key, value.size(), value)
+    print(net._modules)
+    # for i in range(len(agent.actor_critic.base.main)):
+    #    print(agent.actor_critic.base.main[i])
+    # print(agent.actor_critic.base.main.parameters())
+    #for p in net.base.main.parameters():
+        # print(p.data)
+        # print(torch.numel(p.data))
+        # print(torch.numel(p.data[0]))
+    #    print(p.data[0])
+    quit()
+
+    # Re-assigns some values of the CNNs weight tensor
+    # for param in net.base.main.parameters():
+    #    print(param.data[0][0][0])
+    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
+    #    print(param.data[0][0][0])
+    # quit()
+
 
 if __name__ == '__main__':
     # Main program starts here
@@ -296,6 +306,8 @@ if __name__ == '__main__':
         base_kwargs={'recurrent': True, 'is_genesis':True})
     actor_critic.to(device)
 
+    global num_weights
+
     learning_rate = 7.5e-5
     epsilon = 1e-5
     agent = ppo.PPO(
@@ -315,7 +327,7 @@ if __name__ == '__main__':
 
     # Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
-    num_weights = 10  # What should this actually be?
+    num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)  # What should this actually be?
     solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
     while gen_no < max_gen:        

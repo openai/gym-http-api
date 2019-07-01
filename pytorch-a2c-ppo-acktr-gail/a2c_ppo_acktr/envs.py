@@ -6,7 +6,7 @@ import torch
 from gym.spaces.box import Box
 
 from baselines import bench
-from baselines.common.atari_wrappers import make_atari, wrap_deepmind, FrameStack
+from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from baselines.common.vec_env import VecEnvWrapper
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common.vec_env.shmem_vec_env import ShmemVecEnv
@@ -16,6 +16,10 @@ from baselines.common.vec_env.vec_normalize import \
 # Schrum: Use the Sonic contest environment
 from retro_contest.local import make
 import retro
+
+import cv2
+cv2.ocl.setUseOpenCL(False)
+
 
 try:
     import dm_control2gym
@@ -89,14 +93,26 @@ class AllowBacktracking(gym.Wrapper):
         self._max_x = max(self._max_x, self._cur_x)
         return obs, rew, done, info
 
-def wrap_sonic(env, stack=True, scale_rew=True):
-    # env = SonicDiscretizer(env)
+class WarpFrame96(gym.ObservationWrapper):
+    def __init__(self, env):
+        """Warp frames to 96x96."""
+        gym.ObservationWrapper.__init__(self, env)
+        self.width = 96
+        self.height = 96
+        self.observation_space = gym.spaces.Box(low=0, high=255,
+            shape=(self.height, self.width, 1), dtype=np.uint8)
+
+    def observation(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        return frame[:, :, None]
+
+def wrap_sonic(env, scale_rew=True):
+    env = SonicDiscretizer(env)
     if scale_rew:
         env = RewardScaler(env)
     # env = WarpFrame96(env)
-    if stack:
-        env = FrameStack(env, 4)
-    # env = AllowBacktracking(env)
+    env = AllowBacktracking(env)
     return env
 
 def make_env(env_id, seed, rank, log_dir, allow_early_resets):
@@ -112,7 +128,7 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
             # Could just replace env_id with "SonicTheHedgehog-Genesis"
             # Provide way of setting the state from the command line?
             env = make(game = env_id, state = "GreenHillZone.Act1")
-            # env = wrap_sonic(env)
+            env = wrap_sonic(env)
         else:
             env = gym.make(env_id)
 
