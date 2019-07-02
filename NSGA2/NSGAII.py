@@ -271,18 +271,17 @@ def set_weights(net, weights):
     # Get lengths of all the layers, then split
     lengths = []
     sizes = []
-    for layer in net.state_dict():
-        print(layer)
-        # value is the weight tensor
-        value = net.state_dict().get(layer)
-        length = torch.numel(value)
+    print("------------OLD------------")
+    for layer in list(net.parameters()):
+        print(layer.data)
+        length = torch.numel(layer)
         lengths.append(length)
-        size = tuple(value.size())
+        size = tuple(layer.size())
         sizes.append(size)
 
     split_vector = torch.split(weights, lengths, 0)
 
-    for layer in net.state_dict():
+    for layer in list(net.parameters()):
         if i >= len(lengths) or i >= len(sizes):
             print("Index out of bounds")
             quit()
@@ -290,33 +289,15 @@ def set_weights(net, weights):
             print("Size error at Layer {}: {}".format(i + 1, layer))
             quit()
 
-        print(net.state_dict()[layer])
-        input("Press A Key")
         reshaped_weights = torch.reshape(split_vector[i], sizes[i])
-        print(reshaped_weights)
-        input("Press A Key")
-        # Schrum: This following statement does not work. It doesn't change the weights at all. 
-        # I wonder if there is an issue on my machine with the device being cuda?
-        net.state_dict()[layer] = reshaped_weights
-        print(net.state_dict()[layer])
-        input("Press A Key")
-        
-        print(i)
+        layer.data = reshaped_weights
         i += 1
 
-    if len(weights) != 0:
-        print("Too many weights! Terminating")
-        quit()
+    print("------------NEW------------")
+    for layer in list(net.parameters()):
+        print(layer.data)
+
     quit()
-    print(split_vector[0])
-
-    # Re-assigns some values of the CNNs weight tensor
-    # for param in net.base.main.parameters():
-    #    print(param.data[0][0][0])
-    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-    #    print(param.data[0][0][0])
-    # quit()
-
 
 if __name__ == '__main__':
     # Main program starts here
@@ -340,6 +321,8 @@ if __name__ == '__main__':
         envs.action_space,
         base_kwargs={'recurrent': True, 'is_genesis':True})
     actor_critic.to(device)
+
+    torch.save(actor_critic, './model.pth')
 
     global num_weights
 
