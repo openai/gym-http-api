@@ -237,8 +237,9 @@ def evaluate_population(solutions, agent):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
         # TODO: Need to set net weights based on a genome from population. Use solutions[i]
-        # weights = torch.from_numpy(solutions[i])
-        weights = torch.from_numpy(np.ones(num_weights)) # Alex: test, will it load all ones?
+        weights = torch.from_numpy(solutions[i])
+        # weights = torch.from_numpy(np.ones(num_weights))  # Alex: test, will it load all ones?
+        weights = weights.type(torch.FloatTensor)
         set_weights(agent.actor_critic, weights)
 
         # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
@@ -297,8 +298,6 @@ def set_weights(net, weights):
     for layer in list(net.parameters()):
         print(layer.data)
 
-    quit()
-
 if __name__ == '__main__':
     # Main program starts here
 
@@ -321,8 +320,6 @@ if __name__ == '__main__':
         envs.action_space,
         base_kwargs={'recurrent': True, 'is_genesis':True})
     actor_critic.to(device)
-
-    torch.save(actor_critic, './model.pth')
 
     global num_weights
 
