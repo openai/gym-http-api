@@ -193,7 +193,7 @@ def learn(env, agent):
                     rollouts.masks[step])
 
             # To watch while learning
-            envs.render()
+            # envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
 
@@ -229,7 +229,7 @@ def random_genome(n):
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
 def evaluate_population(solutions, agent):
-    global device, num_weights
+    global device
     fitness_scores = []
     behavior_characterizations = []
 
@@ -266,15 +266,11 @@ def evaluate_population(solutions, agent):
 def set_weights(net, weights):
     # Alex: this implementation initializes everything, including biases, to a random value.
     # I'll put some more work into this and see how I may go further (i.e. leaving biases as zeroes).
-    print(torch.numel(weights))
     i = 0
 
     # Get lengths of all the layers, then split
-    lengths = []
-    sizes = []
-    print("------------OLD------------")
+    lengths, sizes = []
     for layer in list(net.parameters()):
-        print(layer.data)
         length = torch.numel(layer)
         lengths.append(length)
         size = tuple(layer.size())
@@ -293,10 +289,6 @@ def set_weights(net, weights):
         reshaped_weights = torch.reshape(split_vector[i], sizes[i])
         layer.data = reshaped_weights
         i += 1
-
-    print("------------NEW------------")
-    for layer in list(net.parameters()):
-        print(layer.data)
 
 if __name__ == '__main__':
     # Main program starts here
