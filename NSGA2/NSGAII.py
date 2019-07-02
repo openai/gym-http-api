@@ -269,7 +269,8 @@ def set_weights(net, weights):
     i = 0
 
     # Get lengths of all the layers, then split
-    lengths, sizes = []
+    lengths = []
+    sizes = []
     for layer in list(net.parameters()):
         length = torch.numel(layer)
         lengths.append(length)
@@ -329,7 +330,7 @@ if __name__ == '__main__':
         max_grad_norm=0.5)
 
     # Schrum: Makes these small to test at first
-    max_gen = 5
+    max_gen = 200
     pop_size = 10
 
     # Initialization
