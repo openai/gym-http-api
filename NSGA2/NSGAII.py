@@ -334,8 +334,7 @@ if __name__ == '__main__':
     pop_size = 10
 
     # Initialization
-    # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
-    num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)  # What should this actually be?
+    num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)
     solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
     while gen_no < max_gen:        
@@ -372,7 +371,7 @@ if __name__ == '__main__':
 
         print("Evaluate children of generation {}".format(gen_no))
         
-        (fitness_scores2, novelty_scores2) = evaluate_population(solution2,agent)
+        (fitness_scores2, novelty_scores2) = evaluate_population(solution2, agent)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
         function2_values2 = novelty_scores + novelty_scores2

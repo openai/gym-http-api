@@ -75,17 +75,27 @@ class AllowBacktracking(gym.Wrapper):
 
     def step(self, action): # pylint: disable=E0202
         obs, rew, done, info = self.env.step(action)
+        xpos = info['x']
+        ypos = info['y']
         self._cur_x += rew
         rew = max(0, self._cur_x - self._max_x)
         self._max_x = max(self._max_x, self._cur_x)
         return obs, rew, done, info
 
-def wrap_sonic(env, stack=True, scale_rew=True):
+def make_custom(stack=True, scale_rew=True):
+    """
+    Create an environment with some standard wrappers.
+    """
+
+    # Simplified, not remote
+    env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
+    #env = grc.RemoteEnv('tmp/sock')
+
     env = SonicDiscretizer(env)
     if scale_rew:
         env = RewardScaler(env)
-    # env = WarpFrame96(env)
+    env = WarpFrame96(env)
     if stack:
         env = FrameStack(env, 4)
-    # env = AllowBacktracking(env)
+    env = AllowBacktracking(env)
     return env
