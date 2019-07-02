@@ -17,6 +17,10 @@ from baselines.common.vec_env.vec_normalize import \
 from retro_contest.local import make
 import retro
 
+import cv2
+cv2.ocl.setUseOpenCL(False)
+
+
 try:
     import dm_control2gym
 except ImportError:
@@ -32,6 +36,84 @@ try:
 except ImportError:
     pass
 
+class SonicDiscretizer(gym.ActionWrapper):
+    """
+    Wrap a gym-retro environment and make it use discrete
+    actions for the Sonic game.
+    """
+    def __init__(self, env):
+        super(SonicDiscretizer, self).__init__(env)
+        buttons = ["B", "A", "MODE", "START", "UP", "DOWN", "LEFT", "RIGHT", "C", "Y", "X", "Z"]
+        actions = [['LEFT'], ['RIGHT'], ['LEFT', 'DOWN'], ['RIGHT', 'DOWN'], ['DOWN'],
+                   ['DOWN', 'B'], ['B']]
+        self._actions = []
+        for action in actions:
+            arr = np.array([False] * 12)
+            for button in action:
+                arr[buttons.index(button)] = True
+            self._actions.append(arr)
+        self.action_space = gym.spaces.Discrete(len(self._actions))
+
+    def action(self, a): # pylint: disable=W0221
+        return self._actions[a].copy()
+
+class RewardScaler(gym.RewardWrapper):
+    """
+    Bring rewards to a reasonable scale for PPO.
+
+    This is incredibly important and effects performance
+    drastically.
+    """
+    def reward(self, reward):
+        return reward * 0.01
+
+class AllowBacktracking(gym.Wrapper):
+    """
+    Use deltas in max(X) as the reward, rather than deltas
+    in X. This way, agents are not discouraged too heavily
+    from exploring backwards if there is no way to advance
+    head-on in the level.
+    """
+    def __init__(self, env):
+        super(AllowBacktracking, self).__init__(env)
+        self._cur_x = 0
+        self._max_x = 0
+
+    def reset(self, **kwargs): # pylint: disable=E0202
+        self._cur_x = 0
+        self._max_x = 0
+        return self.env.reset(**kwargs)
+
+    def step(self, action): # pylint: disable=E0202
+        obs, rew, done, info = self.env.step(action)
+        xpos = info['x']
+        ypos = info['y']
+        self._cur_x += rew
+        rew = max(0, self._cur_x - self._max_x)
+        self._max_x = max(self._max_x, self._cur_x)
+        return obs, rew, done, info
+
+class WarpFrame96(gym.ObservationWrapper):
+    def __init__(self, env):
+        """Warp frames to 96x96."""
+        gym.ObservationWrapper.__init__(self, env)
+        self.width = 96
+        self.height = 96
+        self.observation_space = gym.spaces.Box(low=0, high=255,
+            shape=(self.height, self.width, 1), dtype=np.uint8)
+
+    def observation(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        return frame[:, :, None]
+
+def wrap_sonic(env, scale_rew=True):
+    env = SonicDiscretizer(env)
+    if scale_rew:
+        env = RewardScaler(env)
+    # env = WarpFrame96(env)
+    env = AllowBacktracking(env)
+    return env
 
 def make_env(env_id, seed, rank, log_dir, allow_early_resets):
     def _thunk():
@@ -46,6 +128,7 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
             # Could just replace env_id with "SonicTheHedgehog-Genesis"
             # Provide way of setting the state from the command line?
             env = make(game = env_id, state = "GreenHillZone.Act1")
+            env = wrap_sonic(env)
         else:
             env = gym.make(env_id)
 

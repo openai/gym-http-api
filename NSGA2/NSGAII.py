@@ -9,6 +9,8 @@ import math
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+import functools
+from operator import mul
 
 # Importing necessary PyTorch stuff
 import torch
@@ -22,6 +24,7 @@ import helpers.utils as utils
 from helpers.envs import make_vec_envs
 from helpers.model import Policy
 from helpers.storage import RolloutStorage
+from evaluation import evaluate
 
 # Use the Sonic contest environment
 from retro_contest.local import make
@@ -155,37 +158,11 @@ def mutation(solution):
         solution = min_x+(max_x-min_x)*random.random()
     return solution
 
-# Evaluate one network. The network learns from evolved starting point.
-# At least, that is the plan.
-def evaluate(env, net):
+# One network learns from evolved starting point.
+def learn(env, agent):
     global device
-    fitness_current = 0
-    behaviors = []
 
-    learning_rate = 2.5e-4
-    epsilon = 1e-5
-
-    agent = ppo.PPO(
-            net,
-            clip_param=0.1,
-            ppo_epoch=4,
-            num_mini_batch=1,
-            value_loss_coef=0.5,
-            entropy_coef=0.01,
-            lr=learning_rate,
-            eps=epsilon,
-            max_grad_norm=0.5)
-
-    #for i in range(len(agent.actor_critic.base.main)):
-    #    print(agent.actor_critic.base.main[i])
-    #for p in agent.actor_critic.base.main.parameters():
-    #    print(torch.numel(p))
-
-    # for param in agent.actor_critic.base.main.parameters():
-    #    print(param.data[0][0][0])
-    #    param.data[0][0][0] = torch.FloatTensor([1,2,3,4,5,6,7,8])
-    #    print(param.data[0][0][0])
-
+    net = agent.actor_critic
     num_steps = 128
     num_processes = 1
     rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
@@ -193,11 +170,11 @@ def evaluate(env, net):
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
     rollouts.to(device)
-    
+
     done = False
-    num_updates = 50
+    num_updates = 5 # Keep value small since we evaluate for multiple episodes
     for j in range(num_updates):
-    #while True:  # Until the episode is over
+    # while True:  # Until the episode is over
 
         # if use_linear_lr_decay:
         # decrease learning rate linearly
@@ -215,18 +192,10 @@ def evaluate(env, net):
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
-            # Schrum: Uncomment this out to watch Sonic as he learns. This should only be done with 1 process though.
-            #envs.render()
+            # To watch while learning
+            # envs.render()
             # Obser reward and next obs
             obs, reward, done, infos = envs.step(action)
-
-            # Schrum: This block is our code for fitness and behavior tracking
-            fitness_current += reward
-            info = infos[0]
-            xpos = info['x']
-            ypos = info['y']
-            behaviors.append(xpos)
-            behaviors.append(ypos)
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
@@ -237,11 +206,7 @@ def evaluate(env, net):
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
-            # Moved after the learning update above because we need to learn also (especially!) when Sonic dies  
-            if done:
-                print("DONE WITH EPISODE! Fitness = {}".format(fitness_current[0][0])) 
-                #input("Press a key to continue") # Good for checking if fitness makes sense for the eval
-                break
+        #print("Finished {} steps".format(num_steps))
 
         with torch.no_grad():
             next_value = net.get_value(
@@ -251,35 +216,42 @@ def evaluate(env, net):
         rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
                                  gae_lambda=0.95, use_proper_time_limits=True)
 
-        # These variables were only used for logging in the original PPO code
+        # These variables were only used for logging in the original PPO code.
+        # However, the agent.update command is important, and is doing the learning.
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
 
         rollouts.after_update()
-    
-        if done: 
-            #print("DONE WITH EVAL!")
-            break
-
-    # For some reason, the individual fitness value is two layers deep in a tensor
-    return fitness_current[0][0].item(), behaviors
-
 
 def random_genome(n):
     # n is the number of weights
-    return np.random.rand(1, n)
+    return np.random.uniform(-1, 1, n)
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
-def evaluate_population(solutions,net):
+def evaluate_population(solutions, agent):
+    global device
     fitness_scores = []
     behavior_characterizations = []
 
     for i in range(pop_size):
-        print("Evaluating genome #{}:".format(i), end=" ") # No newline: Fitness will print here
+        print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
-        # Schrum: Need to set net weights based on a genome from population
-        # Use solutions[i]
-        fitness, behavior_char = evaluate(envs, net)
+        # TODO: Need to set net weights based on a genome from population. Use solutions[i]
+        weights = torch.from_numpy(solutions[i])
+        # weights = torch.from_numpy(np.ones(num_weights))  # Alex: test, will it load all ones?
+        weights = weights.type(torch.FloatTensor)
+        set_weights(agent.actor_critic, weights)
+
+        # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
+        print("Learning.", end=" ")
+        learn(envs, agent)
+        # Do evaluation of agent without learning to get fitness and behavior characterization
+        ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
+        seed = 0 # TODO: Probably what the random seed to be different each time
+        num_processes = 1 # TODO: Make command line param?
+        # May want to change/remove the log dir of '/tmp/gym/'
+        print("Evaluating.", end=" ")
+        fitness, behavior_char = evaluate(agent.actor_critic, envs, device, num_processes)
         # print(fitness)
         # print(behavior_char)
         fitness_scores.append(fitness)
@@ -289,7 +261,35 @@ def evaluate_population(solutions,net):
     novelty_scores = calculate_novelty(behavior_characterizations)
     # print(novelty_scores)
         
-    return (fitness_scores,novelty_scores)
+    return (fitness_scores, novelty_scores)
+
+def set_weights(net, weights):
+    # Alex: this implementation initializes everything, including biases, to a random value.
+    # I'll put some more work into this and see how I may go further (i.e. leaving biases as zeroes).
+    i = 0
+
+    # Get lengths of all the layers, then split
+    lengths = []
+    sizes = []
+    for layer in list(net.parameters()):
+        length = torch.numel(layer)
+        lengths.append(length)
+        size = tuple(layer.size())
+        sizes.append(size)
+
+    split_vector = torch.split(weights, lengths, 0)
+
+    for layer in list(net.parameters()):
+        if i >= len(lengths) or i >= len(sizes):
+            print("Index out of bounds")
+            quit()
+        if functools.reduce(mul, sizes[i], 1) != lengths[i]:
+            print("Size error at Layer {}: {}".format(i + 1, layer))
+            quit()
+
+        reshaped_weights = torch.reshape(split_vector[i], sizes[i])
+        layer.data = reshaped_weights
+        i += 1
 
 if __name__ == '__main__':
     # Main program starts here
@@ -304,7 +304,7 @@ if __name__ == '__main__':
     utils.cleanup_log_dir(eval_log_dir)
     
     global device
-    device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
                          gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=True)
 
@@ -314,19 +314,34 @@ if __name__ == '__main__':
         base_kwargs={'recurrent': True, 'is_genesis':True})
     actor_critic.to(device)
 
+    global num_weights
+
+    learning_rate = 7.5e-5
+    epsilon = 1e-5
+    agent = ppo.PPO(
+        actor_critic,
+        clip_param=0.1,
+        ppo_epoch=4,
+        num_mini_batch=1,
+        value_loss_coef=0.5,
+        entropy_coef=0.01,
+        lr=learning_rate,
+        eps=epsilon,
+        max_grad_norm=0.5)
+
     # Schrum: Makes these small to test at first
-    max_gen = 5
+    max_gen = 200
     pop_size = 10
 
     # Initialization
     # Schrum: This will need to be replaced with initialization for the network weights ... probably from -1 to 1, but how many will you need? Depends on network architecture.
-    num_weights = 10  # What should this actually be?
+    num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)  # What should this actually be?
     solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
     while gen_no < max_gen:        
         print("Start generation {}".format(gen_no))
         # This still does not actually use the solutions
-        (fitness_scores,novelty_scores) = evaluate_population(solutions,actor_critic)
+        (fitness_scores, novelty_scores) = evaluate_population(solutions, agent)
 
         # Display the fitness scores and novelty scores for debugging
         # for i in range(0,len(fitness_scores)):
@@ -357,7 +372,7 @@ if __name__ == '__main__':
 
         print("Evaluate children of generation {}".format(gen_no))
         
-        (fitness_scores2,novelty_scores2) = evaluate_population(solution2,actor_critic)
+        (fitness_scores2, novelty_scores2) = evaluate_population(solution2,agent)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
         function2_values2 = novelty_scores + novelty_scores2
