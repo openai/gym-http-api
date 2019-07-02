@@ -273,6 +273,7 @@ def set_weights(net, weights):
     sizes = []
     for layer in net.state_dict():
         print(layer)
+        # value is the weight tensor
         value = net.state_dict().get(layer)
         length = torch.numel(value)
         lengths.append(length)
@@ -288,7 +289,18 @@ def set_weights(net, weights):
         if functools.reduce(mul, sizes[i], 1) != lengths[i]:
             print("Size error at Layer {}: {}".format(i + 1, layer))
             quit()
-        # split_vector[0] = torch.reshape(split_vector[0], shape=sm)
+
+        print(net.state_dict()[layer])
+        input("Press A Key")
+        reshaped_weights = torch.reshape(split_vector[i], sizes[i])
+        print(reshaped_weights)
+        input("Press A Key")
+        # Schrum: This following statement does not work. It doesn't change the weights at all. 
+        # I wonder if there is an issue on my machine with the device being cuda?
+        net.state_dict()[layer] = reshaped_weights
+        print(net.state_dict()[layer])
+        input("Press A Key")
+        
         print(i)
         i += 1
 
