@@ -152,13 +152,9 @@ def crossover(a, b):
 def mutation(solution):
     #print("Original: ", solution)
     # TODO: Make the mutation range be an args parameter?
-    min_x = -3
-    max_x = 3
+    mutationScale = 3
     # TODO: This is too slow. Rather than indexing the individual elements, do a vector based solution
-    for i in range(len(solution)):
-        mutation_prob = random.random()
-        if mutation_prob < 0.5: # TODO: Make this a command line parameter
-            solution[i] += np.random.uniform(-min_x, max_x, 1) # TODO: Probably want this to be gaussian rather than uniform
+    solution = np.random.normal(solution, mutationScale)
     #print("Mutated: ", solution)
     return solution
 
