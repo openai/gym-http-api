@@ -234,15 +234,16 @@ def evaluate_population(solutions, agent):
     for i in range(pop_size):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
-        # Creates solutions[i] Tensor and converts it to type Float before passing on to set_weights
-        weights = torch.from_numpy(solutions[i])
-        weights = weights.type(torch.FloatTensor)
-        set_weights(agent.actor_critic, weights)
+        if args.evol_mode in {'baldwin', 'lamarck'}:
+            # Creates solutions[i] Tensor and converts it to type Float before passing on to set_weights
+            weights = torch.from_numpy(solutions[i])
+            weights = weights.type(torch.FloatTensor)
+            set_weights(agent.actor_critic, weights)
 
-        # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
-        if learn == True:
+            # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
             print("Learning.", end=" ")
             learn(envs, agent)
+
         # Do evaluation of agent without learning to get fitness and behavior characterization
         ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
         seed = args.seed  # TODO: Probably what the random seed to be different each time
@@ -339,7 +340,7 @@ if __name__ == '__main__':
     num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)
     solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
-    while gen_no < args.num_genomes:
+    while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
         # This still does not actually use the solutions
         (fitness_scores, novelty_scores) = evaluate_population(solutions, agent)

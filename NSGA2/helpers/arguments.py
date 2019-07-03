@@ -2,9 +2,10 @@ import argparse
 import torch
 
 '''
-usage: NSGAII.py [-h] [--num_genomes NUM_GENOMES] [--pop_size POP_SIZE]
-                 [--lr LR] [--eps EPS] [--gamma GAMMA] [--use-gae]
-                 [--gae-lambda GAE_LAMBDA] [--entropy-coef ENTROPY_COEF]
+usage: NSGAII.py [-h] [--evol-mode EVOL_MODE] [--num_gens NUM_GENOMES]
+                 [--pop_size POP_SIZE] [--lr LR] [--eps EPS] [--gamma GAMMA]
+                 [--use-gae] [--gae-lambda GAE_LAMBDA]
+                 [--entropy-coef ENTROPY_COEF]
                  [--value-loss-coef VALUE_LOSS_COEF]
                  [--max-grad-norm MAX_GRAD_NORM] [--seed SEED]
                  [--cuda-deterministic] [--num-processes NUM_PROCESSES]
@@ -20,7 +21,11 @@ usage: NSGAII.py [-h] [--num_genomes NUM_GENOMES] [--pop_size POP_SIZE]
 
 def get_args():
     parser = argparse.ArgumentParser(description='RL')
-    parser.add_argument('--num_genomes',
+    parser.add_argument(
+        '--evol-mode',
+        default='baldwin',
+        help='evolution mode: none | baldwin | lamarck')
+    parser.add_argument('--num_gens',
                         type=int, default=50, help='number of genomes to run through (default: 50)')
     parser.add_argument('--pop_size',
                         type=int, default=10, help='population size per genome (default: 10)')
@@ -107,5 +112,7 @@ def get_args():
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
+
+    assert args.evol_mode in ['none', 'baldwin', 'lamarck']
 
     return args
