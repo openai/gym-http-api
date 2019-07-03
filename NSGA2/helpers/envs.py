@@ -11,7 +11,7 @@ from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common.vec_env.shmem_vec_env import ShmemVecEnv
 from baselines.common.vec_env.vec_normalize import \
     VecNormalize as VecNormalize_
-from .sonic_wrappers import SonicDiscretizer, RewardScaler
+from .sonic_wrappers import SonicDiscretizer
 
 # Schrum: Use the Sonic contest environment
 from retro_contest.local import make
@@ -33,11 +33,11 @@ except ImportError:
     pass
 
 
-def make_env(env_id, seed, rank, log_dir, allow_early_resets):
+def make_env(env_id, state, seed, rank, log_dir, allow_early_resets):
     def _thunk():
         # Schrum: I added this check
         is_genesis = True
-        env = make(game=env_id, state="GreenHillZone.Act1")
+        env = make(game=env_id, state=state)
 
         env.seed(seed + rank)
         obs_shape = env.observation_space.shape
@@ -52,7 +52,6 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
                 allow_early_resets=allow_early_resets)
 
         env = SonicDiscretizer(env)
-        env = RewardScaler(env)
 
         # If the input has shape (W,H,3), wrap for PyTorch convolutions
         obs_shape = env.observation_space.shape
@@ -66,6 +65,7 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
 
 
 def make_vec_envs(env_name,
+                  env_state,
                   seed,
                   num_processes,
                   gamma,
@@ -73,7 +73,7 @@ def make_vec_envs(env_name,
                   device,
                   allow_early_resets):
     envs = [
-        make_env(env_name, seed, i, log_dir, allow_early_resets)
+        make_env(env_name, env_state, seed, i, log_dir, allow_early_resets)
         for i in range(num_processes)
     ]
 

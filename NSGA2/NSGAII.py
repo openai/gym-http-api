@@ -21,13 +21,13 @@ import torch.optim as optim
 # Import PPO code
 import helpers.ppo as ppo
 import helpers.utils as utils
+from helpers.arguments import get_args
 from helpers.envs import make_vec_envs
 from helpers.model import Policy
 from helpers.storage import RolloutStorage
 from evaluation import evaluate
 
-# Use the Sonic contest environment
-from retro_contest.local import make
+args = get_args()
 
 # Function to find index of list
 def index_of(a, list):
@@ -163,9 +163,8 @@ def learn(env, agent):
     global device
 
     net = agent.actor_critic
-    num_steps = 128
-    num_processes = 1
-    rollouts = RolloutStorage(num_steps, num_processes, envs.observation_space.shape, 
+    num_steps = args.num_steps
+    rollouts = RolloutStorage(num_steps, args.num_processes, envs.observation_space.shape,
                               envs.action_space, net.recurrent_hidden_state_size)
     obs = envs.reset()
     rollouts.obs[0].copy_(obs)
@@ -213,13 +212,12 @@ def learn(env, agent):
                 rollouts.obs[-1], rollouts.recurrent_hidden_states[-1],
                 rollouts.masks[-1]).detach()
 
-        rollouts.compute_returns(next_value, use_gae=True, gamma=0.99,
-                                 gae_lambda=0.95, use_proper_time_limits=True)
+        rollouts.compute_returns(next_value, args.use_gae, args.gamma,
+                                 args.gae_lambda, args.use_proper_time_limits)
 
         # These variables were only used for logging in the original PPO code.
         # However, the agent.update command is important, and is doing the learning.
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
-
         rollouts.after_update()
 
 def random_genome(n):
@@ -236,19 +234,19 @@ def evaluate_population(solutions, agent):
     for i in range(pop_size):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
-        # TODO: Need to set net weights based on a genome from population. Use solutions[i]
+        # Creates solutions[i] Tensor and converts it to type Float before passing on to set_weights
         weights = torch.from_numpy(solutions[i])
-        # weights = torch.from_numpy(np.ones(num_weights))  # Alex: test, will it load all ones?
         weights = weights.type(torch.FloatTensor)
         set_weights(agent.actor_critic, weights)
 
         # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
-        print("Learning.", end=" ")
-        learn(envs, agent)
+        if learn == True:
+            print("Learning.", end=" ")
+            learn(envs, agent)
         # Do evaluation of agent without learning to get fitness and behavior characterization
         ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
-        seed = 0 # TODO: Probably what the random seed to be different each time
-        num_processes = 1 # TODO: Make command line param?
+        seed = args.seed  # TODO: Probably what the random seed to be different each time
+        num_processes = args.num_processes  # TODO: Make command line param?
         # May want to change/remove the log dir of '/tmp/gym/'
         print("Evaluating.", end=" ")
         fitness, behavior_char = evaluate(agent.actor_critic, envs, device, num_processes)
@@ -263,12 +261,14 @@ def evaluate_population(solutions, agent):
         
     return (fitness_scores, novelty_scores)
 
+# Function to set the weights of the network to our randomly generated values.
 def set_weights(net, weights):
+
     # Alex: this implementation initializes everything, including biases, to a random value.
     # I'll put some more work into this and see how I may go further (i.e. leaving biases as zeroes).
     i = 0
 
-    # Get lengths of all the layers, then split
+    # Get lengths of all the layers
     lengths = []
     sizes = []
     for layer in list(net.parameters()):
@@ -277,17 +277,20 @@ def set_weights(net, weights):
         size = tuple(layer.size())
         sizes.append(size)
 
+    # Split into several weight Tensors corresponding to the number of elements in every layer.
     split_vector = torch.split(weights, lengths, 0)
 
+    # With every layer, replace its respective weight Tensor and set its data to that Tensor.
     for layer in list(net.parameters()):
         if i >= len(lengths) or i >= len(sizes):
             print("Index out of bounds")
             quit()
         if functools.reduce(mul, sizes[i], 1) != lengths[i]:
-            print("Size error at Layer {}: {}".format(i + 1, layer))
+            print("Size error at Layer {}: {}".format(i, layer))
             quit()
 
         reshaped_weights = torch.reshape(split_vector[i], sizes[i])
+
         layer.data = reshaped_weights
         i += 1
 
@@ -305,39 +308,38 @@ if __name__ == '__main__':
     
     global device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    envs = make_vec_envs("SonicTheHedgehog-Genesis", seed=1, num_processes=1,
-                         gamma=0.99, log_dir='/tmp/gym/', device=device, allow_early_resets=True)
+    envs = make_vec_envs(args.env_name, args.env_state, args.seed, args.num_processes,
+                         args.gamma, args.log_dir, device, allow_early_resets=True)
 
+    # Policy is created - in our case, since obs_shape is 3, it becomes a CNN
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,
-        base_kwargs={'recurrent': True, 'is_genesis':True})
+        base_kwargs={'recurrent': args.recurrent_policy, 'is_genesis': True})
     actor_critic.to(device)
 
     global num_weights
 
-    learning_rate = 7.5e-5
-    epsilon = 1e-5
+    # Agent is initialized
     agent = ppo.PPO(
         actor_critic,
-        clip_param=0.1,
-        ppo_epoch=4,
-        num_mini_batch=1,
-        value_loss_coef=0.5,
-        entropy_coef=0.01,
-        lr=learning_rate,
-        eps=epsilon,
-        max_grad_norm=0.5)
+        args.clip_param,
+        args.ppo_epoch,
+        args.num_mini_batch,
+        args.value_loss_coef,
+        args.entropy_coef,
+        lr=args.lr,
+        eps=args.eps,
+        max_grad_norm=args.max_grad_norm)
 
     # Schrum: Makes these small to test at first
-    max_gen = 200
-    pop_size = 10
+    pop_size = args.pop_size
 
     # Initialization
     num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)
     solutions = [random_genome(num_weights) for i in range(0, pop_size)]
     gen_no = 0
-    while gen_no < max_gen:        
+    while gen_no < args.num_genomes:
         print("Start generation {}".format(gen_no))
         # This still does not actually use the solutions
         (fitness_scores, novelty_scores) = evaluate_population(solutions, agent)
@@ -395,7 +397,7 @@ if __name__ == '__main__':
         # Combine the parent and child solutions so the best can be selected for the next parent population
         solution2 = solutions + solution2
         solutions = [solution2[i] for i in new_solution]
-        gen_no = gen_no + 1
+        gen_no += 1
 
     # Let's plot the final front now
     function1 = fitness_scores
