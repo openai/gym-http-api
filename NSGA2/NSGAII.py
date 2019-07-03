@@ -142,20 +142,21 @@ def crowding_distance(values1, values2, front):
 # Function to carry out the crossover
 def crossover(a, b):
     r = random.random()
-    if r > 0.5:
+    if r > 0.5: # Crossover by adding the vectors and averaging
         return mutation((a+b)/2)
-    else:
-        return mutation((a-b)/2)
+    else: # No crossover ... just mutate first of the two
+        return mutation(a)
 
 
 # Function to carry out the mutation operator
 def mutation(solution):
-    # Schrum: Just added these ranges. Appropriate?
+    # TODO: Make the mutation range be an args parameter?
     min_x = -3
     max_x = 3
-    mutation_prob = random.random()
-    if mutation_prob < 1:
-        solution = min_x+(max_x-min_x)*random.random()
+    for i in range(len(solution)):
+        mutation_prob = random.random()
+        if mutation_prob < 0.5: # TODO: Make this a command line parameter
+            solution[i] += np.random.uniform(-min_x, max_x, 1)
     return solution
 
 # One network learns from evolved starting point.
@@ -344,7 +345,6 @@ if __name__ == '__main__':
     gen_no = 0
     while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
-        # This still does not actually use the solutions
         (fitness_scores, novelty_scores) = evaluate_population(solutions, agent)
 
         # Display the fitness scores and novelty scores for debugging
@@ -369,13 +369,13 @@ if __name__ == '__main__':
         # The lambda children            
         solution2 = []
         # Generating offspring
-        while len(solution2) != 2*pop_size:
+        while len(solution2) != pop_size:
             a1 = random.randint(0, pop_size-1)
             b1 = random.randint(0, pop_size-1)
             solution2.append(crossover(solutions[a1], solutions[b1]))
+            print(solution2)
 
         print("Evaluate children of generation {}".format(gen_no))
-        
         (fitness_scores2, novelty_scores2) = evaluate_population(solution2, agent)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
