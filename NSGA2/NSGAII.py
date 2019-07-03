@@ -227,7 +227,7 @@ def random_genome(n):
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
-def evaluate_population(solutions, agent):
+def evaluate_population(solutions, agent, generation):
     global device
     fitness_scores = []
     behavior_characterizations = []
@@ -253,7 +253,7 @@ def evaluate_population(solutions, agent):
         num_processes = args.num_processes  # TODO: Make command line param?
         # May want to change/remove the log dir of '/tmp/gym/'
         print("Evaluating.", end=" ")
-        fitness, behavior_char = evaluate(agent.actor_critic, envs, device, num_processes)
+        fitness, behavior_char = evaluate(agent.actor_critic, envs, device, generation, args)
         # print(fitness)
         # print(behavior_char)
         fitness_scores.append(fitness)
@@ -345,7 +345,7 @@ if __name__ == '__main__':
     gen_no = 0
     while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
-        (fitness_scores, novelty_scores) = evaluate_population(solutions, agent)
+        (fitness_scores, novelty_scores) = evaluate_population(solutions, agent, gen_no)
 
         # Display the fitness scores and novelty scores for debugging
         # for i in range(0,len(fitness_scores)):
@@ -354,6 +354,8 @@ if __name__ == '__main__':
         #     print("------------------")
         # print("+++++++++++++++++++++++++++++++++++++++++")
         
+        print("Max, Average, Min Fitness are {} and {}".format(np.max(fitness_scores), np.mean(fitness_scores), np.min(fitness_scores)))
+        print("Max, Average, Min Novelty are {} and {}".format(np.max(novelty_scores), np.mean(novelty_scores), np.max(novelty_scores)))
         non_dominated_sorted_solution = fast_non_dominated_sort(fitness_scores[:], novelty_scores[:])
         print("The best front for Generation number ", gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
@@ -376,7 +378,7 @@ if __name__ == '__main__':
             #print(solution2)
 
         print("Evaluate children of generation {}".format(gen_no))
-        (fitness_scores2, novelty_scores2) = evaluate_population(solution2, agent)
+        (fitness_scores2, novelty_scores2) = evaluate_population(solution2, agent, gen_no)
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
         function2_values2 = novelty_scores + novelty_scores2

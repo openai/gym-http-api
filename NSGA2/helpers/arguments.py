@@ -25,6 +25,10 @@ def get_args():
         '--evol-mode',
         default='baldwin',
         help='evolution mode: none | baldwin | lamarck')
+    parser.add_argument(
+        '--watch-frequency',
+        type=int, default=9999, # Set larger to max int value?
+        help='Set to indicate number of generations between rendering of evaluation')
     parser.add_argument('--num_gens',
                         type=int, default=50, help='number of genomes to run through (default: 50)')
     parser.add_argument('--pop_size',
