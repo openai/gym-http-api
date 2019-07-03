@@ -150,13 +150,16 @@ def crossover(a, b):
 
 # Function to carry out the mutation operator
 def mutation(solution):
+    #print("Original: ", solution)
     # TODO: Make the mutation range be an args parameter?
     min_x = -3
     max_x = 3
+    # TODO: This is too slow. Rather than indexing the individual elements, do a vector based solution
     for i in range(len(solution)):
         mutation_prob = random.random()
         if mutation_prob < 0.5: # TODO: Make this a command line parameter
-            solution[i] += np.random.uniform(-min_x, max_x, 1)
+            solution[i] += np.random.uniform(-min_x, max_x, 1) # TODO: Probably want this to be gaussian rather than uniform
+    #print("Mutated: ", solution)
     return solution
 
 # One network learns from evolved starting point.
@@ -373,7 +376,7 @@ if __name__ == '__main__':
             a1 = random.randint(0, pop_size-1)
             b1 = random.randint(0, pop_size-1)
             solution2.append(crossover(solutions[a1], solutions[b1]))
-            print(solution2)
+            #print(solution2)
 
         print("Evaluate children of generation {}".format(gen_no))
         (fitness_scores2, novelty_scores2) = evaluate_population(solution2, agent)
