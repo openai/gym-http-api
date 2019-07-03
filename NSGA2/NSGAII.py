@@ -234,15 +234,17 @@ def evaluate_population(solutions, agent):
     for i in range(pop_size):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
 
-        if args.evol_mode in {'baldwin', 'lamarck'}:
-            # Creates solutions[i] Tensor and converts it to type Float before passing on to set_weights
-            weights = torch.from_numpy(solutions[i])
-            weights = weights.type(torch.FloatTensor)
-            set_weights(agent.actor_critic, weights)
+        # Creates solutions[i] Tensor and converts it to type Float before passing on to set_weights
+        weights = torch.from_numpy(solutions[i])
+        weights = weights.type(torch.FloatTensor)
+        set_weights(agent.actor_critic, weights)
 
+        if args.evol_mode in {'baldwin', 'lamarck'}:        
             # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
             print("Learning.", end=" ")
             learn(envs, agent)
+
+            # TODO: If mode is lamarck, then copy the model weights back into solutions[i]
 
         # Do evaluation of agent without learning to get fitness and behavior characterization
         ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
