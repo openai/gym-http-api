@@ -152,10 +152,11 @@ def crossover(a, b):
 def mutation(solution):
     #print("Original: ", solution)
     # TODO: Make the mutation range be an args parameter?
-    mutationScale = 3
-    # TODO: This is too slow. Rather than indexing the individual elements, do a vector based solution
+    max_range = 1
+    # Bit vector multiplied by the range
+    mutationScale = np.random.randint(2, size=len(solution)) * max_range
     solution = np.random.normal(solution, mutationScale)
-    #print("Mutated: ", solution)
+    #print("Mutated : ", solution)
     return solution
 
 # One network learns from evolved starting point.
