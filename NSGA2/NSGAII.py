@@ -354,8 +354,8 @@ if __name__ == '__main__':
         #     print("------------------")
         # print("+++++++++++++++++++++++++++++++++++++++++")
         
-        print("Max, Average, Min Fitness are {} and {}".format(np.max(fitness_scores), np.mean(fitness_scores), np.min(fitness_scores)))
-        print("Max, Average, Min Novelty are {} and {}".format(np.max(novelty_scores), np.mean(novelty_scores), np.max(novelty_scores)))
+        print("Max, Average, Min Fitness are {}, {} and {}".format(np.max(fitness_scores), np.mean(fitness_scores), np.min(fitness_scores)))
+        print("Max, Average, Min Novelty are {}, {} and {}".format(np.max(novelty_scores), np.mean(novelty_scores), np.min(novelty_scores)))
         non_dominated_sorted_solution = fast_non_dominated_sort(fitness_scores[:], novelty_scores[:])
         print("The best front for Generation number ", gen_no, " is")
         for valuez in non_dominated_sorted_solution[0]:
