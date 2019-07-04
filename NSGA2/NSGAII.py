@@ -155,7 +155,7 @@ def mutation(solution):
     max_range = 1
     # Bit vector multiplied by the range
     mutationScale = np.random.randint(2, size=len(solution)) * max_range
-    solution = np.random.normal(solution, mutationScale)
+    solution = np.random.normal(solution, mutationScale).astype(np.float32)
     #print("Mutated : ", solution)
     return solution
 
