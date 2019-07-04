@@ -55,7 +55,8 @@ def evaluate(actor_critic, eval_envs, device, generation, args):
         if watching: 
             eval_envs.render()
         # Obser reward and next obs
-        obs, _, done, infos = eval_envs.step(action)
+        # Schrum: Why did I switch action to action[0]? Bothered that this was needed
+        obs, _, done, infos = eval_envs.step(action[0])
 
         # Schrum: Added to make behavior charaterization
         info = infos[0] 

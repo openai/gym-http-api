@@ -223,7 +223,7 @@ def learn(env, agent):
 
 def random_genome(n):
     # n is the number of weights
-    return np.random.uniform(-1, 1, n)
+    return np.random.uniform(-1, 1, n).astype(np.float32)
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
@@ -237,7 +237,7 @@ def evaluate_population(solutions, agent, generation):
 
         # Creates solutions[i] Tensor and converts it to type Float before passing on to set_weights
         weights = torch.from_numpy(solutions[i])
-        weights = weights.type(torch.FloatTensor)
+        weights = weights.to(device)
         set_weights(agent.actor_critic, weights)
 
         if args.evol_mode in {'baldwin', 'lamarck'}:        
