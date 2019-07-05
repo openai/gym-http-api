@@ -365,7 +365,7 @@ if __name__ == '__main__':
         #     print("------------------")
         # print("+++++++++++++++++++++++++++++++++++++++++")
     
-        log_line("#{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(gen_no,
+        log_line("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(gen_no,
                         np.min(fitness_scores),np.mean(fitness_scores),np.max(fitness_scores),
                         np.min(novelty_scores),np.mean(novelty_scores),np.max(novelty_scores)))
         
