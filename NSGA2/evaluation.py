@@ -60,7 +60,7 @@ def evaluate(actor_critic, eval_envs, device, generation, args):
             eval_envs.render()
         # Obser reward and next obs
         # Schrum: Why did I switch action to action[0]? Bothered that this was needed
-        obs, reward, done, infos = eval_envs.step(action[0])
+        obs, reward, done, infos = eval_envs.step(action)
         # Would prefer to get reward from info['episode']['r'], but this is only filled if episode ends normally.
         # Need to track it manually if eval ends prematurely
         accumulated_reward += reward[0][0].item() # * (args.gamma ** step)

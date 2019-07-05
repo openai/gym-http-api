@@ -198,7 +198,7 @@ def learn(env, agent):
             # To watch while learning
             # envs.render()
             # Obser reward and next obs: Once again, why did this have to change from action to action[0]?
-            obs, reward, done, infos = envs.step(action[0])
+            obs, reward, done, infos = envs.step(action)
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
