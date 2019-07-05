@@ -27,6 +27,9 @@ from helpers.model import Policy
 from helpers.storage import RolloutStorage
 from evaluation import evaluate
 
+# For log file
+from datetime import datetime
+
 args = get_args()
 
 # Function to find index of list
@@ -254,15 +257,12 @@ def evaluate_population(solutions, agent, generation):
         # May want to change/remove the log dir of '/tmp/gym/'
         print("Evaluating.", end=" ")
         fitness, behavior_char = evaluate(agent.actor_critic, envs, device, generation, args)
-        # print(fitness)
-        # print(behavior_char)
         fitness_scores.append(fitness)
         behavior_characterizations.append(behavior_char)
             
     # Compare all of the behavior characterizations to get the diversity/novelty scores.
     novelty_scores = calculate_novelty(behavior_characterizations)
-    # print(novelty_scores)
-        
+
     return (fitness_scores, novelty_scores)
 
 # Function to set the weights of the network to our randomly generated values.
@@ -298,6 +298,12 @@ def set_weights(net, weights):
         layer.data = reshaped_weights
         i += 1
 
+def log_line(str):
+    global log_file_name
+    f = open(log_file_name,'a') # Append a line
+    f.write(str)
+    f.close()
+
 if __name__ == '__main__':
     # Main program starts here
 
@@ -305,11 +311,16 @@ if __name__ == '__main__':
     # Mus pip install gym==0.12.1 in order for this to work
     # env = make(game = "SonicTheHedgehog-Genesis", state = "GreenHillZone.Act1")
 
-    log_dir = os.path.expanduser('/tmp/gym/')
-    eval_log_dir = log_dir + "_eval"
+    # For some reason, this seems necessary for a wrapper that allows early environment termination
+    log_dir = os.path.expanduser('/tmp/gym/') # Nothing is really stored here
     utils.cleanup_log_dir(log_dir)
-    utils.cleanup_log_dir(eval_log_dir)
-    
+
+    # Actual logs
+    global log_file_name
+    now = datetime.now() # current date and time
+    log_file_name = now.strftime("%Y-%m-%d-{}-log.txt".format(args.env_state)) 
+    log_line("#Gen\tMinFitness\tAvgFitness\tMaxFitness\tMinNovelty\tAvgNovelty\tMaxNovelty\n")
+
     global device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     envs = make_vec_envs(args.env_name, args.env_state, args.seed, args.num_processes,
@@ -353,6 +364,10 @@ if __name__ == '__main__':
         #     print("Novelty:",novelty_scores[i])
         #     print("------------------")
         # print("+++++++++++++++++++++++++++++++++++++++++")
+    
+        log_line("#{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(gen_no,
+                        np.min(fitness_scores),np.mean(fitness_scores),np.max(fitness_scores),
+                        np.min(novelty_scores),np.mean(novelty_scores),np.max(novelty_scores)))
         
         print("Max, Average, Min Fitness are {}, {} and {}".format(np.max(fitness_scores), np.mean(fitness_scores), np.min(fitness_scores)))
         print("Max, Average, Min Novelty are {}, {} and {}".format(np.max(novelty_scores), np.mean(novelty_scores), np.min(novelty_scores)))
