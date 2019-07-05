@@ -35,8 +35,6 @@ except ImportError:
 
 def make_env(env_id, state, seed, rank, log_dir, allow_early_resets):
     def _thunk():
-        # Schrum: I added this check
-        is_genesis = True
         env = make(game=env_id, state=state)
 
         env.seed(seed + rank)
@@ -55,7 +53,6 @@ def make_env(env_id, state, seed, rank, log_dir, allow_early_resets):
 
         # If the input has shape (W,H,3), wrap for PyTorch convolutions
         obs_shape = env.observation_space.shape
-        # Schrum: TODO: I'm pretty sure that something needs to be fixed here when is_genesis is true
         if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
            env = TransposeImage(env, op=[2, 0, 1])
 
