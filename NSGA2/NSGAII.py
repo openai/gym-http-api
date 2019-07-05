@@ -197,8 +197,8 @@ def learn(env, agent):
 
             # To watch while learning
             # envs.render()
-            # Obser reward and next obs
-            obs, reward, done, infos = envs.step(action)
+            # Obser reward and next obs: Once again, why did this have to change from action to action[0]?
+            obs, reward, done, infos = envs.step(action[0])
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
@@ -318,7 +318,7 @@ if __name__ == '__main__':
     # Actual logs
     global log_file_name
     now = datetime.now() # current date and time
-    log_file_name = now.strftime("%Y-%m-%d-{}-log.txt".format(args.env_state)) 
+    log_file_name = now.strftime("%Y-%m-%d-{}-{}-log.txt".format(args.env_state,args.evol_mode)) 
     log_line("#Gen\tMinFitness\tAvgFitness\tMaxFitness\tMinNovelty\tAvgNovelty\tMaxNovelty\n")
 
     global device

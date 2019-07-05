@@ -1,0 +1,2 @@
+REM %* Allows for any additional parameters
+python NSGAII.py --evol-mode baldwin --num-gens 1000 --pop-size 10 --use-gae --num-processes 1 --use-proper-time-limits --recurrent-policy --watch-frequency 1 --use-gae --num-processes 1 --num-steps 128 --num-mini-batch 1 %*
