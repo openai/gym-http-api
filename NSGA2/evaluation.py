@@ -59,7 +59,8 @@ def evaluate(actor_critic, eval_envs, device, generation, args):
         if watching: 
             eval_envs.render()
         # Obser reward and next obs
-        # Schrum: Why did I switch action to action[0]? Bothered that this was needed
+        if action.device != 'cpu': # For some reason, CUDA actions are nested in an extra layer
+            action = action[0]
         obs, reward, done, infos = eval_envs.step(action)
         # Would prefer to get reward from info['episode']['r'], but this is only filled if episode ends normally.
         # Need to track it manually if eval ends prematurely

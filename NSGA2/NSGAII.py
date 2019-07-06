@@ -175,7 +175,7 @@ def learn(env, agent):
     rollouts.to(device)
 
     done = False
-    num_updates = 5 # Keep value small since we evaluate for multiple episodes
+    num_updates = args.num_updates
     for j in range(num_updates):
     # while True:  # Until the episode is over
 
@@ -197,7 +197,8 @@ def learn(env, agent):
 
             # To watch while learning
             # envs.render()
-            # Obser reward and next obs: Once again, why did this have to change from action to action[0]?
+            if action.device != 'cpu': # For some reason, CUDA actions are nested in an extra layer
+                action = action[0]
             obs, reward, done, infos = envs.step(action)
 
             # If done then clean the history of observations.

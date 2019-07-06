@@ -33,6 +33,8 @@ def get_args():
                         type=int, default=50, help='Number of steps without a change in x coordinate before Sonic evaluation terminates (default: 50)')
     parser.add_argument('--num-gens',
                         type=int, default=50, help='number of genomes to run through (default: 50)')
+    parser.add_argument('--num-updates',
+                        type=int, default=100, help='number of learning updates if learning is used (default: 100)')
     parser.add_argument('--pop-size',
                         type=int, default=10, help='population size per genome (default: 10)')
     parser.add_argument('--lr',
