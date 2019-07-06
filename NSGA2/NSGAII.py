@@ -179,15 +179,14 @@ def learn(env, agent):
     for j in range(num_updates):
     # while True:  # Until the episode is over
 
-        # if use_linear_lr_decay:
         # decrease learning rate linearly
         # simply changes learning rate of optimizer
-        
-        # Disable this for now ... may want to replace j with the current generation or some other value
-        # utils.update_linear_schedule(
-        #    agent.optimizer, j, num_updates,
-        #    learning_rate)
+        if args.use_linear_lr_decay:
+            utils.update_linear_schedule(
+                agent.optimizer, j, num_updates,
+                args.lr)
 
+        accumulated_reward = 0
         for step in range(num_steps):
             # Sample actions
             with torch.no_grad():
@@ -196,10 +195,11 @@ def learn(env, agent):
                     rollouts.masks[step])
 
             # To watch while learning
-            # envs.render()
+            envs.render()
             if action.device != 'cpu': # For some reason, CUDA actions are nested in an extra layer
                 action = action[0]
             obs, reward, done, infos = envs.step(action)
+            accumulated_reward += reward[0][0].item()
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor(
@@ -210,7 +210,8 @@ def learn(env, agent):
             rollouts.insert(obs, recurrent_hidden_states, action,
                             action_log_prob, value, reward, masks, bad_masks)
 
-        #print("Finished {} steps".format(num_steps))
+        # Print total returns each time
+        print(accumulated_reward, end=",")
 
         with torch.no_grad():
             next_value = net.get_value(
@@ -224,6 +225,9 @@ def learn(env, agent):
         # However, the agent.update command is important, and is doing the learning.
         value_loss, action_loss, dist_entropy = agent.update(rollouts)
         rollouts.after_update()
+
+    # Carriage return after all of the learning scores
+    print("")
 
 def random_genome(n):
     # n is the number of weights
