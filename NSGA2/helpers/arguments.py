@@ -39,8 +39,6 @@ def get_args():
                         type=int, default=10, help='population size per genome (default: 10)')
     parser.add_argument('--lr',
                         type=float, default=7.5e-5, help='learning rate (default: 7.5e-5)')
-    parser.add_argument('--eps',
-                        type=float, default=1e-5, help='RMSprop optimizer epsilon (default: 1e-5)')
     parser.add_argument('--gamma',
                         type=float, default=0.99, help='discount factor for rewards (default: 0.99)')
     parser.add_argument(

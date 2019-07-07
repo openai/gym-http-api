@@ -349,7 +349,7 @@ if __name__ == '__main__':
         args.value_loss_coef,
         args.entropy_coef,
         lr=args.lr,
-        eps=args.eps,
+        eps=1e-8, # This epsilon is not for exploration. It is for numerical stability of the Adam optimizer. This is the default value.
         max_grad_norm=args.max_grad_norm)
 
     # Schrum: Makes these small to test at first
