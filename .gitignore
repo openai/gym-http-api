@@ -1,6 +1,7 @@
 *.swp
 *.pyc
 *.py~
+*.pt
 .DS_Store
 *~
 .cache
