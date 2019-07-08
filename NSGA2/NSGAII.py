@@ -196,7 +196,7 @@ def learn(env, agent):
 
             # To watch while learning
             envs.render()
-            if action.device != 'cpu': # For some reason, CUDA actions are nested in an extra layer
+            if action.device == "cuda:0": # For some reason, CUDA actions are nested in an extra layer
                 action = action[0]
             obs, reward, done, infos = envs.step(action)
             accumulated_reward += reward[0][0].item()

@@ -87,7 +87,7 @@ while True:
             obs, recurrent_hidden_states, masks, deterministic=args.det)
 
     # Obser reward and next obs
-    if action.device != 'cpu': # For some reason, CUDA actions are nested in an extra layer
+    if action.device == "cuda:0": # For some reason, CUDA actions are nested in an extra layer
         action = action[0]
     obs, reward, done, _ = env.step(action)
     episodeReturn += reward * (gamma**step)
