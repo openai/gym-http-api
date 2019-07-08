@@ -256,7 +256,17 @@ def evaluate_population(solutions, agent, generation):
             if args.evol_mode == 'lamarck': 
                 copy_weights(agent.actor_critic, solutions, i)
 
-        
+        if i % args.save_interval == 0 and args.save_dir != "":
+            save_path = os.path.join(args.save_dir, now.strftime("model-%Y-%m-%d-%H-%M-%S"))
+            try:
+                os.makedirs(save_path)
+            except OSError:
+                pass
+
+            torch.save([
+                agent.actor_critic,
+                getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
+            ], os.path.join(save_path, "{}-{}-{}.pt".format(args.evol_mode, generation, i)))
 
         # Do evaluation of agent without learning to get fitness and behavior characterization
         ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
