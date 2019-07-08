@@ -59,7 +59,7 @@ def evaluate(actor_critic, eval_envs, device, generation, args):
         if watching: 
             eval_envs.render()
         # Obser reward and next obs
-        if action.device == "cuda:0": # For some reason, CUDA actions are nested in an extra layer
+        if action.device == "cuda:0":  # For some reason, CUDA actions are nested in an extra layer
             action = action[0]
         obs, reward, done, infos = eval_envs.step(action)
         # Would prefer to get reward from info['episode']['r'], but this is only filled if episode ends normally.
@@ -67,23 +67,28 @@ def evaluate(actor_critic, eval_envs, device, generation, args):
         accumulated_reward += reward[0][0].item() # * (args.gamma ** step)
         step += 1
 
-        # Schrum: Added to make behavior charaterization
+        # Schrum: Added to make behavior characterization
         info = infos[0] 
         xpos = info['x']
         ypos = info['y']
-        behaviors.append(xpos)
-        behaviors.append(ypos)
+        if args.final_pt:
+            if done:
+                behaviors.extend([xpos, ypos])
+        else:
+            behaviors.extend([xpos, ypos])
 
         if xpos == last_x:
             steps_without_change_in_x += 1
             if steps_without_change_in_x >= args.eval_progress_fail_time:
+                if args.final_pt:
+                    behaviors.extend([xpos, ypos])
                 print("End Early, stuck at {} for {} steps.".format(xpos,steps_without_change_in_x), end=" ")
                 # Artificially set accumulated reward to end evaluation early
-                info['episode'] = {'r' : accumulated_reward}
+                info['episode'] = {'r': accumulated_reward}
         else:
             steps_without_change_in_x = 0
 
-        last_x = xpos # remember previous x position
+        last_x = xpos  # remember previous x position
 
         eval_masks = torch.tensor(
             [[0.0] if done_ else [1.0] for done_ in done],

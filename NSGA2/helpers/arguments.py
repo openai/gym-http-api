@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument(
         '--watch-frequency',
         type=int, default=9999, # Set larger to max int value?
-        help='Set to indicate number of generations between rendering of evaluation')
+        help='set to indicate number of generations between rendering of evaluation')
     parser.add_argument('--eval-progress-fail-time',
                         type=int, default=50, help='Number of steps without a change in x coordinate before Sonic evaluation terminates (default: 50)')
     parser.add_argument('--num-gens',
@@ -86,7 +86,7 @@ def get_args():
     parser.add_argument(
         '--env-state',
         default='GreenHillZone.Act1',
-        help='State of given environment (default: GreenHillZone.Act1)')
+        help='state of given environment (default: GreenHillZone.Act1)')
     parser.add_argument(
         '--log-dir',
         default='/tmp/gym/',
@@ -95,6 +95,11 @@ def get_args():
         '--save-dir',
         default='./trained_models/',
         help='directory to save agent logs (default: ./trained_models/)')
+    parser.add_argument(
+        '--final-pt',
+        action='store_true',
+        default=False,
+        help='log only an agent\'s final point to a behavior characterization')
     parser.add_argument(
         '--no-cuda',
         action='store_true',
