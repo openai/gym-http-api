@@ -82,7 +82,7 @@ def evaluate(actor_critic, eval_envs, device, generation, args):
             if steps_without_change_in_x >= args.eval_progress_fail_time:
                 if args.final_pt:
                     behaviors.extend([xpos, ypos])
-                print("End Early, stuck at {} for {} steps.".format(xpos,steps_without_change_in_x), end=" ")
+                print("End Early, stuck at {} for {} steps.".format(xpos, steps_without_change_in_x), end=" ")
                 # Artificially set accumulated reward to end evaluation early
                 info['episode'] = {'r': accumulated_reward}
         else:
