@@ -252,6 +252,11 @@ def evaluate_population(solutions, agent, generation):
             # Make the agent optimize the starting weights. Weights of agent are changed via side-effects
             print("Learning.", end=" ")
             learn(envs, agent)
+            
+            if args.evol_mode == 'lamarck': 
+                copy_weights(agent.actor_critic, solutions, i)
+
+        
 
         # Do evaluation of agent without learning to get fitness and behavior characterization
         ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
@@ -262,8 +267,6 @@ def evaluate_population(solutions, agent, generation):
         fitness, behavior_char = evaluate(agent.actor_critic, envs, device, generation, args)
         fitness_scores.append(fitness)
         behavior_characterizations.append(behavior_char)
-
-        if args.evol_mode == 'lamarck': copy_weights(agent.actor_critic, solutions, i)
             
     # Compare all of the behavior characterizations to get the diversity/novelty scores.
     novelty_scores = calculate_novelty(behavior_characterizations)
