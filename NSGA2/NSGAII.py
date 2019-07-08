@@ -253,17 +253,17 @@ def evaluate_population(solutions, agent, generation):
             print("Learning.", end=" ")
             learn(envs, agent)
 
-            # TODO: If mode is lamarck, then copy the model weights back into solutions[i]
-
         # Do evaluation of agent without learning to get fitness and behavior characterization
         ob_rms = None # utils.get_vec_normalize(envs).ob_rms # Not sure what this is. From gym-http-api\pytorch-a2c-ppo-acktr-gail\main.py
-        seed = args.seed  # TODO: Probably what the random seed to be different each time
-        num_processes = args.num_processes  # TODO: Make command line param?
+        seed = args.seed
+        num_processes = args.num_processes
         # May want to change/remove the log dir of '/tmp/gym/'
         print("Evaluating.", end=" ")
         fitness, behavior_char = evaluate(agent.actor_critic, envs, device, generation, args)
         fitness_scores.append(fitness)
         behavior_characterizations.append(behavior_char)
+
+        if args.evol_mode == 'lamarck': copy_weights(agent.actor_critic, solutions, i)
             
     # Compare all of the behavior characterizations to get the diversity/novelty scores.
     novelty_scores = calculate_novelty(behavior_characterizations)
@@ -303,6 +303,19 @@ def set_weights(net, weights):
         layer.data = reshaped_weights
         i += 1
 
+# Function to copy learned network weights into solution genome. NB: ONLY for Lamarckian.
+def copy_weights(net, solutions, i):
+    cnn_weights = []
+    for layer in list(net.parameters()):
+        cloned_layer = layer.clone()
+        cloned_layer = cloned_layer.reshape(-1)
+        layer_array = cloned_layer.data.numpy()
+        cnn_weights = np.concatenate((cnn_weights, layer_array)).astype(np.float32)
+    if len(solutions[i]) != len(cnn_weights):
+        print("Weights do not fit into solutions genome!")
+        quit()
+    solutions[i] = cnn_weights
+
 def log_line(str):
     global log_file_name
     f = open(log_file_name,'a') # Append a line
@@ -322,8 +335,8 @@ if __name__ == '__main__':
 
     # Actual logs
     global log_file_name
-    now = datetime.now() # current date and time
-    log_file_name = now.strftime("%Y-%m-%d-{}-{}-log.txt".format(args.env_state,args.evol_mode)) 
+    now = datetime.now()  # current date and time
+    log_file_name = now.strftime("%Y-%m-%d-{}-{}-log.txt".format(args.env_state, args.evol_mode))
     log_line("#Gen\tMinFitness\tAvgFitness\tMaxFitness\tMinNovelty\tAvgNovelty\tMaxNovelty\n")
 
     global device
