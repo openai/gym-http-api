@@ -31,7 +31,7 @@ def evaluate(actor_critic, ob_rms, env_name, seed, num_processes, eval_log_dir,
                 deterministic=True)
 
         # Obser reward and next obs
-        if action.device == "cuda:0": # For some reason, CUDA actions are nested in an extra layer
+        if device.type == 'cuda': # For some reason, CUDA actions are nested in an extra layer
             action = action[0]
         obs, _, done, infos = eval_envs.step(action)
 

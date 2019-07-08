@@ -119,7 +119,7 @@ def main():
             # Alex: Best for GPUs as the "pause" every num_steps is taken care of much faster than with a CPU
             envs.render()
             # Obser reward and next obs
-            if action.device == "cuda:0": # For some reason, CUDA actions are nested in an extra layer
+            if device.type == 'cuda': # For some reason, CUDA actions are nested in an extra layer
                 action = action[0]
             obs, reward, done, infos = envs.step(action)
 
