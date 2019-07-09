@@ -319,7 +319,7 @@ def copy_weights(net, solutions, i):
     for layer in list(net.parameters()):
         cloned_layer = layer.clone()
         cloned_layer = cloned_layer.reshape(-1)
-        layer_array = cloned_layer.data.numpy()
+        layer_array = cloned_layer.cpu().data.numpy()
         cnn_weights = np.concatenate((cnn_weights, layer_array)).astype(np.float32)
     if len(solutions[i]) != len(cnn_weights):
         print("Weights do not fit into solutions genome!")
