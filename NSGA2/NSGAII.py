@@ -100,7 +100,8 @@ def calculate_novelty(behavior_characterizations):
                 j_behavior = behavior_characterizations[j]
                 dist = euclidean_dist(i_behavior, j_behavior)
                 total_dist += dist
-        avg_dist = total_dist / len(behavior_characterizations)
+        # The -1 excludes the current item (average with respect to others)
+        avg_dist = total_dist / (len(behavior_characterizations) - 1)
         ns.append(avg_dist)
     return ns
 
@@ -275,10 +276,7 @@ def evaluate_population(solutions, agent, generation):
         fitness_scores.append(fitness)
         behavior_characterizations.append(behavior_char)
             
-    # Compare all of the behavior characterizations to get the diversity/novelty scores.
-    novelty_scores = calculate_novelty(behavior_characterizations)
-
-    return (fitness_scores, novelty_scores)
+    return (fitness_scores, behavior_characterizations)
 
 # Function to set the weights of the network to our randomly generated values.
 def set_weights(net, weights):
@@ -330,6 +328,15 @@ def log_line(str):
     global log_file_name
     f = open(log_file_name,'a') # Append a line
     f.write(str)
+    f.close()
+
+def log_scores_and_behaviors(population_type,generation,fitness_scores,novelty_scores,behavior_characterizations):
+    global log_file_name
+    f = open("{}.{}.gen{}.txt".format(log_file_name,population_type,generation),'w')
+    f.write("#Fitness\tNovelty\tBehavior\n")
+    for i in range(len(fitness_scores)):
+        f.write("{}\t{}\t{}\n".format(fitness_scores[i],novelty_scores[i],behavior_characterizations[i]))
+
     f.close()
 
 if __name__ == '__main__':
@@ -384,15 +391,13 @@ if __name__ == '__main__':
     gen_no = 0
     while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
-        (fitness_scores, novelty_scores) = evaluate_population(solutions, agent, gen_no)
+        (fitness_scores, behavior_characterizations) = evaluate_population(solutions, agent, gen_no)
+        # Compare all of the behavior characterizations to get the diversity/novelty scores.
+        # This is novelty with respect to parents only
+        novelty_scores = calculate_novelty(behavior_characterizations)
 
-        # Display the fitness scores and novelty scores for debugging
-        # for i in range(0,len(fitness_scores)):
-        #     print("Fitness:",fitness_scores[i])
-        #     print("Novelty:",novelty_scores[i])
-        #     print("------------------")
-        # print("+++++++++++++++++++++++++++++++++++++++++")
-    
+        log_scores_and_behaviors("parents",gen_no,fitness_scores,novelty_scores,behavior_characterizations)
+        
         log_line("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(gen_no,
                         np.min(fitness_scores),np.mean(fitness_scores),np.max(fitness_scores),
                         np.min(novelty_scores),np.mean(novelty_scores),np.max(novelty_scores)))
@@ -421,11 +426,17 @@ if __name__ == '__main__':
             #print(solution2)
 
         print("Evaluate children of generation {}".format(gen_no))
-        (fitness_scores2, novelty_scores2) = evaluate_population(solution2, agent, gen_no)
+        (fitness_scores2, behavior_characterizations2) = evaluate_population(solution2, agent, gen_no)
+        # The novelty scores used for pruning the combined parent/child population need to be calculated with respect to the combined population
+        combined_behaviors = behavior_characterizations+behavior_characterizations2
+        novelty_scores_combined = calculate_novelty(combined_behaviors)
+
         # Combine parent and child populations into one before elitist selection
         function1_values2 = fitness_scores + fitness_scores2
-        function2_values2 = novelty_scores + novelty_scores2
+        function2_values2 = novelty_scores_combined
 
+        log_scores_and_behaviors("combined",gen_no,function1_values2,function2_values2,combined_behaviors)
+        
         non_dominated_sorted_solution2 = fast_non_dominated_sort(function1_values2[:], function2_values2[:])
         crowding_distance_values2 = []
         for i in range(0, len(non_dominated_sorted_solution2)):
