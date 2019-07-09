@@ -255,7 +255,7 @@ def evaluate_population(solutions, agent, generation):
             learn(envs, agent)
             
             if args.evol_mode == 'lamarck': 
-                copy_weights(agent.actor_critic, solutions, i)
+                solutions[i] = extract_weights(agent.actor_critic)
 
         if generation % args.save_interval == 0 and args.save_dir != "":
             save_path = os.path.join(args.save_dir, now.strftime("model-%Y-%m-%d-%H-%M-%S"))
@@ -311,18 +311,16 @@ def set_weights(net, weights):
         layer.data = reshaped_weights
         i += 1
 
-# Function to copy learned network weights into solution genome. NB: ONLY for Lamarckian.
-def copy_weights(net, solutions, i):
+# Function to extract learned network weights from model as a linear vector/genome. NB: ONLY for Lamarckian.
+def extract_weights(net):
     cnn_weights = []
     for layer in list(net.parameters()):
         cloned_layer = layer.clone()
         cloned_layer = cloned_layer.reshape(-1)
         layer_array = cloned_layer.cpu().data.numpy()
         cnn_weights = np.concatenate((cnn_weights, layer_array)).astype(np.float32)
-    if len(solutions[i]) != len(cnn_weights):
-        print("Weights do not fit into solutions genome!")
-        quit()
-    solutions[i] = cnn_weights
+    
+    return cnn_weights
 
 def log_line(str):
     global log_file_name
