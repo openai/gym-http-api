@@ -211,7 +211,7 @@ def learn(env, agent):
                             action_log_prob, value, reward, masks, bad_masks)
 
         # Print total returns each time
-        print(accumulated_reward, end=",")
+        #print(accumulated_reward, end=",")
 
         with torch.no_grad():
             next_value = net.get_value(
