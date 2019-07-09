@@ -98,7 +98,7 @@ def get_args():
     parser.add_argument(
         '--final-pt',
         action='store_true',
-        default=False,
+        default=True,
         help='log only an agent\'s final point to a behavior characterization')
     parser.add_argument(
         '--no-cuda',
