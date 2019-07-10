@@ -46,6 +46,11 @@ def get_args():
         action='store_true',
         default=False,
         help='use generalized advantage estimation')
+    parser.add_argument(
+        '--watch-learning',
+        action='store_true',
+        default=False,
+        help='Render visualization during learning')
     parser.add_argument('--gae-lambda',
                         type=float, default=0.95, help='gae lambda parameter (default: 0.95)')
     parser.add_argument('--entropy-coef',

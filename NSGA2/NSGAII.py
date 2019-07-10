@@ -196,7 +196,8 @@ def learn(env, agent):
                     rollouts.masks[step])
 
             # To watch while learning
-            envs.render()
+            if args.watch_learning:
+                envs.render()
             if device.type == 'cuda': # For some reason, CUDA actions are nested in an extra layer
                 action = action[0]
             obs, reward, done, infos = envs.step(action)
@@ -272,7 +273,7 @@ def evaluate_population(solutions, agent, generation):
         # Do evaluation of agent without learning to get fitness and behavior characterization
         print("Evaluating.", end=" ")
         fitness, behavior_char = evaluate(agent.actor_critic, envs, device, generation, args)
-        print("({},{})".format(fitness,behavior_char))
+        print("({},{})".format(fitness, behavior_char))
         fitness_scores.append(fitness)
         behavior_characterizations.append(behavior_char)
             
