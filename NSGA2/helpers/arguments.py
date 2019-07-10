@@ -57,6 +57,11 @@ def get_args():
     parser.add_argument('--seed',
                         type=int, default=1, help='random seed (default: 1)')
     parser.add_argument(
+        '--init-from-network',
+        action='store_true',
+        default=True,
+        help="Genome initialization based on network weight initializer")
+    parser.add_argument(
         '--cuda-deterministic',
         action='store_true',
         default=False,

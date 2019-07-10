@@ -359,14 +359,34 @@ if __name__ == '__main__':
     envs = make_vec_envs(args.env_name, args.env_state, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, allow_early_resets=True)
 
-    # Policy is created - in our case, since obs_shape is 3, it becomes a CNN
-    actor_critic = Policy(
-        envs.observation_space.shape,
-        envs.action_space,
-        base_kwargs={'recurrent': args.recurrent_policy, 'is_genesis': True})
-    actor_critic.to(device)
-
+    pop_size = args.pop_size
     global num_weights
+    
+    if args.init_from_network:
+        solutions = []
+        for i in range(0, pop_size):
+            # Policy is created - in our case, since obs_shape is 3, it becomes a CNN
+            # Each initialization results in a new set of random weights
+            actor_critic = Policy(
+                envs.observation_space.shape,
+                envs.action_space,
+                base_kwargs={'recurrent': args.recurrent_policy, 'is_genesis': True})
+            actor_critic.to(device)
+            # Take those random weights and create a genome
+            solutions.append(extract_weights(actor_critic))
+
+        num_weights = sum(p.numel() for p in actor_critic.parameters() if p.requires_grad)
+    else:
+        # Policy is created - in our case, since obs_shape is 3, it becomes a CNN
+        actor_critic = Policy(
+            envs.observation_space.shape,
+            envs.action_space,
+            base_kwargs={'recurrent': args.recurrent_policy, 'is_genesis': True})
+        actor_critic.to(device)
+        
+        num_weights = sum(p.numel() for p in actor_critic.parameters() if p.requires_grad)
+        # Only need to know the number of weights in order to create completely random weights
+        solutions = [random_genome(num_weights) for i in range(0, pop_size)]
 
     # Agent is initialized
     agent = ppo.PPO(
@@ -379,13 +399,7 @@ if __name__ == '__main__':
         lr=args.lr,
         eps=1e-8, # This epsilon is not for exploration. It is for numerical stability of the Adam optimizer. This is the default value.
         max_grad_norm=args.max_grad_norm)
-
-    # Schrum: Makes these small to test at first
-    pop_size = args.pop_size
-
-    # Initialization
-    num_weights = sum(p.numel() for p in agent.actor_critic.parameters() if p.requires_grad)
-    solutions = [random_genome(num_weights) for i in range(0, pop_size)]
+            
     gen_no = 0
     while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
