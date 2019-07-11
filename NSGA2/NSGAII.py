@@ -163,6 +163,7 @@ def mutation(solution):
     #print("Mutated : ", solution)
     return solution
 
+
 # One network learns from evolved starting point.
 def learn(env, agent):
     global device
@@ -231,16 +232,25 @@ def learn(env, agent):
     # Carriage return after all of the learning scores
     print("")
 
+
 def random_genome(n):
     # n is the number of weights
     return np.random.uniform(-1, 1, n).astype(np.float32)
 
+
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
-def evaluate_population(solutions, agent, generation):
+def evaluate_population(solutions, agent, generation, pop_type):
     global device
     fitness_scores = []
     behavior_characterizations = []
+    save_path = os.path.join(logging_location, "gen{}".format(generation))
+
+    if generation % args.save_interval == 0:
+        try:
+            os.makedirs(save_path)
+        except OSError:
+            pass
 
     for i in range(pop_size):
         print("Evaluating genome #{}:".format(i), end=" ")  # No newline: Fitness will print here
@@ -258,17 +268,11 @@ def evaluate_population(solutions, agent, generation):
             if args.evol_mode == 'lamarck': 
                 solutions[i] = extract_weights(agent.actor_critic)
 
-        if generation % args.save_interval == 0 and args.save_dir != "":
-            save_path = os.path.join(args.save_dir, now.strftime("model-%Y-%m-%d-%H-%M-%S"))
-            try:
-                os.makedirs(save_path)
-            except OSError:
-                pass
-
+        if generation % args.save_interval == 0 and pop_type == "parents":
             torch.save([
                 agent.actor_critic,
                 getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
-            ], os.path.join(save_path, "{}-{}-{}.pt".format(args.evol_mode, generation, i)))
+            ], os.path.join(save_path, "model-{}.pt".format(i)).replace("\\", "/"))  # Windows thing
 
         # Do evaluation of agent without learning to get fitness and behavior characterization
         print("Evaluating.", end=" ")
@@ -278,6 +282,7 @@ def evaluate_population(solutions, agent, generation):
         behavior_characterizations.append(behavior_char)
             
     return (fitness_scores, behavior_characterizations)
+
 
 # Function to set the weights of the network to our randomly generated values.
 def set_weights(net, weights):
@@ -312,6 +317,7 @@ def set_weights(net, weights):
         layer.data = reshaped_weights
         i += 1
 
+
 # Function to extract learned network weights from model as a linear vector/genome. NB: ONLY for Lamarckian.
 def extract_weights(net):
     cnn_weights = []
@@ -323,18 +329,23 @@ def extract_weights(net):
     
     return cnn_weights
 
+
 def log_line(str):
-    global log_file_name
-    f = open(log_file_name,'a') # Append a line
+    f = open(log_file_name, 'a')  # Append a line
     f.write(str)
     f.close()
 
+
 def log_scores_and_behaviors(population_type,generation,fitness_scores,novelty_scores,behavior_characterizations):
-    global log_file_name
-    f = open("{}.{}.gen{}.txt".format(log_file_name,population_type,generation),'w')
-    f.write("#Fitness\tNovelty\tBehavior\n")
+    f = open(os.path.join('{}/gen{}'.format(logging_location, generation),
+             "{}.gen{}.txt".format(population_type,generation)),'w')
+    f.write("#Fitness\tNovelty\tFinal x\tFinal y\n")
     for i in range(len(fitness_scores)):
-        f.write("{}\t{}\t{}\n".format(fitness_scores[i],novelty_scores[i],behavior_characterizations[i]))
+        if args.final_pt:
+            bc_list = behavior_characterizations[i]
+        else:
+            bc_list = behavior_characterizations[i][-2:]
+        f.write("{}\t{}\t{}\t{}\n".format(fitness_scores[i],novelty_scores[i],bc_list[0],bc_list[1]))
 
     f.close()
 
@@ -350,9 +361,15 @@ if __name__ == '__main__':
     utils.cleanup_log_dir(log_dir)
 
     # Actual logs
-    global log_file_name
+    global log_file_name, logging_location
     now = datetime.now()  # current date and time
-    log_file_name = now.strftime("%Y-%m-%d-{}-{}-log.txt".format(args.env_state, args.evol_mode))
+    new_log = now.strftime("%Y-%m-%d-{}-{}".format(args.env_state, args.evol_mode))
+    if args.save_dir != "": logging_location = os.path.join(args.save_dir, new_log)
+    try:
+        os.makedirs(logging_location)
+    except OSError:
+        pass
+    log_file_name = os.path.join(logging_location, "{}-log.txt".format(new_log)).replace("\\", "/")  # Windows, again
     log_line("#Gen\tMinFitness\tAvgFitness\tMaxFitness\tMinNovelty\tAvgNovelty\tMaxNovelty\n")
 
     global device
@@ -404,16 +421,17 @@ if __name__ == '__main__':
     gen_no = 0
     while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
-        (fitness_scores, behavior_characterizations) = evaluate_population(solutions, agent, gen_no)
+        (fitness_scores, behavior_characterizations) = evaluate_population(solutions, agent, gen_no, "parents")
         # Compare all of the behavior characterizations to get the diversity/novelty scores.
         # This is novelty with respect to parents only
         novelty_scores = calculate_novelty(behavior_characterizations)
 
-        log_scores_and_behaviors("parents",gen_no,fitness_scores,novelty_scores,behavior_characterizations)
+        if gen_no % args.save_interval == 0:
+            log_scores_and_behaviors("parents",gen_no,fitness_scores,novelty_scores,behavior_characterizations)
         
         log_line("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(gen_no,
-                        np.min(fitness_scores),np.mean(fitness_scores),np.max(fitness_scores),
-                        np.min(novelty_scores),np.mean(novelty_scores),np.max(novelty_scores)))
+                        np.min(fitness_scores), np.mean(fitness_scores), np.max(fitness_scores),
+                        np.min(novelty_scores), np.mean(novelty_scores), np.max(novelty_scores)))
         
         print("Max, Average, Min Fitness are {}, {} and {}".format(np.max(fitness_scores), np.mean(fitness_scores), np.min(fitness_scores)))
         print("Max, Average, Min Novelty are {}, {} and {}".format(np.max(novelty_scores), np.mean(novelty_scores), np.min(novelty_scores)))
@@ -439,7 +457,7 @@ if __name__ == '__main__':
             #print(solution2)
 
         print("Evaluate children of generation {}".format(gen_no))
-        (fitness_scores2, behavior_characterizations2) = evaluate_population(solution2, agent, gen_no)
+        (fitness_scores2, behavior_characterizations2) = evaluate_population(solution2, agent, gen_no, "children")
         # The novelty scores used for pruning the combined parent/child population need to be calculated with respect to the combined population
         combined_behaviors = behavior_characterizations+behavior_characterizations2
         novelty_scores_combined = calculate_novelty(combined_behaviors)

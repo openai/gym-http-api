@@ -182,7 +182,7 @@ class CNNBase(NNBase):
                 init_(nn.Conv2d(num_inputs, 32, 8, stride=4)), nn.ReLU(),   # 224 x 320 input
                 init_(nn.Conv2d(32, 64, 4, stride=2)), nn.ReLU(),           # 55 x 78 input
                 init_(nn.Conv2d(64, 48, 3, stride=1)), nn.ReLU(), Flatten(),# 26 x 38 input (26 rounded down from 26.5)
-                init_(nn.Linear(48 * 24 * 36, hidden_size)), nn.ReLU())     # 24 * 36 per channel
+                init_(nn.Linear(48 * 24 * 36, hidden_size)), nn.ReLU())     # 24 x 36 per channel
         else:
             self.main = nn.Sequential(
                 init_(nn.Conv2d(num_inputs, 32, 8, stride=4)), nn.ReLU(),   # 84 x 84 input
