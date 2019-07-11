@@ -339,12 +339,15 @@ def log_line(str):
 def log_scores_and_behaviors(population_type,generation,fitness_scores,novelty_scores,behavior_characterizations):
     f = open(os.path.join('{}/gen{}'.format(logging_location, generation),
              "{}.gen{}.txt".format(population_type,generation)),'w')
-    f.write("#Fitness\tNovelty\tBehavior\n")
+    f.write("#Fitness\tNovelty\tFinal x\tFinal y\n")
     for i in range(len(fitness_scores)):
-        f.write("{}\t{}\t{}\n".format(fitness_scores[i],novelty_scores[i],behavior_characterizations[i]))
+        if args.final_pt:
+            bc_list = behavior_characterizations[i]
+        else:
+            bc_list = behavior_characterizations[i][-2:]
+        f.write("{}\t{}\t{}\t{}\n".format(fitness_scores[i],novelty_scores[i],bc_list[0],bc_list[1]))
 
     f.close()
-
 
 if __name__ == '__main__':
     # Main program starts here
