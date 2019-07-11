@@ -240,7 +240,7 @@ def random_genome(n):
 
 # Evaluate every member of the included population, which is a collection
 # of weight vectors for the neural networks.
-def evaluate_population(solutions, agent, generation):
+def evaluate_population(solutions, agent, generation, pop_type):
     global device
     fitness_scores = []
     behavior_characterizations = []
@@ -268,7 +268,7 @@ def evaluate_population(solutions, agent, generation):
             if args.evol_mode == 'lamarck': 
                 solutions[i] = extract_weights(agent.actor_critic)
 
-        if generation % args.save_interval == 0:
+        if generation % args.save_interval == 0 and pop_type == "parents":
             torch.save([
                 agent.actor_critic,
                 getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
@@ -418,7 +418,7 @@ if __name__ == '__main__':
     gen_no = 0
     while gen_no < args.num_gens:
         print("Start generation {}".format(gen_no))
-        (fitness_scores, behavior_characterizations) = evaluate_population(solutions, agent, gen_no)
+        (fitness_scores, behavior_characterizations) = evaluate_population(solutions, agent, gen_no, "parents")
         # Compare all of the behavior characterizations to get the diversity/novelty scores.
         # This is novelty with respect to parents only
         novelty_scores = calculate_novelty(behavior_characterizations)
@@ -454,7 +454,7 @@ if __name__ == '__main__':
             #print(solution2)
 
         print("Evaluate children of generation {}".format(gen_no))
-        (fitness_scores2, behavior_characterizations2) = evaluate_population(solution2, agent, gen_no)
+        (fitness_scores2, behavior_characterizations2) = evaluate_population(solution2, agent, gen_no, "children")
         # The novelty scores used for pruning the combined parent/child population need to be calculated with respect to the combined population
         combined_behaviors = behavior_characterizations+behavior_characterizations2
         novelty_scores_combined = calculate_novelty(combined_behaviors)
