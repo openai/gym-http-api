@@ -20,8 +20,8 @@ def evaluate(actor_critic, eval_envs, num_processes, device):
     eval_recurrent_hidden_states = torch.zeros(
         num_processes, actor_critic.recurrent_hidden_state_size, device=device)
     eval_masks = torch.zeros(num_processes, 1, device=device)
-    accumulated_reward = 0 # Won't work right if the 1 in loop condition below is increased
-    while len(eval_episode_rewards) < 1: # This is a weird loop now. 
+
+    while len(eval_episode_rewards) < 10:
         with torch.no_grad():
             _, action, _, eval_recurrent_hidden_states = actor_critic.act(
                 obs,
@@ -33,8 +33,7 @@ def evaluate(actor_critic, eval_envs, num_processes, device):
         # Obser reward and next obs
         if device.type == 'cuda': # For some reason, CUDA actions are nested in an extra layer
             action = action[0]
-        obs, reward, done, infos = eval_envs.step(action)
-        accumulated_reward += reward[0][0].item()
+        obs, _, done, infos = eval_envs.step(action)
 
         eval_masks = torch.tensor(
             [[0.0] if done_ else [1.0] for done_ in done],
@@ -46,7 +45,8 @@ def evaluate(actor_critic, eval_envs, num_processes, device):
                 eval_episode_rewards.append(info['episode']['r'])
 
     eval_envs.close()
+    average_return = np.mean(eval_episode_rewards)
     print(" Evaluation using {} episodes: mean reward {:.5f}\n".format(
-        len(eval_episode_rewards), np.mean(eval_episode_rewards)))
+        len(eval_episode_rewards), average_return))
         
-    return accumulated_reward
+    return average_return
