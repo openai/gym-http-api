@@ -39,7 +39,7 @@ def main():
     device = torch.device("cuda:0" if args.cuda else "cpu")
 
     envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
-                         args.gamma, args.log_dir, device, False)
+                         args.gamma, args.log_dir, device, True) # True to allow early resets
 
     actor_critic = Policy(
         envs.observation_space.shape,
@@ -103,6 +103,7 @@ def main():
 
     f = open("log.txt","w")
     f.write("#Steps\tReturn\n")
+    f.flush()
     cumulative_steps = 0
 
     for j in range(num_updates):
@@ -199,6 +200,7 @@ def main():
             #ob_rms = utils.get_vec_normalize(envs).ob_rms
             average_return = evaluate(actor_critic, envs, args.num_processes, device)
             f.write("{}\t{}\n".format(cumulative_steps, average_return))
+            f.flush()
 
     # Close file if training ever finishes
     f.close()
