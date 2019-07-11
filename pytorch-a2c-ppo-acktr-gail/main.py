@@ -197,8 +197,7 @@ def main():
         if (args.eval_interval is not None and len(episode_rewards) > 1
                 and j % args.eval_interval == 0):
             #ob_rms = utils.get_vec_normalize(envs).ob_rms
-            average_return = evaluate(actor_critic, args.env_name, args.seed,
-                                        args.num_processes, eval_log_dir, device)
+            average_return = evaluate(actor_critic, envs, args.num_processes, device)
             f.write("{}\t{}\n".format(cumulative_steps, average_return))
 
     # Close file if training ever finishes
