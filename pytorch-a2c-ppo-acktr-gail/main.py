@@ -121,7 +121,7 @@ def main():
                     rollouts.obs[step], rollouts.recurrent_hidden_states[step],
                     rollouts.masks[step])
 
-            envs.render()
+            #envs.render()
             cumulative_steps += 1
             # Obser reward and next obs
             if device.type == 'cuda': # For some reason, CUDA actions are nested in an extra layer
