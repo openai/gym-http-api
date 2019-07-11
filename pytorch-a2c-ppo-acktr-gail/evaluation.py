@@ -31,6 +31,8 @@ def evaluate(actor_critic, ob_rms, env_name, seed, num_processes, eval_log_dir,
                 deterministic=True)
 
         # Obser reward and next obs
+        if device.type == 'cuda': # For some reason, CUDA actions are nested in an extra layer
+            action = action[0]
         obs, _, done, infos = eval_envs.step(action)
 
         eval_masks = torch.tensor(

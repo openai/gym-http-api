@@ -6,12 +6,12 @@ import torch
 from gym.spaces.box import Box
 
 from baselines import bench
-from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from baselines.common.vec_env import VecEnvWrapper
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common.vec_env.shmem_vec_env import ShmemVecEnv
 from baselines.common.vec_env.vec_normalize import \
     VecNormalize as VecNormalize_
+from .sonic_wrappers import SonicDiscretizer
 
 # Schrum: Use the Sonic contest environment
 from retro_contest.local import make
@@ -33,29 +33,11 @@ except ImportError:
     pass
 
 
-def make_env(env_id, seed, rank, log_dir, allow_early_resets):
+def make_env(env_id, state, seed, rank, log_dir, allow_early_resets):
     def _thunk():
-        # Schrum: I added this check
-        is_genesis = False
-        if env_id.startswith("dm"):
-            _, domain, task = env_id.split('.')
-            env = dm_control2gym.make(domain_name=domain, task_name=task)
-        elif env_id.endswith("Genesis"):
-            is_genesis = True
-            # Will only work for "SonicTheHedgehog-Genesis" though ...
-            # Could just replace env_id with "SonicTheHedgehog-Genesis"
-            # Provide way of setting the state from the command line?
-            env = make(game = env_id, state = "GreenHillZone.Act1")
-        else:
-            env = gym.make(env_id)
-
-        is_atari = hasattr(gym.envs, 'atari') and isinstance(
-            env.unwrapped, gym.envs.atari.atari_env.AtariEnv)
-        if is_atari:
-            env = make_atari(env_id)
+        env = make(game=env_id, state=state)
 
         env.seed(seed + rank)
-
         obs_shape = env.observation_space.shape
 
         if str(env.__class__.__name__).find('TimeLimit') >= 0:
@@ -67,21 +49,12 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
                 os.path.join(log_dir, str(rank)),
                 allow_early_resets=allow_early_resets)
 
-        if is_atari:
-            if len(env.observation_space.shape) == 3:
-                env = wrap_deepmind(env)
-        # Added (not is_genesis) so that this won't crash when Genesis is used
-        elif len(env.observation_space.shape) == 3 and not is_genesis:
-            raise NotImplementedError(
-                "CNN models work only for atari,\n"
-                "please use a custom wrapper for a custom pixel input env.\n"
-                "See wrap_deepmind for an example.")
+        env = SonicDiscretizer(env)
 
         # If the input has shape (W,H,3), wrap for PyTorch convolutions
         obs_shape = env.observation_space.shape
-        # Schrum: TODO: I'm pretty sure that something needs to be fixed here when is_genesis is true
         if len(obs_shape) == 3 and obs_shape[2] in [1, 3]:
-            env = TransposeImage(env, op=[2, 0, 1])
+           env = TransposeImage(env, op=[2, 0, 1])
 
         return env
 
@@ -89,15 +62,15 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
 
 
 def make_vec_envs(env_name,
+                  env_state,
                   seed,
                   num_processes,
                   gamma,
                   log_dir,
                   device,
-                  allow_early_resets,
-                  num_frame_stack=None):
+                  allow_early_resets):
     envs = [
-        make_env(env_name, seed, i, log_dir, allow_early_resets)
+        make_env(env_name, env_state, seed, i, log_dir, allow_early_resets)
         for i in range(num_processes)
     ]
 
@@ -114,10 +87,7 @@ def make_vec_envs(env_name,
 
     envs = VecPyTorch(envs, device)
 
-    if num_frame_stack is not None:
-        envs = VecPyTorchFrameStack(envs, num_frame_stack, device)
-    elif len(envs.observation_space.shape) == 3:
-        envs = VecPyTorchFrameStack(envs, 4, device)
+    envs = VecPyTorchFrameStack(envs, 4, device)
 
     return envs
 
