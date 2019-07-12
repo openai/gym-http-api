@@ -82,13 +82,13 @@ class AllowBacktracking(gym.Wrapper):
         self._max_x = max(self._max_x, self._cur_x)
         return obs, rew, done, info
 
-def make_custom(stack=True, scale_rew=True):
+def make_custom(game, state, stack=True, scale_rew=True):
     """
     Create an environment with some standard wrappers.
     """
 
     # Simplified, not remote
-    env = make(game='SonicTheHedgehog-Genesis', state='GreenHillZone.Act1')
+    env = make(game=game, state=state)
     #env = grc.RemoteEnv('tmp/sock')
 
     env = SonicDiscretizer(env)

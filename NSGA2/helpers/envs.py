@@ -11,7 +11,7 @@ from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common.vec_env.shmem_vec_env import ShmemVecEnv
 from baselines.common.vec_env.vec_normalize import \
     VecNormalize as VecNormalize_
-from .sonic_wrappers import SonicDiscretizer
+from sonic_wrappers import make_custom
 
 # Schrum: Use the Sonic contest environment
 from retro_contest.local import make
@@ -35,7 +35,7 @@ except ImportError:
 
 def make_env(env_id, state, seed, rank, log_dir, allow_early_resets):
     def _thunk():
-        env = make(game=env_id, state=state)
+        env = make_custom(game=env_id, state=state)
 
         env.seed(seed + rank)
         obs_shape = env.observation_space.shape
