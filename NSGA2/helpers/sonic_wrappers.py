@@ -82,7 +82,7 @@ class AllowBacktracking(gym.Wrapper):
         self._max_x = max(self._max_x, self._cur_x)
         return obs, rew, done, info
 
-def make_custom(game, state, stack=True, scale_rew=True):
+def make_custom(game, state, stack=False, scale_rew=True):
     """
     Create an environment with some standard wrappers.
     """
@@ -94,8 +94,12 @@ def make_custom(game, state, stack=True, scale_rew=True):
     env = SonicDiscretizer(env)
     if scale_rew:
         env = RewardScaler(env)
-    env = WarpFrame96(env)
-    if stack:
+    # This is disallowed in the pytorch-a2c-ppo-acktr-gail code as well
+    # but I wonder if we should make it work. The reason it doesn't is because
+    # we're not matching the architecture from the TensorFlow PPO entry.
+    #env = WarpFrame96(env)
+
+    if stack: # This seems to cost too much video memory to use
         env = FrameStack(env, 4)
     env = AllowBacktracking(env)
     return env
