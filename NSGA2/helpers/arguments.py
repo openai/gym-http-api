@@ -34,17 +34,17 @@ def get_args():
     parser.add_argument('--num-gens',
                         type=int, default=50, help='number of genomes to run through (default: 50)')
     parser.add_argument('--num-updates',
-                        type=int, default=100, help='number of learning updates if learning is used (default: 100)')
+                        type=int, default=128, help='number of learning updates if learning is used (default: 128)')
     parser.add_argument('--pop-size',
                         type=int, default=10, help='population size per genome (default: 10)')
     parser.add_argument('--lr',
-                        type=float, default=7.5e-5, help='learning rate (default: 7.5e-5)')
+                        type=float, default=2e-4, help='learning rate (default: 2e-4)')
     parser.add_argument('--gamma',
                         type=float, default=0.99, help='discount factor for rewards (default: 0.99)')
     parser.add_argument(
         '--use-gae',
         action='store_true',
-        default=False,
+        default=True,
         help='use generalized advantage estimation')
     parser.add_argument(
         '--watch-learning',
@@ -74,13 +74,13 @@ def get_args():
     parser.add_argument('--num-processes',
                         type=int, default=16, help='how many training CPU processes to use (default: 16)')
     parser.add_argument('--num-steps',
-                        type=int, default=128, help='number of forward steps (default: 128)')
+                        type=int, default=1024, help='number of forward steps (default: 1024)')
     parser.add_argument('--ppo-epoch',
                         type=int, default=4, help='number of ppo epochs (default: 4)')
     parser.add_argument('--num-mini-batch',
-                        type=int, default=32, help='number of batches for ppo (default: 32)')
+                        type=int, default=16, help='number of batches for ppo (default: 16)')
     parser.add_argument('--clip-param',
-                        type=float, default=0.2, help='ppo clip parameter (default: 0.2)')
+                        type=float, default=0.1, help='ppo clip parameter (default: 0.1)')
     parser.add_argument('--log-interval',
                         type=int, default=10, help='log interval, one log per n updates (default: 10)')
     parser.add_argument('--save-interval',
@@ -128,7 +128,7 @@ def get_args():
     parser.add_argument(
         '--use-linear-lr-decay',
         action='store_true',
-        default=False,
+        default=True,
         help='use a linear schedule on the learning rate')
 
     args = parser.parse_args()
